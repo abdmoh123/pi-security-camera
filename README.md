@@ -11,6 +11,10 @@ A project about a remote Raspberry Pi security camera.
 ## Structure
 
 ```mermaid
-pi_camera --> server
-server --> client
+flowchart TD
+    pi_camera[Pi device] --> server[Server]
+    server[Server] --> pi_camera[Pi device]
+
+    server --> client[Client (e.g. smartphone)]
+    client[Client (e.g. smartphone)] --> server
 ```
