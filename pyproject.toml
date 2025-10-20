@@ -1,0 +1,16 @@
+[project]
+name = "pi-security-camera"
+version = "0.1.0"
+description = "Project about a remote Raspberry Pi security camera"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.119.0",
+    "pydantic>=2.12.3",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+    "ruff>=0.14.1",
+]

@@ -1,0 +1,10 @@
+line-length = 120
+
+[lint]
+extend-select = [
+    "E501",  # add line-too-long rule
+    "D"      # enable docstring enforcement
+]
+
+[lint.pydocstyle]
+convention = "google"
