@@ -12,9 +12,7 @@ A project about a remote Raspberry Pi security camera.
 
 ```mermaid
 flowchart TD
-    pi_camera[Pi device] --> server[Server]
-    server[Server] --> pi_camera[Pi device]
+    pi_camera[Pi device] <-->|Requests| server[Server]
 
-    server --> client["Client (e.g. smartphone)"]
-    client --> server
+    server <-->|FastAPI| client["Client (e.g. smartphone)"]
 ```
