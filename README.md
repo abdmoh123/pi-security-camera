@@ -15,6 +15,6 @@ flowchart TD
     pi_camera[Pi device] --> server[Server]
     server[Server] --> pi_camera[Pi device]
 
-    server --> client[Client (e.g. smartphone)]
-    client[Client (e.g. smartphone)] --> server
+    server --> client["Client (e.g. smartphone)"]
+    client --> server
 ```
