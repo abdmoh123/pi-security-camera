@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM docker.io/ubuntu:24.04
 
 # Create and switch to work directory
