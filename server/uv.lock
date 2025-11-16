@@ -369,7 +369,6 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
-    { name = "pydantic" },
     { name = "sqlalchemy" },
 ]
 
@@ -382,7 +381,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.119.0" },
-    { name = "pydantic", specifier = ">=2.12.3" },
     { name = "sqlalchemy", specifier = ">=2.0.44" },
 ]
 
