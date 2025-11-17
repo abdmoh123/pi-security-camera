@@ -1,4 +1,4 @@
-"""FastAPI routes related to the user table."""
+"""FastAPI routes related to the Camera table."""
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session

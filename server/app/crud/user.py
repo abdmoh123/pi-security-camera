@@ -21,7 +21,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
 
 
 def create_user(db: Session, user: UserCreate) -> User:
-    """Creates a new user using the given inputs. The input is validated using Pydantic models."""
+    """Creates a new user using the given inputs."""
     db_user = User(email=user.email, password_hash=user.password_hash)
 
     db.add(db_user)

@@ -20,3 +20,15 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True)
     password_hash: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+
+
+class Camera(Base):
+    """Schema for the camera table."""
+
+    __tablename__: str = "cameras"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+    auth_key: Mapped[str] = mapped_column(String)
+    mac_address: Mapped[str] = mapped_column(String)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))

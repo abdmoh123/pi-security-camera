@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app.database import engine
 from app.db_models import Base
 
-from app.routes import users
+from app.routes import cameras, users
 
 
 Base.metadata.create_all(bind=engine)
@@ -13,6 +13,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Pi Security Camera", description="API for managing Pi security cameras", version="0.1.0")
 
 app.include_router(users.router, prefix="/api/v0")
+app.include_router(cameras.router, prefix="/api/v0")
 
 
 @app.get("/api/v0")
@@ -23,5 +24,5 @@ def read_root() -> dict[str, str]:
 
 @app.get("/api/v0/health")
 def check_health() -> dict[str, str]:
-    """Route to check health."""
+    """Route to check health. Doesn't really do anything yet."""
     return {"status": "ok"}
