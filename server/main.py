@@ -1,45 +1,27 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+"""Pi security project main entrypoint."""
+
+from fastapi import FastAPI
+
+from app.database import engine
+from app.db_models import Base
+
+from app.routes import users
 
 
-app = FastAPI()
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Pi Security Camera", description="API for managing Pi security cameras", version="0.1.0")
+
+app.include_router(users.router, prefix="/api/v0")
 
 
-class Item(BaseModel):
-    content: str
+@app.get("/api/v0")
+def read_root() -> dict[str, str]:
+    """Root API function."""
+    return {"message": app.title, "description": app.description, "version": app.version}
 
 
-@app.get("/")
-def read_root():
-    print("Hello from pi-security-camera!")
-
-
-@app.get("/data")
-def read_all_data() -> list[Item]:
-    data: list[Item] = []
-    with open("data/data.txt", "r") as file:
-        dataline: list[str] = file.readline().split()
-        data_item = {"content": dataline[1]}
-        data.append(Item(**data_item))
-    return data
-
-
-@app.get("/data/{item_id}")
-def read_item(item_id: int) -> Item:
-    data_list: dict[int, Item] = {}
-    with open("data/data.txt", "r") as file:
-        dataline: list[str] = file.readline().split(",")
-        data_item = {"content": dataline[1]}
-        read_item_id: int = int(dataline[0])
-        data_list[read_item_id] = Item(**data_item)
-
-    if data_list.get(item_id) is None:
-        raise HTTPException(status_code=404, detail="Item not found!")
-    return data_list[item_id]
-
-
-@app.put("/data/{item_id}")
-def add_item(item_id: int, item: Item):
-    with open("data/data.txt", "a") as file:
-        _ = file.write(f"{item_id}, {item.content}")
-    return {"item_id": item_id, "item_content": item.content}
+@app.get("/api/v0/health")
+def check_health() -> dict[str, str]:
+    """Route to check health."""
+    return {"status": "ok"}
