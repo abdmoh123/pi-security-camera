@@ -42,11 +42,15 @@ def create_camera_subscription(
 @router.get("/", response_model=CameraSubscription)
 def get_camera_subscriptions_by_user(
     user_id: int,
+    page_index: int = 0,
+    page_size: int = 100,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[CameraSubscriptionSchema]:
     """Returns a camera_subscription's details using a given user ID."""
     db_camera_subscription: list[CameraSubscriptionSchema] = (
-        crud_camera_subscription.get_camera_subscriptions_by_user_id(db_session, user_id)
+        crud_camera_subscription.get_camera_subscriptions_by_user_id(
+            db_session, user_id, skip=page_index * page_size, limit=page_size
+        )
     )
 
     if not db_camera_subscription:
@@ -58,11 +62,15 @@ def get_camera_subscriptions_by_user(
 @router.get("/", response_model=CameraSubscription)
 def get_camera_subscriptions_by_camera(
     camera_id: int,
+    page_index: int = 0,
+    page_size: int = 100,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[CameraSubscriptionSchema]:
     """Returns a camera_subscription's details using a given user ID."""
     db_camera_subscription: list[CameraSubscriptionSchema] = (
-        crud_camera_subscription.get_camera_subscriptions_by_camera_id(db_session, camera_id)
+        crud_camera_subscription.get_camera_subscriptions_by_camera_id(
+            db_session, camera_id, skip=page_index * page_size, limit=page_size
+        )
     )
 
     if not db_camera_subscription:

@@ -22,14 +22,20 @@ def get_camera_subscriptions(db: Session, skip: int = 0, limit: int = 100) -> li
     return db.query(CameraSubscription).offset(skip).limit(limit).all()
 
 
-def get_camera_subscriptions_by_user_id(db: Session, user_id: int) -> list[CameraSubscription]:
+def get_camera_subscriptions_by_user_id(
+    db: Session, user_id: int, skip: int = 0, limit: int = 100
+) -> list[CameraSubscription]:
     """Returns all of a given user's camera subscriptions."""
-    return db.query(CameraSubscription).filter(CameraSubscription.user_id == user_id).all()
+    return db.query(CameraSubscription).filter(CameraSubscription.user_id == user_id).offset(skip).limit(limit).all()
 
 
-def get_camera_subscriptions_by_camera_id(db: Session, camera_id: int) -> list[CameraSubscription]:
+def get_camera_subscriptions_by_camera_id(
+    db: Session, camera_id: int, skip: int = 0, limit: int = 100
+) -> list[CameraSubscription]:
     """Returns all subscriptions a given camera is assigned to."""
-    return db.query(CameraSubscription).filter(CameraSubscription.camera_id == camera_id).all()
+    return (
+        db.query(CameraSubscription).filter(CameraSubscription.camera_id == camera_id).offset(skip).limit(limit).all()
+    )
 
 
 def create_camera_subscription(db: Session, camera_subscription: CameraSubscriptionModel) -> CameraSubscription:
