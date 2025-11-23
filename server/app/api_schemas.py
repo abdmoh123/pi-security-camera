@@ -34,6 +34,7 @@ class Camera(BaseModel):
     """Pydantic model for a camera."""
 
     id: int
+    host_address: str
     name: str
     auth_key: str
     mac_address: str
@@ -45,8 +46,9 @@ class Camera(BaseModel):
 
 
 class CameraCreate(BaseModel):
-    """Pydantic model used when creating a new camera record."""
+    """Pydantic model received when creating a new camera record."""
 
+    host_address: str
     name: str
     auth_key: str
     mac_address: str
@@ -56,6 +58,7 @@ class CameraUpdate(BaseModel):
     """Pydantic model used when updating a Camera record."""
 
     name: str | None = None
+    host_address: str | None = None
     auth_key: str | None = None
     mac_address: str | None = None
 

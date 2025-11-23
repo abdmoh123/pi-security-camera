@@ -10,9 +10,17 @@ def get_camera(db: Session, camera_id: int) -> Camera | None:
     return db.query(Camera).filter(Camera.id == camera_id).first()
 
 
-def get_camera_by_name(db: Session, name: str) -> Camera | None:
-    """Queries the database to get a user using the given name."""
-    return db.query(Camera).filter(Camera.name == name).first()
+def get_camera_by_host_address(db: Session, host_address: str) -> Camera | None:
+    """Queries for a camera with the given host address (e.g. IP address).
+
+    We can't have multiple cameras with the same IP address.
+    """
+    return db.query(Camera).filter(Camera.host_address == host_address).first()
+
+
+def get_cameras_by_name(db: Session, name: str, skip: int = 0, limit: int = 100) -> list[Camera]:
+    """Queries the database to get a list of cameras that have the given name."""
+    return db.query(Camera).filter(Camera.name == name).offset(skip).limit(limit).all()
 
 
 def get_cameras(db: Session, skip: int = 0, limit: int = 100) -> list[Camera]:
@@ -22,7 +30,9 @@ def get_cameras(db: Session, skip: int = 0, limit: int = 100) -> list[Camera]:
 
 def create_camera(db: Session, camera: CameraCreate) -> Camera:
     """Creates a new camera using the given inputs."""
-    db_camera = Camera(name=camera.name, auth_key=camera.auth_key, mac_address=camera.mac_address)
+    db_camera = Camera(
+        name=camera.name, host_address=camera.host_address, auth_key=camera.auth_key, mac_address=camera.mac_address
+    )
 
     db.add(db_camera)
     db.commit()
@@ -37,6 +47,10 @@ def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera |
 
     # skip modifying the database if inputs are empty or if camera doesn't exist
     if not camera.model_fields_set or not db_camera:
+        return db_camera
+
+    db_camera_ip = db.query(Camera).filter(Camera.host_address == camera.host_address).all()
+    if db_camera_ip:
         return db_camera
 
     # fields left as None will not be included in the dictionary

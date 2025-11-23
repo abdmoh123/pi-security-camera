@@ -21,10 +21,10 @@ def get_cameras(page_index: int = 0, page_size: int = 100, db_session: Session =
 @router.post("/", response_model=Camera)
 def create_camera(camera: CameraCreate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
     """Creates a new camera with the given details."""
-    db_camera: CameraSchema | None = crud_camera.get_camera_by_name(db_session, camera.name)
+    db_camera: CameraSchema | None = crud_camera.get_camera_by_host_address(db_session, camera.host_address)
 
     if db_camera:
-        raise HTTPException(status_code=400, detail="Camera already exists!")
+        raise HTTPException(status_code=400, detail="Camera already exists: Host address is already in use!")
 
     db_camera = crud_camera.create_camera(db_session, camera)
     return db_camera
@@ -44,6 +44,11 @@ def get_camera(camera_id: int, db_session: Session = Depends(get_db)) -> CameraS
 @router.put("/{camera_id}", response_model=Camera)
 def update_camera(camera_id: int, camera: CameraUpdate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
     """Updates a camera's details using a given ID."""
+    if camera.host_address:
+        db_camera_ip: CameraSchema | None = crud_camera.get_camera_by_host_address(db_session, camera.host_address)
+        if db_camera_ip and db_camera_ip.id != camera_id:
+            raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
+
     db_camera: CameraSchema | None = crud_camera.update_camera(db_session, camera_id, camera)
 
     if not db_camera:

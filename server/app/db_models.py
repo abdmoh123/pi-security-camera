@@ -28,7 +28,8 @@ class Camera(Base):
     __tablename__: str = "cameras"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+    host_address: Mapped[str] = mapped_column(String, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String)
     auth_key: Mapped[str] = mapped_column(String)
     mac_address: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
