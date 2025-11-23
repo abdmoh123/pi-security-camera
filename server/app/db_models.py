@@ -32,3 +32,13 @@ class Camera(Base):
     auth_key: Mapped[str] = mapped_column(String)
     mac_address: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+
+
+class CameraSubscription(Base):
+    """Schema for tracking cameras subscribed to users."""
+
+    __tablename__: str = "camera_subscriptions"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey(f"{User.__tablename__}.id"), primary_key=True)
+    camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"), primary_key=True)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))

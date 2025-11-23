@@ -5,7 +5,7 @@ from importlib.metadata import version, PackageNotFoundError
 
 from app.database import engine
 from app.db_models import Base
-from app.routes import cameras, users
+from app.routes import cameras, users, camera_subscriptions
 
 
 Base.metadata.create_all(bind=engine)
@@ -23,6 +23,7 @@ app = FastAPI(title="Pi Security Camera", description="API for managing Pi secur
 api_prefix: str = "/api/v0"
 app.include_router(users.router, prefix=api_prefix)
 app.include_router(cameras.router, prefix=api_prefix)
+app.include_router(camera_subscriptions.router, prefix=api_prefix)
 
 
 @app.get(api_prefix)

@@ -58,3 +58,15 @@ class CameraUpdate(BaseModel):
     name: str | None = None
     auth_key: str | None = None
     mac_address: str | None = None
+
+
+class CameraSubscription(BaseModel):
+    """Pydantic model for a camera."""
+
+    user_id: int
+    camera_id: int
+
+    class Config:
+        """Config subclass of CameraSubscription."""
+
+        from_attributes: bool = True
