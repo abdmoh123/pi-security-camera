@@ -6,7 +6,10 @@ from app.api_schemas import CameraSubscription as CameraSubscriptionModel
 
 
 def get_camera_subscription(db: Session, camera_subscription: CameraSubscriptionModel) -> CameraSubscription | None:
-    """Queries the database to get a camera_subscription using the given ID."""
+    """Queries the database to get a camera_subscription using the given user and camera IDs.
+
+    Only useful for checking if a subscription exists.
+    """
     return (
         db.query(CameraSubscription)
         .filter(
