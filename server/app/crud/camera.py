@@ -23,6 +23,11 @@ def get_cameras_by_name(db: Session, name: str, skip: int = 0, limit: int = 100)
     return db.query(Camera).filter(Camera.name == name).offset(skip).limit(limit).all()
 
 
+def get_cameras_by_mac_address(db: Session, mac_address: str, skip: int = 0, limit: int = 100) -> list[Camera]:
+    """Queries the database to get a list of cameras that have the given MAC address."""
+    return db.query(Camera).filter(Camera.mac_address == mac_address).offset(skip).limit(limit).all()
+
+
 def get_cameras(db: Session, skip: int = 0, limit: int = 100) -> list[Camera]:
     """Queries and returns a list of all cameras with pagination."""
     return db.query(Camera).offset(skip).limit(limit).all()
