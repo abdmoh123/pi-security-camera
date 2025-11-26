@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api_schemas import UserCreate, UserUpdate, User
+from app.api_schemas import CameraSubscription, UserCreate, UserUpdate, User
 from app.database import get_db
-from app.crud import user as crud_user
-from app.db_models import User as UserSchema
+from app.crud import user as crud_user, camera as crud_camera, camera_subscription as crud_subscription
+from app.db_models import Camera, User as UserSchema
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -61,3 +61,77 @@ def delete_user(user_id: int, db_session: Session = Depends(get_db)) -> UserSche
         raise HTTPException(status_code=404, detail="User not found")
 
     return db_user
+
+
+@router.post("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+def create_camera_subscription(
+    user_id: int,
+    camera_id: int,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> CameraSubscription:
+    """Subscribes a given user to a given camera."""
+    if not crud_user.get_user(db_session, user_id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    result: list[CameraSubscription] = crud_subscription.create_camera_subscriptions_by_user(
+        db_session, user_id, [camera_id]
+    )
+    if len(result) == 0:
+        raise HTTPException(status_code=404, detail="Failed to subscribe: Camera not found!")
+
+    return result[0]
+
+
+@router.post("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
+def create_camera_subscriptions(
+    user_id: int,
+    camera_ids: list[int],
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[CameraSubscription]:
+    """Subscribes a given user to the given cameras."""
+    if not crud_user.get_user(db_session, user_id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    for id in camera_ids:
+        camera: Camera | None = crud_camera.get_camera(db_session, id)
+        if not camera:
+            raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {id} not found!")
+
+    return crud_subscription.create_camera_subscriptions_by_user(db_session, user_id, camera_ids)
+
+
+@router.delete("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+def unsubscribe_from_camera(
+    user_id: int,
+    camera_id: int,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> CameraSubscription:
+    """Unsubscribes a user from a given camera."""
+    if not crud_user.get_user(db_session, user_id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    result: list[CameraSubscription] = crud_subscription.delete_camera_subscriptions_by_user(
+        db_session, user_id, [camera_id]
+    )
+    if len(result) == 0:
+        raise HTTPException(status_code=404, detail="Failed to unsubscribe: Camera not found!")
+
+    return result[0]
+
+
+@router.delete("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
+def unsubscribe_from_cameras(
+    user_id: int,
+    camera_ids: list[int],
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[CameraSubscription]:
+    """Unsubscribes a given user from the given cameras."""
+    if not crud_user.get_user(db_session, user_id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    for id in camera_ids:
+        camera: Camera | None = crud_camera.get_camera(db_session, id)
+        if not camera:
+            raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {id} not found!")
+
+    return crud_subscription.delete_camera_subscriptions_by_user(db_session, user_id, camera_ids)

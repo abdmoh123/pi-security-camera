@@ -64,7 +64,7 @@ class CameraUpdate(BaseModel):
 
 
 class CameraSubscription(BaseModel):
-    """Pydantic model for a camera."""
+    """Pydantic model for a subscription of a user to a camera."""
 
     user_id: int
     camera_id: int

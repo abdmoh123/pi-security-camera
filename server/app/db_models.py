@@ -1,7 +1,9 @@
 """File containing schemas of tables in the SQL database."""
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from __future__ import annotations
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import datetime, timezone
 
 
@@ -9,6 +11,15 @@ class Base(DeclarativeBase):
     """Exists to provide type hints to shutup mypy."""
 
     pass
+
+
+camera_subscriptions_table = Table(
+    "camera_subscriptions",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+    Column("camera_id", Integer, ForeignKey("cameras.id"), primary_key=True),
+    Column("registered_at", DateTime, default=datetime.now(timezone.utc)),
+)
 
 
 class User(Base):
@@ -20,6 +31,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True)
     password_hash: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+
+    cameras: Mapped[list[Camera]] = relationship(
+        "Camera", secondary=camera_subscriptions_table, back_populates=__tablename__
+    )
 
 
 class Camera(Base):
@@ -34,12 +49,4 @@ class Camera(Base):
     mac_address: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
-
-class CameraSubscription(Base):
-    """Schema for tracking cameras subscribed to users."""
-
-    __tablename__: str = "camera_subscriptions"
-
-    user_id: Mapped[int] = mapped_column(ForeignKey(f"{User.__tablename__}.id"), primary_key=True)
-    camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"), primary_key=True)
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    users: Mapped[list[User]] = relationship("User", secondary=camera_subscriptions_table, back_populates=__tablename__)
