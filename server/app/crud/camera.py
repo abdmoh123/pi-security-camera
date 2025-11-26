@@ -28,9 +28,15 @@ def get_cameras_by_mac_address(db: Session, mac_address: str, skip: int = 0, lim
     return db.query(Camera).filter(Camera.mac_address == mac_address).offset(skip).limit(limit).all()
 
 
-def get_cameras(db: Session, skip: int = 0, limit: int = 100) -> list[Camera]:
-    """Queries and returns a list of all cameras with pagination."""
-    return db.query(Camera).offset(skip).limit(limit).all()
+def get_cameras(db: Session, camera_ids: list[int] | None = None, skip: int = 0, limit: int = 100) -> list[Camera]:
+    """Queries and returns a list of cameras with pagination.
+
+    If a list of IDs were given, it will only return the given cameras (if they were found).
+    Otherwise, it returns all cameras in the database (with pagination of course).
+    """
+    if not camera_ids:
+        return db.query(Camera).offset(skip).limit(limit).all()
+    return db.query(Camera).filter(Camera.id.in_(camera_ids)).offset(skip).limit(limit).all()
 
 
 def create_camera(db: Session, camera: CameraCreate) -> Camera:

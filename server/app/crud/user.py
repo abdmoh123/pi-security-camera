@@ -15,9 +15,15 @@ def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
-    """Queries and returns a list of all users with pagination."""
-    return db.query(User).offset(skip).limit(limit).all()
+def get_users(db: Session, user_ids: list[int] | None = None, skip: int = 0, limit: int = 100) -> list[User]:
+    """Queries and returns a list of all users with pagination.
+
+    If a list of IDs were given, it will only return the given users (if they were found).
+    Otherwise, it returns all users in the database (with pagination of course).
+    """
+    if not user_ids:
+        return db.query(User).offset(skip).limit(limit).all()
+    return db.query(User).filter(User.id.in_(user_ids)).offset(skip).limit(limit).all()
 
 
 def create_user(db: Session, user: UserCreate) -> User:
