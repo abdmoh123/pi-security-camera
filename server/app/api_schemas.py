@@ -30,6 +30,18 @@ class UserUpdate(BaseModel):
     password_hash: str | None = None
 
 
+class UserResponse(BaseModel):
+    """Used when returning to the user (removes sensitive info like passwords)."""
+
+    id: int
+    email: str
+
+    class Config:
+        """Config subclass of UserResponse."""
+
+        from_attributes: bool = True
+
+
 class Camera(BaseModel):
     """Pydantic model for a camera."""
 
