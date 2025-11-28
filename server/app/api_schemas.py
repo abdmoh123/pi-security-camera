@@ -85,3 +85,31 @@ class CameraSubscription(BaseModel):
         """Config subclass of CameraSubscription."""
 
         from_attributes: bool = True
+
+
+class Video(BaseModel):
+    """Pydantic model for a video entry."""
+
+    file_name: str
+    camera_id: int | None = None
+    users: list[UserResponse]
+
+    class Config:
+        """Config subclass of Video."""
+
+        from_attributes: bool = True
+
+
+class VideoCreate(BaseModel):
+    """Pydantic model for a video entry."""
+
+    file_name: str
+    camera_id: int | None = None
+
+
+class VideoUpdate(BaseModel):
+    """Pydantic model for modifying the video entry in the database."""
+
+    file_name: str | None = None
+    camera_id: int | None = None
+    user_ids: list[int] | None = None
