@@ -5,6 +5,7 @@ description = "Project about a remote Raspberry Pi security camera"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiofiles>=25.1.0",
     "fastapi[standard]>=0.119.0",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.44",
