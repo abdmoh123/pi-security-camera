@@ -74,11 +74,48 @@ def update_video(video_id: int, video: VideoUpdate, db_session: Session = Depend
 
 
 @router.delete("/{video_id}", response_model=Video)
-def delete_video(video_id: int, db_session: Session = Depends(get_db)) -> VideoSchema:  # pyright: ignore[reportCallInDefaultInitializer]
-    """Deletes a given video by ID."""
-    db_video: VideoSchema | None = crud_video.delete_video_entry(db_session, video_id=video_id)
+def unlink_user_from_video(video_id: int, user_id: int, db_session: Session = Depends(get_db)) -> VideoSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+    """Unlinks a given user from a given video.
 
+    If the last linked user was removed, then the video is deleted (no one can access it anyway).
+    """
+    db_video: VideoSchema | None = crud_video.get_video_entry(db_session, video_id)
     if not db_video:
-        raise HTTPException(status_code=404, detail="Video not found")
+        raise HTTPException(status_code=404, detail="Failed to unlink user: Video not found")
 
-    return db_video
+    # TODO: Make sure that you can only unlink a user if the video isn't linked to a camera
+    #       Also allow unlinking a video from a camera (e.g. manually or by deleting a camera account)
+
+    # Find and unlink the user from the video
+    removed_user: bool = False
+    for user in db_video.users:
+        if user.id == user_id:
+            removed_user = True
+            db_video.users.remove(user)
+            break
+    if not removed_user:
+        raise HTTPException(status_code=404, detail="Failed to unlink user: User not linked to video!")
+
+    # Delete the video if no users are linked anymore
+    if not db_video.users:
+        # Delete the video entry
+        deleted_video: VideoSchema | None = crud_video.delete_video_entry(db_session, video_id)
+        # Should never be None due to the video already being found earlier
+        if not deleted_video:
+            raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
+
+        # Delete the video file
+        file_path: Path = VIDEO_FILES_DIR / str(db_video.camera_id) / db_video.file_name
+        file_path.unlink()
+
+        return deleted_video
+
+    # Update the video entry with the new list of linked users
+    updated_video_model = VideoUpdate.model_validate(db_video)
+    updated_video: VideoSchema | None = crud_video.update_video_entry(db_session, video_id, updated_video_model)
+
+    # Shouldn't happen because the video was already found at the beginning
+    if not updated_video:
+        raise HTTPException(status_code=404, detail="Failed to unlink user: Video not found")
+
+    return updated_video

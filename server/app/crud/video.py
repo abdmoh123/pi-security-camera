@@ -57,10 +57,13 @@ def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) 
         - The passed-in users will be linked to the video
         - If the inputted camera ID = 0, then the video will have no camera linked
     """
-    db_video = db.query(Video).filter(Video.id == video_id).first()
+    # Skip modifying the database if inputs are empty
+    if not new_video_data.model_fields_set:
+        return None
 
-    # skip modifying the database if inputs are empty or if video doesn't exist
-    if not new_video_data.model_fields_set or not db_video:
+    db_video = db.query(Video).filter(Video.id == video_id).first()
+    # Skip modifying the database if video doesn't exist
+    if not db_video:
         return db_video
 
     if new_video_data.file_name:
