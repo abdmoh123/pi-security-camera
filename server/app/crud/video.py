@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api_schemas import VideoCreate, VideoUpdate
 from app.crud.camera import get_camera
-from app.crud.user import get_users
-from app.db_models import Camera, User, Video
+from app.db_models import Camera, Video
 
 
 def get_video_entry(db: Session, video_id: int) -> Video | None:
@@ -29,16 +28,14 @@ def get_video_entries(db: Session, video_ids: list[int] | None = None, skip: int
     return db.query(Video).filter(Video.id.in_(video_ids)).offset(skip).limit(limit).all()
 
 
-def create_video_entry(db: Session, video: VideoCreate) -> Video:
+def create_video_entry(db: Session, video: VideoCreate) -> Video | None:
     """Creates a new video entry using the given inputs."""
-    db_camera: Camera | None = None
-    users: list[User] = list()
-    if video.camera_id:
-        db_camera = get_camera(db, video.camera_id)
-        if db_camera:
-            users = db_camera.users
+    # Check if the camera exists before creating the video entry
+    db_camera: Camera | None = get_camera(db, video.camera_id)
+    if not db_camera:
+        return None
 
-    db_video = Video(file_name=video.file_name, camera_id=video.camera_id, users=users)
+    db_video = Video(file_name=video.file_name, camera_id=db_camera.id)
 
     db.add(db_video)
     db.commit()
@@ -50,40 +47,19 @@ def create_video_entry(db: Session, video: VideoCreate) -> Video:
 def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) -> Video | None:
     """Modifies a given video entry's parameters (excluding ID) via a given ID.
 
-    There are special rules for assigning users to a video:
-    - If a camera is linked to the video, only the users subscribed to that camera can view the video.
-        - Any passed-in user list is ignored
-    - If no camera is linked, then any user can be assigned to have access to the video.
-        - The passed-in users will be linked to the video
-        - If the inputted camera ID = 0, then the video will have no camera linked
+    You can only modify the name of the video for now.
     """
     # Skip modifying the database if inputs are empty
     if not new_video_data.model_fields_set:
         return None
 
-    db_video = db.query(Video).filter(Video.id == video_id).first()
+    db_video: Video | None = get_video_entry(db, video_id)
     # Skip modifying the database if video doesn't exist
     if not db_video:
         return db_video
 
     if new_video_data.file_name:
-        # you can't have multiple videos with the same file name (conflict issue)
-        videos_with_file_name: list[Video] = get_video_entries_by_file_name(db, new_video_data.file_name)
-        if not videos_with_file_name:
-            db_video.file_name = new_video_data.file_name
-
-    # a camera ID of 0 is defined as no camera (None value means don't change the camera ID)
-    if new_video_data.camera_id == 0:
-        db_video.camera_id = None
-    # setting a new camera id should make it so only the users subscribed to the new camera can access it
-    elif new_video_data.camera_id:
-        camera: Camera | None = get_camera(db, new_video_data.camera_id)
-        if camera:
-            db_video.camera_id = camera.id
-            db_video.users = camera.users
-    # if the video isn't linked to a camera, the users with access don't need to be subscribed to a specific camera
-    elif new_video_data.user_ids and not db_video.camera_id:
-        db_video.users = get_users(db, new_video_data.user_ids)
+        db_video.file_name = new_video_data.file_name
 
     db.commit()
     db.refresh(db_video)

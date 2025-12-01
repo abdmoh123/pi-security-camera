@@ -90,9 +90,9 @@ class CameraSubscription(BaseModel):
 class Video(BaseModel):
     """Pydantic model for a video entry."""
 
+    id: int
     file_name: str
-    camera_id: int | None = None
-    users: list[UserResponse]
+    camera_id: int
 
     class Config:
         """Config subclass of Video."""
@@ -104,12 +104,10 @@ class VideoCreate(BaseModel):
     """Pydantic model for a video entry."""
 
     file_name: str
-    camera_id: int | None = None
+    camera_id: int
 
 
 class VideoUpdate(BaseModel):
     """Pydantic model for modifying the video entry in the database."""
 
     file_name: str | None = None
-    camera_id: int | None = None
-    user_ids: list[int] | None = None
