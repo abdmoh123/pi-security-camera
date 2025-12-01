@@ -6,12 +6,12 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from app.api_schemas import VideoCreate, VideoUpdate, Video
-from app.database import get_db
-from app.crud import video as crud_video
+from app.api_schemas import Video, VideoCreate, VideoUpdate
 from app.crud import camera as crud_camera
-from app.db_models import Camera, Video as VideoSchema
-
+from app.crud import video as crud_video
+from app.database import get_db
+from app.db_models import Camera
+from app.db_models import Video as VideoSchema
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 

@@ -1,12 +1,12 @@
 """Pi security project main entrypoint."""
 
+from importlib.metadata import PackageNotFoundError, version
+
 from fastapi import FastAPI
-from importlib.metadata import version, PackageNotFoundError
 
 from app.database import engine
 from app.db_models import Base
 from app.routes import cameras, users
-
 
 Base.metadata.create_all(bind=engine)
 

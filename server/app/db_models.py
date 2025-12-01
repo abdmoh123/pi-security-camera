@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from datetime import datetime, timezone
 
 
 class Base(DeclarativeBase):

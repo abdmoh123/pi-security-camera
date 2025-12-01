@@ -3,11 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api_schemas import CameraCreate, CameraUpdate, Camera
-from app.database import get_db
+from app.api_schemas import Camera, CameraCreate, CameraUpdate
 from app.crud import camera as crud_camera
+from app.database import get_db
 from app.db_models import Camera as CameraSchema
-
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 

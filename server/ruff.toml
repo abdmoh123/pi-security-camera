@@ -2,8 +2,10 @@ line-length = 120
 
 [lint]
 extend-select = [
+    "I001",  # isort incorrect formatting
+    "I002",  # isort missing required import
     "E501",  # add line-too-long rule
-    "D"      # enable docstring enforcement
+    "D",     # enable docstring enforcement
 ]
 
 [lint.pydocstyle]

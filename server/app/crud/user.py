@@ -1,8 +1,9 @@
 """File containing crud functions related to the User table."""
 
 from sqlalchemy.orm import Session
-from app.db_models import User
+
 from app.api_schemas import UserCreate, UserUpdate
+from app.db_models import User
 
 
 def get_user(db: Session, user_id: int) -> User | None:

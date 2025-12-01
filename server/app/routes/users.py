@@ -3,16 +3,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api_schemas import CameraSubscription, UserCreate, UserUpdate, UserResponse, Video
+from app.api_schemas import CameraSubscription, UserCreate, UserResponse, UserUpdate, Video
+from app.crud import camera as crud_camera
+from app.crud import camera_subscription as crud_subscription
+from app.crud import user as crud_user
+from app.crud import video as crud_video
 from app.database import get_db
-from app.crud import (
-    user as crud_user,
-    camera as crud_camera,
-    camera_subscription as crud_subscription,
-    video as crud_video,
-)
-from app.db_models import Camera, User as UserSchema, Video as VideoSchema
-
+from app.db_models import Camera
+from app.db_models import User as UserSchema
+from app.db_models import Video as VideoSchema
 
 router = APIRouter(prefix="/users", tags=["users"])
 
