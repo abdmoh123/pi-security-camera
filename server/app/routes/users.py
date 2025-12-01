@@ -3,10 +3,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api_schemas import CameraSubscription, UserCreate, UserUpdate, UserResponse
+from app.api_schemas import CameraSubscription, UserCreate, UserUpdate, UserResponse, Video
 from app.database import get_db
-from app.crud import user as crud_user, camera as crud_camera, camera_subscription as crud_subscription
-from app.db_models import Camera, User as UserSchema
+from app.crud import (
+    user as crud_user,
+    camera as crud_camera,
+    camera_subscription as crud_subscription,
+    video as crud_video,
+)
+from app.db_models import Camera, User as UserSchema, Video as VideoSchema
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -135,3 +140,19 @@ def unsubscribe_from_cameras(
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {id} not found!")
 
     return crud_subscription.delete_camera_subscriptions_by_user(db_session, user_id, camera_ids)
+
+
+@router.get("/{user_id}/videos", response_model=list[Video])
+def get_videos(
+    user_id: int,
+    page_index: int = 0,
+    page_size: int = 100,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[VideoSchema]:
+    """Gets a list of all accessible videos with pagination."""
+    db_user: UserSchema | None = crud_user.get_user(db_session, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    camera_ids: list[int] = [camera.id for camera in db_user.cameras]
+    return crud_video.get_video_entries_by_cameras(db_session, camera_ids, skip=page_index * page_size, limit=page_size)

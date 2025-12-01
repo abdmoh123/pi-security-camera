@@ -17,6 +17,11 @@ def get_video_entries_by_file_name(db: Session, file_name: str, skip: int = 0, l
     return db.query(Video).filter(Video.file_name == file_name).offset(skip).limit(limit).all()
 
 
+def get_video_entries_by_cameras(db: Session, camera_ids: list[int], skip: int = 0, limit: int = 100) -> list[Video]:
+    """Searches for video entries that was produced by the given camera."""
+    return db.query(Video).filter(Video.camera_id.in_(camera_ids)).offset(skip).limit(limit).all()
+
+
 def get_video_entries(db: Session, video_ids: list[int] | None = None, skip: int = 0, limit: int = 100) -> list[Video]:
     """Queries and returns a list of all videos with pagination.
 
