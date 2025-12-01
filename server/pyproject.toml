@@ -19,3 +19,8 @@ dev = [
     "ruff>=0.14.1",
     "types-aiofiles>=25.1.0.20251011",
 ]
+
+[tool.mypy]
+strict = true
+disallow_untyped_globals = true
+strict_optional = true
