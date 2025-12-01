@@ -2,6 +2,7 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
+import uvicorn
 from fastapi import FastAPI
 
 from app.database import engine
@@ -35,3 +36,12 @@ def read_root() -> dict[str, str]:
 def check_health() -> dict[str, str]:
     """Route to check health. Doesn't really do anything yet."""
     return {"status": "ok"}
+
+
+def main() -> None:
+    """Main file entrypoint."""
+    uvicorn.run("main:app")
+
+
+if __name__ == "__main__":
+    main()
