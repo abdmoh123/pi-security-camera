@@ -3,10 +3,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api_schemas import Camera, CameraCreate, CameraUpdate
+from app.api_schemas import Camera, CameraCreate, CameraUpdate, Video
 from app.crud import camera as crud_camera
+from app.crud import video as crud_video
 from app.database import get_db
 from app.db_models import Camera as CameraSchema
+from app.db_models import Video as VideoSchema
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
@@ -65,3 +67,20 @@ def delete_camera(camera_id: int, db_session: Session = Depends(get_db)) -> Came
         raise HTTPException(status_code=404, detail="Camera not found")
 
     return db_camera
+
+
+@router.get("/{camera_id}/videos", response_model=list[Video])
+def get_videos(
+    camera_id: int,
+    page_index: int = 0,
+    page_size: int = 100,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[VideoSchema]:
+    """Gets a list of all of a camera's videos with pagination."""
+    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, camera_id)
+    if not db_camera:
+        raise HTTPException(status_code=404, detail="Camera not found!")
+
+    return crud_video.get_video_entries_by_cameras(
+        db_session, [db_camera.id], skip=page_index * page_size, limit=page_size
+    )
