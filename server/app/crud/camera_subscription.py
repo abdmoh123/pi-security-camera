@@ -8,16 +8,16 @@ from app.crud.user import get_user, get_users
 from app.db_models import Camera, User
 
 
-def get_camera_subscriptions_by_user(db: Session, user_id: int) -> list[CameraSubscription]:
+def get_camera_subscriptions_by_user(db: Session, user_id_or_email: int | str) -> list[CameraSubscription]:
     """Gets all camera subscriptions of the given user."""
     subscriptions: list[CameraSubscription] = list()
 
-    db_user: User | None = get_user(db, user_id)
+    db_user: User | None = get_user(db, user_id_or_email)
     if not db_user:
         return subscriptions
 
     for camera in db_user.cameras:
-        subscriptions.append(CameraSubscription(user_id=user_id, camera_id=camera.id))
+        subscriptions.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
 
     return subscriptions
 
@@ -36,15 +36,17 @@ def get_camera_subscriptions_by_camera(db: Session, camera_id: int) -> list[Came
     return subscriptions
 
 
-def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: list[int]) -> list[CameraSubscription]:
+def create_camera_subscriptions_by_user(
+    db: Session, user_id_or_email: int | str, camera_ids: list[int]
+) -> list[CameraSubscription]:
     """Subscribes the given user to the given cameras."""
-    db_user: User | None = get_user(db, user_id)
+    db_user: User | None = get_user(db, user_id_or_email)
     # don't bother subscribing if the user doesn't exist
     if not db_user:
         return []
 
     # separate out the cameras that the user is already subscribed to
-    current_subscriptions: list[CameraSubscription] = get_camera_subscriptions_by_user(db, user_id)
+    current_subscriptions: list[CameraSubscription] = get_camera_subscriptions_by_user(db, user_id_or_email)
     subscribed_camera_ids: set[int] = set([sub.camera_id for sub in current_subscriptions])
     unsubscribed_camera_ids: set[int] = set(camera_ids) - subscribed_camera_ids
 
@@ -54,7 +56,7 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
         camera: Camera | None = get_camera(db, id)
         if camera:
             db_user.cameras.append(camera)
-            result.append(CameraSubscription(user_id=user_id, camera_id=camera.id))
+            result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
 
     db.commit()
 
@@ -86,9 +88,11 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     return result
 
 
-def delete_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: list[int]) -> list[CameraSubscription]:
+def delete_camera_subscriptions_by_user(
+    db: Session, user_id_or_email: int | str, camera_ids: list[int]
+) -> list[CameraSubscription]:
     """Unsubscribes the user from a given list of cameras."""
-    db_user: User | None = get_user(db, user_id)
+    db_user: User | None = get_user(db, user_id_or_email)
     # don't bother subscribing if the user doesn't exist
     if not db_user:
         return []
@@ -98,14 +102,16 @@ def delete_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
     result: list[CameraSubscription] = list()
     for camera in cameras:
         db_user.cameras.remove(camera)
-        result.append(CameraSubscription(user_id=user_id, camera_id=camera.id))
+        result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
 
     db.commit()
 
     return result
 
 
-def delete_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids: list[int]) -> list[CameraSubscription]:
+def delete_camera_subscriptions_by_camera(
+    db: Session, camera_id: int, user_ids_or_emails: list[int] | list[str]
+) -> list[CameraSubscription]:
     """Unsubscribes the given users from the given camera."""
     db_camera: Camera | None = get_camera(db, camera_id)
     # don't bother subscribing if the user doesn't exist
@@ -113,7 +119,7 @@ def delete_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
         return []
 
     # unlink the cameras from the user
-    users: list[User] = get_users(db, user_ids)
+    users: list[User] = get_users(db, user_ids_or_emails)
     result: list[CameraSubscription] = list()
     for user in users:
         db_camera.users.remove(user)

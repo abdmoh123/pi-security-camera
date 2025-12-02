@@ -17,9 +17,14 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/", response_model=list[UserResponse])
-def get_users(page_index: int = 0, page_size: int = 100, db_session: Session = Depends(get_db)) -> list[UserSchema]:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_users(
+    user_list: list[int] | list[str] | None = None,
+    page_index: int = 0,
+    page_size: int = 100,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[UserSchema]:
     """Gets a list of all users with pagination."""
-    return crud_user.get_users(db_session, skip=page_index * page_size, limit=page_size)
+    return crud_user.get_users(db_session, user_list, skip=page_index * page_size, limit=page_size)
 
 
 @router.post("/", response_model=UserResponse)
@@ -34,10 +39,10 @@ def create_user(user: UserCreate, db_session: Session = Depends(get_db)) -> User
     return db_user
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: int, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
-    """Returns a user's details using a given ID."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, user_id)
+@router.get("/{id_or_email}", response_model=UserResponse)
+def get_user(id_or_email: int | str, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+    """Returns a user's details using a given ID or email."""
+    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -45,10 +50,10 @@ def get_user(user_id: int, db_session: Session = Depends(get_db)) -> UserSchema:
     return db_user
 
 
-@router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user: UserUpdate, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
-    """Updates a user's details using a given ID."""
-    db_user: UserSchema | None = crud_user.update_user(db_session, user_id, user)
+@router.put("/{id_or_email}", response_model=UserResponse)
+def update_user(id_or_email: int, user: UserUpdate, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+    """Updates a user's details using a given ID or email."""
+    db_user: UserSchema | None = crud_user.update_user(db_session, id_or_email, user)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -56,10 +61,10 @@ def update_user(user_id: int, user: UserUpdate, db_session: Session = Depends(ge
     return db_user
 
 
-@router.delete("/{user_id}", response_model=UserResponse)
-def delete_user(user_id: int, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
-    """Deletes a given user by ID."""
-    db_user: UserSchema | None = crud_user.delete_user(db_session, user_id=user_id)
+@router.delete("/{id_or_email}", response_model=UserResponse)
+def delete_user(id_or_email: int, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+    """Deletes a given user by ID or email."""
+    db_user: UserSchema | None = crud_user.delete_user(db_session, user_id_or_email=id_or_email)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -67,18 +72,18 @@ def delete_user(user_id: int, db_session: Session = Depends(get_db)) -> UserSche
     return db_user
 
 
-@router.post("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+@router.post("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def create_camera_subscription(
-    user_id: int,
+    id_or_email: int | str,
     camera_id: int,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
-    if not crud_user.get_user(db_session, user_id):
+    if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = crud_subscription.create_camera_subscriptions_by_user(
-        db_session, user_id, [camera_id]
+        db_session, id_or_email, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to subscribe: Camera not found!")
@@ -86,14 +91,14 @@ def create_camera_subscription(
     return result[0]
 
 
-@router.post("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
+@router.post("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def create_camera_subscriptions(
-    user_id: int,
+    id_or_email: int | str,
     camera_ids: list[int],
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[CameraSubscription]:
     """Subscribes a given user to the given cameras."""
-    if not crud_user.get_user(db_session, user_id):
+    if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
     for id in camera_ids:
@@ -101,21 +106,21 @@ def create_camera_subscriptions(
         if not camera:
             raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {id} not found!")
 
-    return crud_subscription.create_camera_subscriptions_by_user(db_session, user_id, camera_ids)
+    return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
 
 
-@router.delete("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+@router.delete("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def unsubscribe_from_camera(
-    user_id: int,
+    id_or_email: int | str,
     camera_id: int,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
-    if not crud_user.get_user(db_session, user_id):
+    if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = crud_subscription.delete_camera_subscriptions_by_user(
-        db_session, user_id, [camera_id]
+        db_session, id_or_email, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to unsubscribe: Camera not found!")
@@ -123,14 +128,14 @@ def unsubscribe_from_camera(
     return result[0]
 
 
-@router.delete("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
+@router.delete("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def unsubscribe_from_cameras(
-    user_id: int,
+    id_or_email: int | str,
     camera_ids: list[int],
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from the given cameras."""
-    if not crud_user.get_user(db_session, user_id):
+    if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
     for id in camera_ids:
@@ -138,18 +143,18 @@ def unsubscribe_from_cameras(
         if not camera:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {id} not found!")
 
-    return crud_subscription.delete_camera_subscriptions_by_user(db_session, user_id, camera_ids)
+    return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
 
 
-@router.get("/{user_id}/videos", response_model=list[Video])
+@router.get("/{id_or_email}/videos", response_model=list[Video])
 def get_videos(
-    user_id: int,
+    id_or_email: int | str,
     page_index: int = 0,
     page_size: int = 100,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, user_id)
+    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 
