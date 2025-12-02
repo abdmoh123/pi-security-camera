@@ -14,9 +14,14 @@ router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 
 @router.get("/", response_model=list[Camera])
-def get_cameras(page_index: int = 0, page_size: int = 100, db_session: Session = Depends(get_db)) -> list[CameraSchema]:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_cameras(
+    camera_ids: list[int] | None = None,
+    page_index: int = 0,
+    page_size: int = 100,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination."""
-    return crud_camera.get_cameras(db_session, skip=page_index * page_size, limit=page_size)
+    return crud_camera.get_cameras(db_session, camera_ids, skip=page_index * page_size, limit=page_size)
 
 
 @router.post("/", response_model=Camera)
