@@ -19,9 +19,13 @@ def get_camera_by_host_address(db: Session, host_address: str) -> Camera | None:
     return db.query(Camera).filter(Camera.host_address == host_address).first()
 
 
+# TODO: Generalise this function and combine it into get_cameras()
 def get_cameras_by_name(db: Session, name: str, skip: int = 0, limit: int = 100) -> list[Camera]:
-    """Queries the database to get a list of cameras that have the given name."""
-    return db.query(Camera).filter(Camera.name == name).offset(skip).limit(limit).all()
+    """Queries the database to get a list of cameras that have the given name.
+
+    The cameras names are filtered using 'contains' logic instead of looking for an exact match.
+    """
+    return db.query(Camera).filter(Camera.name.contains(name)).offset(skip).limit(limit).all()
 
 
 def get_cameras_by_mac_address(db: Session, mac_address: str, skip: int = 0, limit: int = 100) -> list[Camera]:
