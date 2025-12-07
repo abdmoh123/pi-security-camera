@@ -5,11 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 import uvicorn
 from fastapi import FastAPI
 
-from app.database import engine
-from app.db_models import Base
 from app.routes import cameras, users
-
-Base.metadata.create_all(bind=engine)
 
 # get version info
 try:
@@ -38,9 +34,9 @@ def check_health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-def main() -> None:
+def main(reload: bool = True) -> None:
     """Main file entrypoint."""
-    uvicorn.run("main:app")
+    uvicorn.run("main:app", reload=reload)
 
 
 if __name__ == "__main__":
