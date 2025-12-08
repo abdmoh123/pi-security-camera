@@ -8,7 +8,7 @@ from typing import Any, Protocol
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.db_models import Base
+from app.db.db_models import Base
 
 
 class DBType(str, Enum):

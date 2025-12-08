@@ -2,8 +2,8 @@
 
 from sqlalchemy.orm import Session
 
-from app.api_schemas import UserCreate, UserUpdate
-from app.db_models import User
+from app.api.models.api_schemas import UserCreate, UserUpdate
+from app.db.db_models import User
 
 
 def get_user(db: Session, user_id_or_email: int | str) -> User | None:

@@ -2,9 +2,9 @@
 
 from sqlalchemy.orm import Session
 
-from app.api_schemas import VideoCreate, VideoUpdate
+from app.api.models.api_schemas import VideoCreate, VideoUpdate
 from app.crud.camera import get_camera
-from app.db_models import Camera, Video
+from app.db.db_models import Camera, Video
 
 
 def get_video_entry(db: Session, video_id: int) -> Video | None:

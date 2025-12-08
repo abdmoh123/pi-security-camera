@@ -5,7 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 import uvicorn
 from fastapi import FastAPI
 
-from app.routes import cameras, users
+from app.api.routes import cameras, users
 
 # get version info
 try:

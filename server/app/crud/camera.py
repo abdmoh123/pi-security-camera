@@ -2,8 +2,8 @@
 
 from sqlalchemy.orm import Session
 
-from app.api_schemas import CameraCreate, CameraUpdate
-from app.db_models import Camera
+from app.api.models.api_schemas import CameraCreate, CameraUpdate
+from app.db.db_models import Camera
 
 
 def get_camera(db: Session, camera_id: int) -> Camera | None:
