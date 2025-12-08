@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.api.models.api_schemas import CameraSubscription
+from app.api.models.camera_subscriptions import CameraSubscription
 from app.crud.camera import get_camera, get_cameras
 from app.crud.user import get_user, get_users
 from app.db.db_models import Camera, User

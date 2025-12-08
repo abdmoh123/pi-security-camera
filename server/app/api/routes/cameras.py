@@ -3,7 +3,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.models.api_schemas import Camera, CameraCreate, CameraUpdate, Video
+from app.api.models.cameras import Camera, CameraCreate, CameraUpdate
+from app.api.models.videos import Video
 from app.crud import camera as crud_camera
 from app.crud import video as crud_video
 from app.db.database import get_db

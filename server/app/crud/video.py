@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.api.models.api_schemas import VideoCreate, VideoUpdate
+from app.api.models.videos import VideoCreate, VideoUpdate
 from app.crud.camera import get_camera
 from app.db.db_models import Camera, Video
 

@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.api.models.api_schemas import UserCreate, UserUpdate
+from app.api.models.users import UserCreate, UserUpdate
 from app.db.db_models import User
 
 

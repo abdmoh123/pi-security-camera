@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.api.models.api_schemas import CameraCreate, CameraUpdate
+from app.api.models.cameras import CameraCreate, CameraUpdate
 from app.db.db_models import Camera
 
 
