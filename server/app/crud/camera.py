@@ -1,5 +1,6 @@
 """File containing crud functions related to the Camera table."""
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.cameras import CameraCreate, CameraUpdate
@@ -11,37 +12,31 @@ def get_camera(db: Session, camera_id: int) -> Camera | None:
     return db.query(Camera).filter(Camera.id == camera_id).first()
 
 
-def get_camera_by_host_address(db: Session, host_address: str) -> Camera | None:
-    """Queries for a camera with the given host address (e.g. IP address).
-
-    We can't have multiple cameras with the same IP address.
-    """
-    return db.query(Camera).filter(Camera.host_address == host_address).first()
-
-
-# TODO: Generalise this function and combine it into get_cameras()
-def get_cameras_by_name(db: Session, name: str, skip: int = 0, limit: int = 100) -> list[Camera]:
-    """Queries the database to get a list of cameras that have the given name.
-
-    The cameras names are filtered using 'contains' logic instead of looking for an exact match.
-    """
-    return db.query(Camera).filter(Camera.name.contains(name)).offset(skip).limit(limit).all()
-
-
-def get_cameras_by_mac_address(db: Session, mac_address: str, skip: int = 0, limit: int = 100) -> list[Camera]:
-    """Queries the database to get a list of cameras that have the given MAC address."""
-    return db.query(Camera).filter(Camera.mac_address == mac_address).offset(skip).limit(limit).all()
-
-
-def get_cameras(db: Session, camera_ids: list[int] | None = None, skip: int = 0, limit: int = 100) -> list[Camera]:
+def get_cameras(
+    db: Session,
+    camera_ids: list[int] | None = None,
+    camera_name: str | None = None,
+    host_address: str | None = None,
+    mac_address: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> list[Camera]:
     """Queries and returns a list of cameras with pagination.
 
-    If a list of IDs were given, it will only return the given cameras (if they were found).
-    Otherwise, it returns all cameras in the database (with pagination of course).
+    It allows filtering by likeness as well as limiting the results to specifc cameras by IDs.
     """
-    if not camera_ids:
-        return db.query(Camera).offset(skip).limit(limit).all()
-    return db.query(Camera).filter(Camera.id.in_(camera_ids)).offset(skip).limit(limit).all()
+    query = select(Camera)
+
+    if camera_ids:
+        query = query.where(Camera.id.in_(camera_ids))
+    if camera_name:
+        query = query.where(Camera.name.ilike(f"%{camera_name}%"))
+    if host_address:
+        query = query.where(Camera.host_address.ilike(f"%{host_address}%"))
+    if mac_address:
+        query = query.where(Camera.mac_address.ilike(f"%{mac_address}%"))
+
+    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 
 
 def create_camera(db: Session, camera: CameraCreate) -> Camera:

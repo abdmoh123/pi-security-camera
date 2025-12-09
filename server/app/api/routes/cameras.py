@@ -18,28 +18,26 @@ router = APIRouter(prefix="/cameras", tags=["cameras"])
 def get_cameras(
     camera_ids: list[int] | None = None,
     camera_name: str | None = None,
+    host_address: str | None = None,
+    mac_address: str | None = None,
     page_index: int = 0,
     page_size: int = 100,
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination."""
     skip: int = page_index * page_size
-    if camera_name:
-        # return cameras that contain the string in camera_name, not an exact match
-        return crud_camera.get_cameras_by_name(db_session, camera_name, skip, limit=page_size)
-    return crud_camera.get_cameras(db_session, camera_ids, skip=page_index * page_size, limit=page_size)
+    return crud_camera.get_cameras(db_session, camera_ids, camera_name, host_address, mac_address, skip, page_size)
 
 
 @router.post("/", response_model=Camera)
 def create_camera(camera: CameraCreate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
     """Creates a new camera with the given details."""
-    db_camera: CameraSchema | None = crud_camera.get_camera_by_host_address(db_session, camera.host_address)
+    db_cameras: list[CameraSchema] = crud_camera.get_cameras(db_session, host_address=camera.host_address, limit=1)
 
-    if db_camera:
+    if db_cameras:
         raise HTTPException(status_code=400, detail="Camera already exists: Host address is already in use!")
 
-    db_camera = crud_camera.create_camera(db_session, camera)
-    return db_camera
+    return crud_camera.create_camera(db_session, camera)
 
 
 @router.get("/{camera_id}", response_model=Camera)
@@ -57,8 +55,10 @@ def get_camera(camera_id: int, db_session: Session = Depends(get_db)) -> CameraS
 def update_camera(camera_id: int, camera: CameraUpdate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
     """Updates a camera's details using a given ID."""
     if camera.host_address:
-        db_camera_ip: CameraSchema | None = crud_camera.get_camera_by_host_address(db_session, camera.host_address)
-        if db_camera_ip and db_camera_ip.id != camera_id:
+        cameras_by_ip: list[CameraSchema] = crud_camera.get_cameras(
+            db_session, host_address=camera.host_address, limit=1
+        )
+        if cameras_by_ip and cameras_by_ip[0].id != camera_id:
             raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
 
     db_camera: CameraSchema | None = crud_camera.update_camera(db_session, camera_id, camera)
