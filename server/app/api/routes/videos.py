@@ -23,9 +23,18 @@ VIDEO_FILES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/", response_model=list[Video])
-def get_videos(page_index: int = 0, page_size: int = 100, db_session: Session = Depends(get_db)) -> list[VideoSchema]:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_videos(
+    video_ids: list[int] | None = None,
+    file_name: str | None = None,
+    camera_ids: list[int] | None = None,
+    page_index: int = 0,
+    page_size: int = 100,
+    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+) -> list[VideoSchema]:
     """Gets a list of all videos with pagination."""
-    return crud_video.get_video_entries(db_session, skip=page_index * page_size, limit=page_size)
+    return crud_video.get_video_entries(
+        db_session, video_ids, file_name, camera_ids, skip=page_index * page_size, limit=page_size
+    )
 
 
 @router.post("/", response_model=Video)
@@ -35,11 +44,12 @@ async def upload_video(
     db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> VideoSchema:
     """Creates and uploads a new video with the given details."""
-    # Check if the video entry already exists in the database
-    db_videos: list[VideoSchema] = crud_video.get_video_entries_by_file_name(db_session, video_data.file_name)
-    for found_video in db_videos:
-        if found_video.camera_id == video_data.camera_id:
-            raise HTTPException(status_code=400, detail="Video already exists!")
+    # Check if the video entry already exists in the database (file name and camera ID must be the same)
+    db_videos: list[VideoSchema] = crud_video.get_video_entries(
+        db_session, file_name=video_data.file_name, camera_ids=[video_data.camera_id], limit=1
+    )
+    if db_videos:
+        raise HTTPException(status_code=400, detail="Video already exists!")
 
     # Check if camera exists
     db_camera: Camera | None = crud_camera.get_camera(db_session, video_data.camera_id)

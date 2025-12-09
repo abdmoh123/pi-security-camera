@@ -92,6 +92,6 @@ def get_videos(
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
-    return crud_video.get_video_entries_by_cameras(
-        db_session, [db_camera.id], skip=page_index * page_size, limit=page_size
+    return crud_video.get_video_entries(
+        db_session, camera_ids=[db_camera.id], skip=page_index * page_size, limit=page_size
     )
