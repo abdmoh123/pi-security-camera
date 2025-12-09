@@ -103,10 +103,10 @@ def create_camera_subscriptions(
     if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    for id in camera_ids:
-        camera: Camera | None = crud_camera.get_camera(db_session, id)
-        if not camera:
-            raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {id} not found!")
+    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_ids)
+    for camera in cameras:
+        if camera.id not in camera_ids:
+            raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
 
     return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
 
@@ -140,10 +140,10 @@ def unsubscribe_from_cameras(
     if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    for id in camera_ids:
-        camera: Camera | None = crud_camera.get_camera(db_session, id)
-        if not camera:
-            raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {id} not found!")
+    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_ids)
+    for camera in cameras:
+        if camera.id not in camera_ids:
+            raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
     return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
 
@@ -161,4 +161,4 @@ def get_videos(
         raise HTTPException(status_code=404, detail="User not found!")
 
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
-    return crud_video.get_video_entries_by_cameras(db_session, camera_ids, skip=page_index * page_size, limit=page_size)
+    return crud_video.get_video_entries(db_session, camera_ids=camera_ids, skip=page_index * page_size, limit=page_size)
