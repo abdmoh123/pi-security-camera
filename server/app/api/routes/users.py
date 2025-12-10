@@ -1,9 +1,12 @@
 """FastAPI routes related to the User table."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api.models.camera_subscriptions import CameraSubscription
+from app.api.models.general import PaginationParams
 from app.api.models.users import UserCreate, UserResponse, UserUpdate
 from app.api.models.videos import Video
 from app.crud import camera as crud_camera
@@ -20,17 +23,21 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/", response_model=list[UserResponse])
 def get_users(
-    user_list: list[int] | list[str] | None = None,
-    page_index: int = 0,
-    page_size: int = 100,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
+    user_list: Annotated[list[int] | list[str] | None, Query()] = None,
 ) -> list[UserSchema]:
     """Gets a list of all users with pagination."""
-    return crud_user.get_users(db_session, user_list, skip=page_index * page_size, limit=page_size)
+    return crud_user.get_users(
+        db_session, user_list, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+    )
 
 
 @router.post("/", response_model=UserResponse)
-def create_user(user: UserCreate, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def create_user(
+    user: Annotated[UserCreate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> UserSchema:
     """Creates a new user with the given details."""
     db_user: UserSchema | None = crud_user.get_user_by_email(db_session, user.email)
 
@@ -42,7 +49,7 @@ def create_user(user: UserCreate, db_session: Session = Depends(get_db)) -> User
 
 
 @router.get("/{id_or_email}", response_model=UserResponse)
-def get_user(id_or_email: int | str, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_user(id_or_email: Annotated[int | str, Path()], db_session: Annotated[Session, Depends(get_db)]) -> UserSchema:
     """Returns a user's details using a given ID or email."""
     db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
 
@@ -53,7 +60,11 @@ def get_user(id_or_email: int | str, db_session: Session = Depends(get_db)) -> U
 
 
 @router.put("/{id_or_email}", response_model=UserResponse)
-def update_user(id_or_email: int, user: UserUpdate, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def update_user(
+    id_or_email: Annotated[int, Path()],
+    user: Annotated[UserUpdate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> UserSchema:
     """Updates a user's details using a given ID or email."""
     db_user: UserSchema | None = crud_user.update_user(db_session, id_or_email, user)
 
@@ -64,7 +75,10 @@ def update_user(id_or_email: int, user: UserUpdate, db_session: Session = Depend
 
 
 @router.delete("/{id_or_email}", response_model=UserResponse)
-def delete_user(id_or_email: int, db_session: Session = Depends(get_db)) -> UserSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def delete_user(
+    id_or_email: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> UserSchema:
     """Deletes a given user by ID or email."""
     db_user: UserSchema | None = crud_user.delete_user(db_session, user_id_or_email=id_or_email)
 
@@ -76,9 +90,9 @@ def delete_user(id_or_email: int, db_session: Session = Depends(get_db)) -> User
 
 @router.post("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def create_camera_subscription(
-    id_or_email: int | str,
-    camera_id: int,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    id_or_email: Annotated[int | str, Path()],
+    camera_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
     if not crud_user.get_user(db_session, id_or_email):
@@ -95,9 +109,9 @@ def create_camera_subscription(
 
 @router.post("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def create_camera_subscriptions(
-    id_or_email: int | str,
-    camera_ids: list[int],
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    id_or_email: Annotated[int | str, Path()],
+    camera_ids: Annotated[list[int], Query()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to the given cameras."""
     if not crud_user.get_user(db_session, id_or_email):
@@ -113,9 +127,9 @@ def create_camera_subscriptions(
 
 @router.delete("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def unsubscribe_from_camera(
-    id_or_email: int | str,
-    camera_id: int,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    id_or_email: Annotated[int | str, Path()],
+    camera_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
     if not crud_user.get_user(db_session, id_or_email):
@@ -132,9 +146,9 @@ def unsubscribe_from_camera(
 
 @router.delete("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def unsubscribe_from_cameras(
-    id_or_email: int | str,
-    camera_ids: list[int],
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    id_or_email: Annotated[int | str, Path()],
+    camera_ids: Annotated[list[int], Query()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from the given cameras."""
     if not crud_user.get_user(db_session, id_or_email):
@@ -150,10 +164,9 @@ def unsubscribe_from_cameras(
 
 @router.get("/{id_or_email}/videos", response_model=list[Video])
 def get_videos(
-    id_or_email: int | str,
-    page_index: int = 0,
-    page_size: int = 100,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    id_or_email: Annotated[int | str, Path()],
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
     db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
@@ -161,4 +174,6 @@ def get_videos(
         raise HTTPException(status_code=404, detail="User not found!")
 
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
-    return crud_video.get_video_entries(db_session, camera_ids=camera_ids, skip=page_index * page_size, limit=page_size)
+    return crud_video.get_video_entries(
+        db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+    )
