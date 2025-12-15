@@ -1,0 +1,34 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+    "name": "Pi Security Camera",
+    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu24.04",
+
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    "features": {
+        "ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {
+            "shellautocompletion": true
+        },
+        "ghcr.io/devcontainers-extra/features/neovim-apt-get:1": {},
+        "ghcr.io/devcontainers-extra/features/fd:1": {},
+        "ghcr.io/devcontainers-extra/features/ripgrep:1": {},
+        "ghcr.io/georgofenbeck/features/lazygit-linuxbinary:1": {},
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/git-lfs:1": {},
+    },
+
+    // Configure tool-specific properties.
+    "customizations": {},
+
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [8000],
+
+    // Use 'portsAttributes' to set default properties for specific forwarded ports. 
+    // More info: https://containers.dev/implementors/json_reference/#port-attributes
+    // "portsAttributes": {},
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // TODO: Get the command below to work (user doesn't have permission to access the pyproject.toml file)
+    "postCreateCommand": "uv sync --dev",
+}
