@@ -1,11 +1,13 @@
 """FastAPI routes related to the Video table."""
 
-from pathlib import Path
+from pathlib import Path as FilePath
+from typing import Annotated
 
 import aiofiles
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, UploadFile
 from sqlalchemy.orm import Session
 
+from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
 from app.crud import camera as crud_camera
 from app.crud import video as crud_video
@@ -18,30 +20,34 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 # TODO: Make the video files get stored on the database container instead of api server
 
 # Make sure the path for storing the actual videos exists
-VIDEO_FILES_DIR = Path("/var/lib/pi-security-camera/videos")
+VIDEO_FILES_DIR = FilePath("/var/lib/pi-security-camera/videos")
 VIDEO_FILES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/", response_model=list[Video])
 def get_videos(
-    video_ids: list[int] | None = None,
-    file_name: str | None = None,
-    camera_ids: list[int] | None = None,
-    page_index: int = 0,
-    page_size: int = 100,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
+    video_ids: Annotated[list[int] | None, Query()] = None,
+    file_name: Annotated[str | None, Query()] = None,
+    camera_ids: Annotated[list[int] | None, Query()] = None,
 ) -> list[VideoSchema]:
     """Gets a list of all videos with pagination."""
     return crud_video.get_video_entries(
-        db_session, video_ids, file_name, camera_ids, skip=page_index * page_size, limit=page_size
+        db_session,
+        video_ids,
+        file_name,
+        camera_ids,
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
     )
 
 
 @router.post("/", response_model=Video)
 async def upload_video(
-    video_data: VideoCreate,
-    video_file: UploadFile,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    video_data: Annotated[VideoCreate, Body()],
+    video_file: Annotated[UploadFile, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Creates and uploads a new video with the given details."""
     # Check if the video entry already exists in the database (file name and camera ID must be the same)
@@ -69,7 +75,7 @@ async def upload_video(
         raise HTTPException(status_code=404, detail="Camera not found!")
 
     # Write the uploaded video to the server's storage (async part)
-    file_path: Path = VIDEO_FILES_DIR / str(video_data.camera_id) / video_data.file_name
+    file_path: FilePath = VIDEO_FILES_DIR / str(video_data.camera_id) / video_data.file_name
     video_contents: bytes = await video_file.read()
     async with aiofiles.open(file_path, "wb") as file:
         _ = await file.write(video_contents)
@@ -78,7 +84,10 @@ async def upload_video(
 
 
 @router.get("/{video_id}", response_model=Video)
-def get_video(video_id: int, db_session: Session = Depends(get_db)) -> VideoSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_video(
+    video_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
     """Returns a video's details using a given ID."""
     db_video: VideoSchema | None = crud_video.get_video_entry(db_session, video_id)
 
@@ -89,7 +98,11 @@ def get_video(video_id: int, db_session: Session = Depends(get_db)) -> VideoSche
 
 
 @router.put("/{video_id}", response_model=Video)
-def update_video(video_id: int, video: VideoUpdate, db_session: Session = Depends(get_db)) -> VideoSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def update_video(
+    video_id: Annotated[int, Path()],
+    video: Annotated[VideoUpdate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
     """Updates a video's details using a given ID."""
     db_video: VideoSchema | None = crud_video.update_video_entry(db_session, video_id, video)
 
@@ -100,14 +113,17 @@ def update_video(video_id: int, video: VideoUpdate, db_session: Session = Depend
 
 
 @router.delete("/{video_id}", response_model=Video)
-def delete_video(video_id: int, db_session: Session = Depends(get_db)) -> VideoSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def delete_video(
+    video_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
     """Deletes the given video."""
     deleted_video: VideoSchema | None = crud_video.delete_video_entry(db_session, video_id)
     if not deleted_video:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
     # Delete the video file
-    file_path: Path = VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name
+    file_path: FilePath = VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name
     file_path.unlink()
 
     return deleted_video
