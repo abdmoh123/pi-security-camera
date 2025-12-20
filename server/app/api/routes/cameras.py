@@ -1,9 +1,12 @@
 """FastAPI routes related to the Camera table."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api.models.cameras import Camera, CameraCreate, CameraUpdate
+from app.api.models.general import PaginationParams
 from app.api.models.videos import Video
 from app.crud import camera as crud_camera
 from app.crud import video as crud_video
@@ -16,21 +19,30 @@ router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 @router.get("/", response_model=list[Camera])
 def get_cameras(
-    camera_ids: list[int] | None = None,
-    camera_name: str | None = None,
-    host_address: str | None = None,
-    mac_address: str | None = None,
-    page_index: int = 0,
-    page_size: int = 100,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
+    camera_ids: Annotated[list[int] | None, Query()] = None,
+    camera_name: Annotated[str | None, Query()] = None,
+    host_address: Annotated[str | None, Query()] = None,
+    mac_address: Annotated[str | None, Query()] = None,
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination."""
-    skip: int = page_index * page_size
-    return crud_camera.get_cameras(db_session, camera_ids, camera_name, host_address, mac_address, skip, page_size)
+    return crud_camera.get_cameras(
+        db_session,
+        camera_ids,
+        camera_name,
+        host_address,
+        mac_address,
+        pagination.page_index * pagination.page_size,
+        pagination.page_size,
+    )
 
 
 @router.post("/", response_model=Camera)
-def create_camera(camera: CameraCreate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def create_camera(
+    camera: Annotated[CameraCreate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> CameraSchema:
     """Creates a new camera with the given details."""
     db_cameras: list[CameraSchema] = crud_camera.get_cameras(db_session, host_address=camera.host_address, limit=1)
 
@@ -41,7 +53,10 @@ def create_camera(camera: CameraCreate, db_session: Session = Depends(get_db)) -
 
 
 @router.get("/{camera_id}", response_model=Camera)
-def get_camera(camera_id: int, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def get_camera(
+    camera_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> CameraSchema:
     """Returns a camera's details using a given ID."""
     db_camera: CameraSchema | None = crud_camera.get_camera(db_session, camera_id)
 
@@ -52,7 +67,11 @@ def get_camera(camera_id: int, db_session: Session = Depends(get_db)) -> CameraS
 
 
 @router.put("/{camera_id}", response_model=Camera)
-def update_camera(camera_id: int, camera: CameraUpdate, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def update_camera(
+    camera_id: Annotated[int, Path()],
+    camera: Annotated[CameraUpdate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> CameraSchema:
     """Updates a camera's details using a given ID."""
     if camera.host_address:
         cameras_by_ip: list[CameraSchema] = crud_camera.get_cameras(
@@ -70,7 +89,10 @@ def update_camera(camera_id: int, camera: CameraUpdate, db_session: Session = De
 
 
 @router.delete("/{camera_id}", response_model=Camera)
-def delete_camera(camera_id: int, db_session: Session = Depends(get_db)) -> CameraSchema:  # pyright: ignore[reportCallInDefaultInitializer]
+def delete_camera(
+    camera_id: Annotated[int, Path()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> CameraSchema:
     """Deletes a given camera by ID."""
     db_camera: CameraSchema | None = crud_camera.delete_camera(db_session, camera_id=camera_id)
 
@@ -82,10 +104,9 @@ def delete_camera(camera_id: int, db_session: Session = Depends(get_db)) -> Came
 
 @router.get("/{camera_id}/videos", response_model=list[Video])
 def get_videos(
-    camera_id: int,
-    page_index: int = 0,
-    page_size: int = 100,
-    db_session: Session = Depends(get_db),  # pyright: ignore[reportCallInDefaultInitializer]
+    camera_id: Annotated[int, Path()],
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
     db_camera: CameraSchema | None = crud_camera.get_camera(db_session, camera_id)
@@ -93,5 +114,8 @@ def get_videos(
         raise HTTPException(status_code=404, detail="Camera not found!")
 
     return crud_video.get_video_entries(
-        db_session, camera_ids=[db_camera.id], skip=page_index * page_size, limit=page_size
+        db_session,
+        camera_ids=[db_camera.id],
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
     )
