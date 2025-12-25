@@ -1,16 +1,18 @@
 """File containing pydantic models for camera data."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
 
 
 class Camera(BaseModel):
     """Pydantic model for a camera."""
 
-    id: int
-    host_address: str
-    name: str
+    id: int = Field(ge=1)
+    host_address: str = Field(pattern=host_address_regex)
+    name: str = Field(pattern=camera_name_regex)
     auth_key: str
-    mac_address: str
+    mac_address: str = Field(pattern=mac_address_regex)
 
     class Config:
         """Config subclass of Camera."""
@@ -21,16 +23,16 @@ class Camera(BaseModel):
 class CameraCreate(BaseModel):
     """Pydantic model received when creating a new camera record."""
 
-    host_address: str
-    name: str
+    host_address: str = Field(pattern=host_address_regex)
+    name: str = Field(pattern=camera_name_regex)
     auth_key: str
-    mac_address: str
+    mac_address: str = Field(pattern=mac_address_regex)
 
 
 class CameraUpdate(BaseModel):
     """Pydantic model used when updating a Camera record."""
 
-    name: str | None = None
-    host_address: str | None = None
+    name: str | None = Field(default=None, pattern=camera_name_regex)
+    host_address: str | None = Field(default=None, pattern=host_address_regex)
     auth_key: str | None = None
-    mac_address: str | None = None
+    mac_address: str | None = Field(default=None, pattern=mac_address_regex)

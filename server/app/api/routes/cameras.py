@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.models.cameras import Camera, CameraCreate, CameraUpdate
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video
+from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
 from app.crud import camera as crud_camera
 from app.crud import video as crud_video
 from app.db.database import get_db
@@ -21,16 +22,16 @@ router = APIRouter(prefix="/cameras", tags=["cameras"])
 def get_cameras(
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    camera_ids: Annotated[list[int] | None, Query()] = None,
-    camera_name: Annotated[str | None, Query()] = None,
-    host_address: Annotated[str | None, Query()] = None,
-    mac_address: Annotated[str | None, Query()] = None,
+    id: Annotated[list[int] | None, Query(ge=1)] = None,
+    name: Annotated[str | None, Query(regex=camera_name_regex)] = None,
+    host_address: Annotated[str | None, Query(regex=host_address_regex)] = None,
+    mac_address: Annotated[str | None, Query(regex=mac_address_regex)] = None,
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination."""
     return crud_camera.get_cameras(
         db_session,
-        camera_ids,
-        camera_name,
+        id,
+        name,
         host_address,
         mac_address,
         pagination.page_index * pagination.page_size,
@@ -54,11 +55,11 @@ def create_camera(
 
 @router.get("/{camera_id}", response_model=Camera)
 def get_camera(
-    camera_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Returns a camera's details using a given ID."""
-    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, camera_id)
+    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, id)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -68,7 +69,7 @@ def get_camera(
 
 @router.put("/{camera_id}", response_model=Camera)
 def update_camera(
-    camera_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     camera: Annotated[CameraUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
@@ -77,10 +78,10 @@ def update_camera(
         cameras_by_ip: list[CameraSchema] = crud_camera.get_cameras(
             db_session, host_address=camera.host_address, limit=1
         )
-        if cameras_by_ip and cameras_by_ip[0].id != camera_id:
+        if cameras_by_ip and cameras_by_ip[0].id != id:
             raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
 
-    db_camera: CameraSchema | None = crud_camera.update_camera(db_session, camera_id, camera)
+    db_camera: CameraSchema | None = crud_camera.update_camera(db_session, id, camera)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -90,11 +91,11 @@ def update_camera(
 
 @router.delete("/{camera_id}", response_model=Camera)
 def delete_camera(
-    camera_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Deletes a given camera by ID."""
-    db_camera: CameraSchema | None = crud_camera.delete_camera(db_session, camera_id=camera_id)
+    db_camera: CameraSchema | None = crud_camera.delete_camera(db_session, camera_id=id)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found")
@@ -104,12 +105,12 @@ def delete_camera(
 
 @router.get("/{camera_id}/videos", response_model=list[Video])
 def get_videos(
-    camera_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
-    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, camera_id)
+    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
