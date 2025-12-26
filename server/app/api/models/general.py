@@ -9,5 +9,5 @@ class PaginationParams(BaseModel):
     Also includes some validation.
     """
 
-    page_index: int = Field(0, ge=0)
-    page_size: int = Field(100, ge=1)
+    page_index: int = Field(default=0, ge=0)
+    page_size: int = Field(default=100, ge=1)

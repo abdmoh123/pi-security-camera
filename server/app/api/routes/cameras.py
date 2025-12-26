@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.api.models.cameras import Camera, CameraCreate, CameraResponse, CameraUpdate
+from app.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video
 from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
@@ -53,7 +53,7 @@ def create_camera(
     return crud_camera.create_camera(db_session, camera)
 
 
-@router.get("/{camera_id}", response_model=CameraResponse)
+@router.get("/{id}", response_model=CameraResponse)
 def get_camera(
     id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
@@ -67,7 +67,7 @@ def get_camera(
     return db_camera
 
 
-@router.put("/{camera_id}", response_model=CameraResponse)
+@router.put("/{id}", response_model=CameraResponse)
 def update_camera(
     id: Annotated[int, Path(ge=1)],
     camera: Annotated[CameraUpdate, Body()],
@@ -89,7 +89,7 @@ def update_camera(
     return db_camera
 
 
-@router.delete("/{camera_id}", response_model=CameraResponse)
+@router.delete("/{id}", response_model=CameraResponse)
 def delete_camera(
     id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
@@ -103,7 +103,7 @@ def delete_camera(
     return db_camera
 
 
-@router.get("/{camera_id}/videos", response_model=list[Video])
+@router.get("/{id}/videos", response_model=list[Video])
 def get_videos(
     id: Annotated[int, Path(ge=1)],
     pagination: Annotated[PaginationParams, Query()],
