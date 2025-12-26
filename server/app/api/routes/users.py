@@ -25,11 +25,11 @@ router = APIRouter(prefix="/users", tags=["users"])
 def get_users(
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    user_list: Annotated[list[int] | list[str] | None, Query()] = None,
+    user: Annotated[list[int] | list[str] | None, Query()] = None,
 ) -> list[UserSchema]:
     """Gets a list of all users with pagination."""
     return crud_user.get_users(
-        db_session, user_list, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+        db_session, user, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
 
@@ -91,7 +91,7 @@ def delete_user(
 @router.post("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def create_camera_subscription(
     id_or_email: Annotated[int | str, Path()],
-    camera_id: Annotated[int, Path()],
+    camera_id: Annotated[int, Path(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
@@ -110,25 +110,25 @@ def create_camera_subscription(
 @router.post("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def create_camera_subscriptions(
     id_or_email: Annotated[int | str, Path()],
-    camera_ids: Annotated[list[int], Query()],
+    camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to the given cameras."""
     if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_ids)
+    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
     for camera in cameras:
-        if camera.id not in camera_ids:
+        if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
 
-    return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
+    return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email, camera_id)
 
 
 @router.delete("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def unsubscribe_from_camera(
     id_or_email: Annotated[int | str, Path()],
-    camera_id: Annotated[int, Path()],
+    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
@@ -147,19 +147,19 @@ def unsubscribe_from_camera(
 @router.delete("/{id_or_email}/subscriptions/", response_model=list[CameraSubscription])
 def unsubscribe_from_cameras(
     id_or_email: Annotated[int | str, Path()],
-    camera_ids: Annotated[list[int], Query()],
+    camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from the given cameras."""
     if not crud_user.get_user(db_session, id_or_email):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_ids)
+    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
     for camera in cameras:
-        if camera.id not in camera_ids:
+        if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
-    return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email, camera_ids)
+    return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email, camera_id)
 
 
 @router.get("/{id_or_email}/videos", response_model=list[Video])
