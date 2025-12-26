@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
+from app.core.validation.regex import file_name_regex
 from app.db.database import get_db
 from app.db.db_models import Camera
 from app.db.db_models import Video as VideoSchema
@@ -29,7 +30,7 @@ def get_videos(
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
     id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
-    file_name: Annotated[str | None, Query(min_length=5)] = None,
+    file_name: Annotated[str | None, Query(regex=file_name_regex, min_length=5)] = None,
     camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
 ) -> list[VideoSchema]:
     """Gets a list of all videos with pagination."""
