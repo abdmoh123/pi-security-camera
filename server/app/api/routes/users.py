@@ -1,14 +1,17 @@
 """FastAPI routes related to the User table."""
 
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.models.camera_subscriptions import CameraSubscription
 from app.api.models.general import PaginationParams
 from app.api.models.users import UserCreate, UserResponse, UserUpdate
 from app.api.models.videos import Video
+from app.core.validation.regex import email_regex
 from app.crud import camera as crud_camera
 from app.crud import camera_subscription as crud_subscription
 from app.crud import user as crud_user
@@ -19,6 +22,27 @@ from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+class IDorEmailValidator(BaseModel):
+    """ID or email pydantic model used for special validation."""
+
+    value: int | str
+
+    @field_validator("id_or_email", mode="before")
+    @classmethod
+    def validate_id_or_email(cls, value: int | str) -> int | str:
+        """Validates the user ID or email."""
+        if isinstance(value, int):
+            if value < 1:
+                raise ValueError("Invalid ID! Must be at least 1")
+            return value
+        elif isinstance(value, str):
+            if not re.match(email_regex, value):
+                raise ValueError("Invalid email! Must follow standard email pattern (e.g. abc@example.com)")
+            return value
+
+        raise ValueError("Invalid type for id_or_email: Must be int or str")
 
 
 @router.get("/", response_model=list[UserResponse])
@@ -51,7 +75,8 @@ def create_user(
 @router.get("/{id_or_email}", response_model=UserResponse)
 def get_user(id_or_email: Annotated[int | str, Path()], db_session: Annotated[Session, Depends(get_db)]) -> UserSchema:
     """Returns a user's details using a given ID or email."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    db_user: UserSchema | None = crud_user.get_user(db_session, validated_id_email.value)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -66,7 +91,8 @@ def update_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
-    db_user: UserSchema | None = crud_user.update_user(db_session, id_or_email, user)
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    db_user: UserSchema | None = crud_user.update_user(db_session, validated_id_email.value, user)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -76,11 +102,12 @@ def update_user(
 
 @router.delete("/{id_or_email}", response_model=UserResponse)
 def delete_user(
-    id_or_email: Annotated[int, Path()],
+    id_or_email: Annotated[int | str, Path()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Deletes a given user by ID or email."""
-    db_user: UserSchema | None = crud_user.delete_user(db_session, user_id_or_email=id_or_email)
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    db_user: UserSchema | None = crud_user.delete_user(db_session, user_id_or_email=validated_id_email.value)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -95,11 +122,12 @@ def create_camera_subscription(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
-    if not crud_user.get_user(db_session, id_or_email):
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    if not crud_user.get_user(db_session, validated_id_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = crud_subscription.create_camera_subscriptions_by_user(
-        db_session, id_or_email, [camera_id]
+        db_session, validated_id_email.value, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to subscribe: Camera not found!")
@@ -114,7 +142,8 @@ def create_camera_subscriptions(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to the given cameras."""
-    if not crud_user.get_user(db_session, id_or_email):
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    if not crud_user.get_user(db_session, validated_id_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
     cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
@@ -122,7 +151,7 @@ def create_camera_subscriptions(
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
 
-    return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email, camera_id)
+    return crud_subscription.create_camera_subscriptions_by_user(db_session, validated_id_email.value, camera_id)
 
 
 @router.delete("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
@@ -132,11 +161,12 @@ def unsubscribe_from_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
-    if not crud_user.get_user(db_session, id_or_email):
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    if not crud_user.get_user(db_session, validated_id_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = crud_subscription.delete_camera_subscriptions_by_user(
-        db_session, id_or_email, [camera_id]
+        db_session, validated_id_email.value, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to unsubscribe: Camera not found!")
@@ -151,7 +181,8 @@ def unsubscribe_from_cameras(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from the given cameras."""
-    if not crud_user.get_user(db_session, id_or_email):
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    if not crud_user.get_user(db_session, validated_id_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
     cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
@@ -159,7 +190,7 @@ def unsubscribe_from_cameras(
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
-    return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email, camera_id)
+    return crud_subscription.delete_camera_subscriptions_by_user(db_session, validated_id_email.value, camera_id)
 
 
 @router.get("/{id_or_email}/videos", response_model=list[Video])
@@ -169,7 +200,8 @@ def get_videos(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email)
+    validated_id_email = IDorEmailValidator(value=id_or_email)
+    db_user: UserSchema | None = crud_user.get_user(db_session, validated_id_email.value)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 

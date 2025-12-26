@@ -72,7 +72,7 @@ def update_user(db: Session, user_id_or_email: int | str, user: UserUpdate) -> U
     return db_user
 
 
-def delete_user(db: Session, user_id_or_email: int) -> User | None:
+def delete_user(db: Session, user_id_or_email: int | str) -> User | None:
     """Deletes a given user via ID or email."""
     db_user: User | None = get_user(db, user_id_or_email)
 
