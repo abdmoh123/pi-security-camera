@@ -1,8 +1,10 @@
 """File containing crud functions related to the User table."""
 
+from argon2 import PasswordHasher
 from sqlalchemy.orm import Session
 
 from app.api.models.users import UserCreate, UserUpdate
+from app.core.security.hashing import generate_hashed_password
 from app.db.db_models import User
 
 
@@ -45,7 +47,7 @@ def get_users(
 
 def create_user(db: Session, user: UserCreate) -> User:
     """Creates a new user using the given inputs."""
-    db_user = User(email=user.email, password_hash=user.password_hash)
+    db_user = User(email=user.email, password_hash=generate_hashed_password(user.password, PasswordHasher()))
 
     db.add(db_user)
     db.commit()
@@ -63,8 +65,12 @@ def update_user(db: Session, user_id_or_email: int | str, user: UserUpdate) -> U
         return db_user
 
     user_as_dict = user.model_dump(exclude_unset=True)
+    if user.password:
+        user_as_dict["password_hash"] = generate_hashed_password(user.password, PasswordHasher())
 
     for key, value in user_as_dict.items():  # pyright: ignore[reportAny]
+        if key == "password":  # skip password key as it doesn't exist in User table (uses password_hash instead)
+            continue
         setattr(db_user, key, value)
     db.commit()
     db.refresh(db_user)
