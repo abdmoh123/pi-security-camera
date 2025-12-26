@@ -28,16 +28,16 @@ VIDEO_FILES_DIR.mkdir(parents=True, exist_ok=True)
 def get_videos(
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    video_ids: Annotated[list[int] | None, Query()] = None,
-    file_name: Annotated[str | None, Query()] = None,
-    camera_ids: Annotated[list[int] | None, Query()] = None,
+    id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+    file_name: Annotated[str | None, Query(min_length=5)] = None,
+    camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
 ) -> list[VideoSchema]:
     """Gets a list of all videos with pagination."""
     return crud_video.get_video_entries(
         db_session,
-        video_ids,
+        id,
         file_name,
-        camera_ids,
+        camera_id,
         skip=pagination.page_index * pagination.page_size,
         limit=pagination.page_size,
     )
@@ -83,13 +83,13 @@ async def upload_video(
     return result_video
 
 
-@router.get("/{video_id}", response_model=Video)
+@router.get("/{id}", response_model=Video)
 def get_video(
-    video_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Returns a video's details using a given ID."""
-    db_video: VideoSchema | None = crud_video.get_video_entry(db_session, video_id)
+    db_video: VideoSchema | None = crud_video.get_video_entry(db_session, id)
 
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
@@ -97,14 +97,14 @@ def get_video(
     return db_video
 
 
-@router.put("/{video_id}", response_model=Video)
+@router.put("/{id}", response_model=Video)
 def update_video(
-    video_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     video: Annotated[VideoUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Updates a video's details using a given ID."""
-    db_video: VideoSchema | None = crud_video.update_video_entry(db_session, video_id, video)
+    db_video: VideoSchema | None = crud_video.update_video_entry(db_session, id, video)
 
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
@@ -112,13 +112,13 @@ def update_video(
     return db_video
 
 
-@router.delete("/{video_id}", response_model=Video)
+@router.delete("/{id}", response_model=Video)
 def delete_video(
-    video_id: Annotated[int, Path()],
+    id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Deletes the given video."""
-    deleted_video: VideoSchema | None = crud_video.delete_video_entry(db_session, video_id)
+    deleted_video: VideoSchema | None = crud_video.delete_video_entry(db_session, id)
     if not deleted_video:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
