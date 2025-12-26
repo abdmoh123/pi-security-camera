@@ -1,8 +1,29 @@
 """File containing pydantic models for user data."""
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, field_validator
 
 from app.core.validation.regex import email_regex
+
+
+class IDorEmail(BaseModel):
+    """ID or email pydantic model used for special validation."""
+
+    value: int | str
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def validate_id_or_email(cls, value: int | str) -> int | str:
+        """Validates the user ID or email."""
+        if isinstance(value, int):  # ID validation
+            if value < 1:
+                raise ValueError("Invalid ID! Must be at least 1")
+            return value
+        else:  # Email validation
+            if not re.match(email_regex, value):
+                raise ValueError("Invalid email! Must follow standard email pattern (e.g. abc@example.com)")
+            return value
 
 
 class User(BaseModel):
