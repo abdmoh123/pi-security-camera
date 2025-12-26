@@ -9,14 +9,14 @@ from app.api.models.camera_subscriptions import CameraSubscription
 from app.api.models.general import PaginationParams
 from app.api.models.users import IDorEmail, UserCreate, UserResponse, UserUpdate
 from app.api.models.videos import Video
-from app.crud import camera as crud_camera
-from app.crud import camera_subscription as crud_subscription
-from app.crud import user as crud_user
-from app.crud import video as crud_video
 from app.db.database import get_db
 from app.db.db_models import Camera
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
+from app.services import camera as camera_service
+from app.services import camera_subscription as subscription_service
+from app.services import user as user_service
+from app.services import video as video_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,7 +28,7 @@ def get_users(
     user: Annotated[list[int] | list[str] | None, Query()] = None,
 ) -> list[UserSchema]:
     """Gets a list of all users with pagination."""
-    return crud_user.get_users(
+    return user_service.get_users(
         db_session, user, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
@@ -39,19 +39,19 @@ def create_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Creates a new user with the given details."""
-    db_user: UserSchema | None = crud_user.get_user_by_email(db_session, user.email)
+    db_user: UserSchema | None = user_service.get_user_by_email(db_session, user.email)
 
     if db_user:
         raise HTTPException(status_code=400, detail="User already exists!")
 
-    db_user = crud_user.create_user(db_session, user)
+    db_user = user_service.create_user(db_session, user)
     return db_user
 
 
 @router.get("/{id_or_email}", response_model=UserResponse)
 def get_user(id_or_email: Annotated[IDorEmail, Path()], db_session: Annotated[Session, Depends(get_db)]) -> UserSchema:
     """Returns a user's details using a given ID or email."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email.value)
+    db_user: UserSchema | None = user_service.get_user(db_session, id_or_email.value)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -66,7 +66,7 @@ def update_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
-    db_user: UserSchema | None = crud_user.update_user(db_session, id_or_email.value, user)
+    db_user: UserSchema | None = user_service.update_user(db_session, id_or_email.value, user)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
@@ -80,7 +80,7 @@ def delete_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Deletes a given user by ID or email."""
-    db_user: UserSchema | None = crud_user.delete_user(db_session, user_id_or_email=id_or_email.value)
+    db_user: UserSchema | None = user_service.delete_user(db_session, user_id_or_email=id_or_email.value)
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -95,10 +95,10 @@ def create_camera_subscription(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
-    if not crud_user.get_user(db_session, id_or_email.value):
+    if not user_service.get_user(db_session, id_or_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    result: list[CameraSubscription] = crud_subscription.create_camera_subscriptions_by_user(
+    result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
         db_session, id_or_email.value, [camera_id]
     )
     if len(result) == 0:
@@ -114,15 +114,15 @@ def create_camera_subscriptions(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to the given cameras."""
-    if not crud_user.get_user(db_session, id_or_email.value):
+    if not user_service.get_user(db_session, id_or_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
+    cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
     for camera in cameras:
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
 
-    return crud_subscription.create_camera_subscriptions_by_user(db_session, id_or_email.value, camera_id)
+    return subscription_service.create_camera_subscriptions_by_user(db_session, id_or_email.value, camera_id)
 
 
 @router.delete("/{id_or_email}/subscriptions/{camera_id}", response_model=CameraSubscription)
@@ -132,10 +132,10 @@ def unsubscribe_from_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
-    if not crud_user.get_user(db_session, id_or_email.value):
+    if not user_service.get_user(db_session, id_or_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    result: list[CameraSubscription] = crud_subscription.delete_camera_subscriptions_by_user(
+    result: list[CameraSubscription] = subscription_service.delete_camera_subscriptions_by_user(
         db_session, id_or_email.value, [camera_id]
     )
     if len(result) == 0:
@@ -151,15 +151,15 @@ def unsubscribe_from_cameras(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from the given cameras."""
-    if not crud_user.get_user(db_session, id_or_email.value):
+    if not user_service.get_user(db_session, id_or_email.value):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    cameras: list[Camera] = crud_camera.get_cameras(db_session, camera_ids=camera_id)
+    cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
     for camera in cameras:
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
-    return crud_subscription.delete_camera_subscriptions_by_user(db_session, id_or_email.value, camera_id)
+    return subscription_service.delete_camera_subscriptions_by_user(db_session, id_or_email.value, camera_id)
 
 
 @router.get("/{id_or_email}/videos", response_model=list[Video])
@@ -169,11 +169,11 @@ def get_videos(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
-    db_user: UserSchema | None = crud_user.get_user(db_session, id_or_email.value)
+    db_user: UserSchema | None = user_service.get_user(db_session, id_or_email.value)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
-    return crud_video.get_video_entries(
+    return video_service.get_video_entries(
         db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )

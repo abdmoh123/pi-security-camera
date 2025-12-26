@@ -9,11 +9,11 @@ from app.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video
 from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
-from app.crud import camera as crud_camera
-from app.crud import video as crud_video
 from app.db.database import get_db
 from app.db.db_models import Camera as CameraSchema
 from app.db.db_models import Video as VideoSchema
+from app.services import camera as camera_service
+from app.services import video as video_service
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
@@ -28,7 +28,7 @@ def get_cameras(
     mac_address: Annotated[str | None, Query(regex=mac_address_regex)] = None,
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination."""
-    return crud_camera.get_cameras(
+    return camera_service.get_cameras(
         db_session,
         id,
         name,
@@ -45,12 +45,12 @@ def create_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Creates a new camera with the given details."""
-    db_cameras: list[CameraSchema] = crud_camera.get_cameras(db_session, host_address=camera.host_address, limit=1)
+    db_cameras: list[CameraSchema] = camera_service.get_cameras(db_session, host_address=camera.host_address, limit=1)
 
     if db_cameras:
         raise HTTPException(status_code=400, detail="Camera already exists: Host address is already in use!")
 
-    return crud_camera.create_camera(db_session, camera)
+    return camera_service.create_camera(db_session, camera)
 
 
 @router.get("/{id}", response_model=CameraResponse)
@@ -59,7 +59,7 @@ def get_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Returns a camera's details using a given ID."""
-    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, id)
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -75,13 +75,13 @@ def update_camera(
 ) -> CameraSchema:
     """Updates a camera's details using a given ID."""
     if camera.host_address:
-        cameras_by_ip: list[CameraSchema] = crud_camera.get_cameras(
+        cameras_by_ip: list[CameraSchema] = camera_service.get_cameras(
             db_session, host_address=camera.host_address, limit=1
         )
         if cameras_by_ip and cameras_by_ip[0].id != id:
             raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
 
-    db_camera: CameraSchema | None = crud_camera.update_camera(db_session, id, camera)
+    db_camera: CameraSchema | None = camera_service.update_camera(db_session, id, camera)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -95,7 +95,7 @@ def delete_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Deletes a given camera by ID."""
-    db_camera: CameraSchema | None = crud_camera.delete_camera(db_session, camera_id=id)
+    db_camera: CameraSchema | None = camera_service.delete_camera(db_session, camera_id=id)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found")
@@ -110,11 +110,11 @@ def get_videos(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
-    db_camera: CameraSchema | None = crud_camera.get_camera(db_session, id)
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
-    return crud_video.get_video_entries(
+    return video_service.get_video_entries(
         db_session,
         camera_ids=[db_camera.id],
         skip=pagination.page_index * pagination.page_size,

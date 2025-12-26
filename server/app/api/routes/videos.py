@@ -9,11 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
-from app.crud import camera as crud_camera
-from app.crud import video as crud_video
 from app.db.database import get_db
 from app.db.db_models import Camera
 from app.db.db_models import Video as VideoSchema
+from app.services import camera as camera_service
+from app.services import video as video_service
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
@@ -33,7 +33,7 @@ def get_videos(
     camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
 ) -> list[VideoSchema]:
     """Gets a list of all videos with pagination."""
-    return crud_video.get_video_entries(
+    return video_service.get_video_entries(
         db_session,
         id,
         file_name,
@@ -51,14 +51,14 @@ async def upload_video(
 ) -> VideoSchema:
     """Creates and uploads a new video with the given details."""
     # Check if the video entry already exists in the database (file name and camera ID must be the same)
-    db_videos: list[VideoSchema] = crud_video.get_video_entries(
+    db_videos: list[VideoSchema] = video_service.get_video_entries(
         db_session, file_name=video_data.file_name, camera_ids=[video_data.camera_id], limit=1
     )
     if db_videos:
         raise HTTPException(status_code=400, detail="Video already exists!")
 
     # Check if camera exists
-    db_camera: Camera | None = crud_camera.get_camera(db_session, video_data.camera_id)
+    db_camera: Camera | None = camera_service.get_camera(db_session, video_data.camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
@@ -69,7 +69,7 @@ async def upload_video(
     # TODO: Make it so if the file upload fails, the entry is deleted (and vice versa)
 
     # Create the video entry
-    result_video: VideoSchema | None = crud_video.create_video_entry(db_session, video_data)
+    result_video: VideoSchema | None = video_service.create_video_entry(db_session, video_data)
     if not result_video:
         # Should never happen because the camera was checked earlier
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -89,7 +89,7 @@ def get_video(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Returns a video's details using a given ID."""
-    db_video: VideoSchema | None = crud_video.get_video_entry(db_session, id)
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, id)
 
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
@@ -104,7 +104,7 @@ def update_video(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Updates a video's details using a given ID."""
-    db_video: VideoSchema | None = crud_video.update_video_entry(db_session, id, video)
+    db_video: VideoSchema | None = video_service.update_video_entry(db_session, id, video)
 
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
@@ -118,7 +118,7 @@ def delete_video(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Deletes the given video."""
-    deleted_video: VideoSchema | None = crud_video.delete_video_entry(db_session, id)
+    deleted_video: VideoSchema | None = video_service.delete_video_entry(db_session, id)
     if not deleted_video:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
