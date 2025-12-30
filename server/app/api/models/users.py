@@ -2,7 +2,7 @@
 
 import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.validation.regex import email_regex, password_regex
 
@@ -30,7 +30,7 @@ class User(BaseModel):
     """Base User record/model."""
 
     id: int = Field(ge=1)
-    email: str = Field(pattern=email_regex)  # Rudimentary validation (won't check if email exists)
+    email: EmailStr = Field(pattern=email_regex)  # Rudimentary validation (won't check if email exists)
     password: str = Field(pattern=password_regex, min_length=8)  # Password rules can't apply here as it is a hash
 
     class Config:
@@ -42,14 +42,14 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     """Request body input as a class for creating a new user."""
 
-    email: str = Field(pattern=email_regex)
+    email: EmailStr = Field(pattern=email_regex)
     password: str = Field(pattern=password_regex, min_length=8)
 
 
 class UserUpdate(BaseModel):
     """Request body input as a class for updating a user's details."""
 
-    email: str | None = Field(default=None, pattern=email_regex)
+    email: EmailStr | None = Field(default=None, pattern=email_regex)
     password: str | None = Field(default=None, pattern=password_regex, min_length=8)
 
 
@@ -57,7 +57,7 @@ class UserResponse(BaseModel):
     """Used when returning to the user (removes sensitive info like passwords)."""
 
     id: int = Field(ge=1)
-    email: str = Field(pattern=email_regex)
+    email: EmailStr = Field(pattern=email_regex)
 
     class Config:
         """Config subclass of UserResponse."""
