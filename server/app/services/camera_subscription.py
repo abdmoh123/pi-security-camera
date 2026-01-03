@@ -3,9 +3,9 @@
 from sqlalchemy.orm import Session
 
 from app.api.models.camera_subscriptions import CameraSubscription
-from app.crud.camera import get_camera, get_cameras
-from app.crud.user import get_user, get_users
 from app.db.db_models import Camera, User
+from app.services.camera import get_camera, get_cameras
+from app.services.user import get_user, get_users
 
 
 def get_camera_subscriptions_by_user(db: Session, user_id_or_email: int | str) -> list[CameraSubscription]:

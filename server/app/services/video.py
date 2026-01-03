@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.videos import VideoCreate, VideoUpdate
-from app.crud.camera import get_camera
 from app.db.db_models import Camera, Video
+from app.services.camera import get_camera
 
 
 def get_video_entry(db: Session, video_id: int) -> Video | None:
