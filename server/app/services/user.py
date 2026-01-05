@@ -4,6 +4,7 @@ from argon2 import PasswordHasher
 from sqlalchemy.orm import Session
 
 from app.api.models.users import UserCreate, UserUpdate
+from app.core.config import settings
 from app.core.security.hashing import generate_hashed_password
 from app.db.db_models import User
 
@@ -46,8 +47,16 @@ def get_users(
 
 
 def create_user(db: Session, user: UserCreate) -> User:
-    """Creates a new user using the given inputs."""
-    db_user = User(email=user.email, password_hash=generate_hashed_password(user.password, PasswordHasher()))
+    """Creates a new user using the given inputs.
+
+    The first registered user will automatically be made an admin if `ENABLE_FIRST_USER_ADMIN` env variable is True.
+    """
+    is_first_user = db.query(User).count() == 0
+    is_admin = is_first_user and settings.ENABLE_FIRST_USER_ADMIN
+
+    db_user = User(
+        email=user.email, password_hash=generate_hashed_password(user.password, PasswordHasher()), is_admin=is_admin
+    )
 
     db.add(db_user)
     db.commit()

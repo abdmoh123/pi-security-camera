@@ -58,6 +58,7 @@ class UserResponse(BaseModel):
 
     id: int = Field(ge=1)
     email: EmailStr = Field(pattern=email_regex)
+    is_admin: bool = Field(default=False)
 
     class Config:
         """Config subclass of UserResponse."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -31,6 +31,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True)
     password_hash: Mapped[str] = mapped_column(String)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     cameras: Mapped[list[Camera]] = relationship(
@@ -64,4 +65,4 @@ class Video(Base):
     camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"), primary_key=True, nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
-    camera: Mapped[Camera] = relationship(back_populates=__tablename__)
+    camera: Mapped[Camera] = relationship("Camera", back_populates=__tablename__)
