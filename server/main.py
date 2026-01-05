@@ -5,7 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 import uvicorn
 from fastapi import FastAPI
 
-from app.api.routes import cameras, users
+from app.api.routes import auth, cameras, users
 
 # get version info
 try:
@@ -20,6 +20,7 @@ app = FastAPI(title="Pi Security Camera", description="API for managing Pi secur
 api_prefix: str = "/api/v0"
 app.include_router(users.router, prefix=api_prefix)
 app.include_router(cameras.router, prefix=api_prefix)
+app.include_router(auth.router, prefix=api_prefix)
 
 
 @app.get(api_prefix)

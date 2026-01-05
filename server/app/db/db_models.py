@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -37,6 +37,7 @@ class User(Base):
     cameras: Mapped[list[Camera]] = relationship(
         "Camera", secondary=camera_subscriptions_table, back_populates=__tablename__
     )
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates=__tablename__)
 
 
 class Camera(Base):
@@ -66,3 +67,18 @@ class Video(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     camera: Mapped[Camera] = relationship("Camera", back_populates=__tablename__)
+
+
+class RefreshToken(Base):
+    """Schema for refresh tokens, enabling session management and revocation."""
+
+    __tablename__: str = "refresh_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    token: Mapped[str] = mapped_column(Text, unique=True, index=True)  # Text for potentially long tokens
+    user_id: Mapped[int] = mapped_column(ForeignKey(f"{User.__tablename__}.id"))
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    device_info: Mapped[str | None] = mapped_column(String, nullable=True)  # Optional device info for specific logout
+
+    user: Mapped[User] = relationship("User", back_populates=__tablename__)
