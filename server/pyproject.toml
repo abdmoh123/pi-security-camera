@@ -10,6 +10,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "fastapi[standard]>=0.119.0",
     "psycopg2-binary>=2.9.11",
+    "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.20",
     "sqlalchemy>=2.0.44",
 ]
@@ -22,6 +23,7 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.14.1",
     "types-aiofiles>=25.1.0.20251011",
+    "types-python-jose>=3.5.0.20250531",
 ]
 
 [tool.mypy]
