@@ -30,3 +30,20 @@ dev = [
 strict = true
 disallow_untyped_globals = true
 strict_optional = true
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = [
+    "I001",  # isort incorrect formatting
+    "I002",  # isort missing required import
+    "E501",  # add line-too-long rule
+    "D",     # enable docstring enforcement
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
