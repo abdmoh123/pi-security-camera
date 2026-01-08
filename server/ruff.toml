@@ -8,5 +8,8 @@ extend-select = [
     "D",     # enable docstring enforcement
 ]
 
+[lint.extend-per-file-ignores]
+"__init__.py" = ["D"]
+
 [lint.pydocstyle]
 convention = "google"
