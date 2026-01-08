@@ -7,9 +7,9 @@ import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from app.api.auth import get_current_admin_user, get_current_user
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
+from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.validation.regex import file_name_regex
 from app.db.database import get_db
 from app.db.db_models import Camera

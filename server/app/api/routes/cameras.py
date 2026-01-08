@@ -5,10 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.api.auth import get_current_admin_user, get_current_user
 from app.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video
+from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
 from app.db.database import get_db
 from app.db.db_models import Camera as CameraSchema

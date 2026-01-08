@@ -4,9 +4,9 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.api.auth import create_access_token
-from app.api.models.auth import TokenHeader, TokenPayload, TokenPayloadCreate
-from app.core.auth.jwt import encode_token
+from app.auth.dependencies import create_access_token
+from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate
+from app.auth.utils import encode_token
 from app.core.config import settings
 from app.db.db_models import RefreshToken
 

@@ -5,11 +5,11 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.api.auth import get_current_admin_user, get_current_user
 from app.api.models.camera_subscriptions import CameraSubscription
 from app.api.models.general import PaginationParams
 from app.api.models.users import IDorEmail, UserCreate, UserResponse, UserUpdate
 from app.api.models.videos import Video
+from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.utils import user_matches_id_or_email
 from app.db.database import get_db
 from app.db.db_models import Camera

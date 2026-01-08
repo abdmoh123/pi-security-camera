@@ -2,7 +2,7 @@
 
 from jose import jwt
 
-from app.api.models.auth import TokenHeader, TokenPayload
+from app.auth.models import TokenHeader, TokenPayload
 from app.core.config import settings
 
 

@@ -8,8 +8,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 from sqlalchemy.orm import Session
 
-from app.api.models.auth import TokenHeader, TokenPayload, TokenPayloadCreate
-from app.core.auth.jwt import decode_token, encode_token
+from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate
+from app.auth.utils import decode_token, encode_token
 from app.core.config import settings
 from app.db.database import get_db
 from app.db.db_models import User
