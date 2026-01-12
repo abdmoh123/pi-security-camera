@@ -24,7 +24,7 @@ def create_refresh_token(db: Session, user_id: int, expires_at: datetime | None 
     # For simplicity, let's generate a JWT for the refresh token as well
     issued_at = datetime.now(timezone.utc)
     refresh_token = encode_token(
-        TokenHeader(alg=settings.ALGORITHM),
+        TokenHeader(alg=settings.JWT_ENCODING_ALGORITHM),
         TokenPayload(sub=str(user_id), exp=expires_at, iat=issued_at),
         secret=settings.SECRET_KEY,
     )

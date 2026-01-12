@@ -1,43 +1,13 @@
 """File for connecting the server to the database."""
 
-import os
 from collections.abc import Generator
-from enum import Enum
 from typing import Any, Protocol
 
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.config import DBType, settings
 from app.db.db_models import Base
-
-
-class DBType(str, Enum):
-    """Types of databases that are currently supported."""
-
-    SQLITE = "sqlite"
-    POSTGRES = "postgres"
-
-
-def get_db_type() -> DBType:
-    """Gets the database type from the host's environment variables."""
-    # Default to sqlite if undefined
-    db_type_env: str = os.getenv("DB_TYPE", "sqlite").lower()
-    try:
-        return DBType(db_type_env)
-    except ValueError:
-        raise ValueError(f"Invalid DB type: {db_type_env}")
-
-
-def get_db_url() -> str:
-    """Reads the database url from the host's environment files."""
-    match get_db_type():
-        case DBType.SQLITE:
-            return "sqlite:///app.db"
-        case DBType.POSTGRES:
-            url: str | None = os.getenv("DATABASE_URL")
-            if not url:
-                raise ValueError("Cannot connect to a database! DATABASE_URL is not set!")
-            return url
 
 
 class DBConnectorProtocol(Protocol):
@@ -95,13 +65,13 @@ def create_sqlite_connector(database_url: str) -> DBConnectorProtocol:
     return GeneralDBConnector(database_url, connect_args={"check_same_thread": False})
 
 
-def create_db_connector() -> DBConnectorProtocol:
+def create_db_connector(db_type: DBType) -> DBConnectorProtocol:
     """Creates a database connector based on environment variable values."""
-    match get_db_type():
+    match db_type:
         case DBType.SQLITE:
-            return create_sqlite_connector(get_db_url())
+            return create_sqlite_connector(settings.DB_URL)
         case DBType.POSTGRES:
-            return create_postgres_connector(get_db_url())
+            return create_postgres_connector(settings.DB_URL)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -109,5 +79,5 @@ def get_db() -> Generator[Session, None, None]:
     yield from db_connector.get_session()
 
 
-db_connector: DBConnectorProtocol = create_db_connector()
+db_connector: DBConnectorProtocol = create_db_connector(settings.DB_TYPE)
 Base.metadata.create_all(bind=db_connector.get_engine())

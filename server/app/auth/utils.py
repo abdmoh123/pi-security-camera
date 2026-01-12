@@ -11,7 +11,9 @@ def encode_token(header: TokenHeader, payload: TokenPayload, secret: str = setti
     return jwt.encode(claims=payload.model_dump(), key=secret, algorithm=header.alg, headers=header.model_dump())
 
 
-def decode_token(token: str, secret: str = settings.SECRET_KEY, algorithm: str = settings.ALGORITHM) -> TokenPayload:
+def decode_token(
+    token: str, secret: str = settings.SECRET_KEY, algorithm: str = settings.JWT_ENCODING_ALGORITHM
+) -> TokenPayload:
     """Decodes a jwt to a pydantic model of a token payload."""
     payload = jwt.decode(token, secret, algorithms=[algorithm])
     return TokenPayload(sub=payload["sub"], exp=payload["exp"], iat=payload["iat"])  # pyright: ignore[reportAny]
