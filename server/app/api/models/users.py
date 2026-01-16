@@ -1,37 +1,35 @@
 """File containing pydantic models for user data."""
 
-import re
+from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import AfterValidator, BaseModel, BeforeValidator, EmailStr, Field
 
-from app.core.validation.regex import email_regex, password_regex
+from app.core.validation.regex import email_regex
+from app.core.validation.user_validation import id_or_email_validator, password_validator
 
 
 class IDorEmail(BaseModel):
     """ID or email pydantic model used for special validation."""
 
-    value: int | str
-
-    @field_validator("value", mode="before")
-    @classmethod
-    def validate_id_or_email(cls, value: int | str) -> int | str:
-        """Validates the user ID or email."""
-        if isinstance(value, int):  # ID validation
-            if value < 1:
-                raise ValueError("Invalid ID! Must be at least 1")
-            return value
-        else:  # Email validation
-            if not re.match(email_regex, value):
-                raise ValueError("Invalid email! Must follow standard email pattern (e.g. abc@example.com)")
-            return value
+    value: Annotated[int | str, BeforeValidator(id_or_email_validator)]
 
 
-class User(BaseModel):
+class BaseUser(BaseModel):
+    """Base User record/model. All except UserUpdate inherit from this class."""
+
+    email: EmailStr = Field(pattern=email_regex)  # Rudimentary validation (won't check if email exists)
+
+
+class UserWithPassword(BaseUser):
+    """User record/model with password. Includes a validator for the password."""
+
+    password: Annotated[str, AfterValidator(password_validator)]
+
+
+class User(UserWithPassword):
     """Base User record/model."""
 
     id: int = Field(ge=1)
-    email: EmailStr = Field(pattern=email_regex)  # Rudimentary validation (won't check if email exists)
-    password: str = Field(pattern=password_regex, min_length=8)  # Password rules can't apply here as it is a hash
 
     class Config:
         """Config subclass of User."""
@@ -39,21 +37,20 @@ class User(BaseModel):
         from_attributes: bool = True
 
 
-class UserCreate(BaseModel):
+class UserCreate(UserWithPassword):
     """Request body input as a class for creating a new user."""
 
-    email: EmailStr = Field(pattern=email_regex)
-    password: str = Field(pattern=password_regex, min_length=8)
+    pass
 
 
 class UserUpdate(BaseModel):
     """Request body input as a class for updating a user's details."""
 
     email: EmailStr | None = Field(default=None, pattern=email_regex)
-    password: str | None = Field(default=None, pattern=password_regex, min_length=8)
+    password: Annotated[str | None, AfterValidator(password_validator)] = None
 
 
-class UserResponse(BaseModel):
+class UserResponse(BaseUser):
     """Used when returning to the user (removes sensitive info like passwords)."""
 
     id: int = Field(ge=1)
