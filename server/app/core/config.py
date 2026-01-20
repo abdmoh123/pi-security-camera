@@ -86,7 +86,7 @@ class Settings:
     DB_URL: str = _get_db_url(DB_TYPE)
 
     SECRET_KEY: str = _get_secret()  # Generate a random one with `openssl rand -hex 32`
-    JWT_ENCODING_ALGORITHM: JWTAlgorithm = _get_jwt_algorithm()  # Default to HS256
+    JWT_ALGORITHM: JWTAlgorithm = _get_jwt_algorithm()  # Default to HS256
 
     # Token expiry times
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

@@ -26,7 +26,7 @@ def create_access_token(payload: TokenPayloadCreate, expires_delta: timedelta | 
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = TokenPayload(sub=payload.sub, exp=expire, iat=datetime.now(timezone.utc))
     try:
-        return encode_token(TokenHeader(alg=settings.JWT_ENCODING_ALGORITHM), to_encode)
+        return encode_token(TokenHeader(alg=settings.JWT_ALGORITHM), to_encode)
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not create access token") from e
 

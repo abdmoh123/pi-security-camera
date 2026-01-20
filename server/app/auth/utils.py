@@ -12,7 +12,7 @@ def encode_token(header: TokenHeader, payload: TokenPayload, secret: str = setti
 
 
 def decode_token(
-    token: str, secret: str = settings.SECRET_KEY, algorithm: str = settings.JWT_ENCODING_ALGORITHM
+    token: str, secret: str = settings.SECRET_KEY, algorithm: str = settings.JWT_ALGORITHM
 ) -> TokenPayload:
     """Decodes a jwt to a pydantic model of a token payload."""
     payload = jwt.decode(token, secret, algorithms=[algorithm])
