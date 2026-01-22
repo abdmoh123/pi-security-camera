@@ -54,7 +54,6 @@ class UserResponse(BaseUser):
     """Used when returning to the user (removes sensitive info like passwords)."""
 
     id: int = Field(ge=1)
-    email: EmailStr = Field(pattern=email_regex)
     is_admin: bool = Field(default=False)
 
     class Config:
