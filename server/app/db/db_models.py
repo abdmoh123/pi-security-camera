@@ -37,7 +37,7 @@ class User(Base):
     cameras: Mapped[list[Camera]] = relationship(
         "Camera", secondary=camera_subscriptions_table, back_populates=__tablename__
     )
-    refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates=__tablename__)
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user")
 
 
 class Camera(Base):
@@ -53,7 +53,7 @@ class Camera(Base):
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     users: Mapped[list[User]] = relationship("User", secondary=camera_subscriptions_table, back_populates=__tablename__)
-    videos: Mapped[list[Video]] = relationship("Video", back_populates=__tablename__)
+    videos: Mapped[list[Video]] = relationship("Video", back_populates="camera")
 
 
 class Video(Base):
