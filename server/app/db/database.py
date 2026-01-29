@@ -31,9 +31,9 @@ class DBConnectorProtocol(Protocol):
 class GeneralDBConnector:
     """Generalised database connector used to connect the API to the database."""
 
-    def __init__(self, database_url: str, connect_args: dict[str, Any]):  # pyright: ignore[reportExplicitAny]
+    def __init__(self, database_url: str, **engine_kwargs: Any):  # pyright: ignore[reportExplicitAny, reportAny]
         """Initialises and sets up the engine and session so the API can interact with the database."""
-        self._engine: Engine = create_engine(database_url, connect_args=connect_args)
+        self._engine: Engine = create_engine(database_url, **engine_kwargs)  # pyright: ignore[reportAny]
         self._session_maker: sessionmaker[Session] = sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
 
     def get_engine(self) -> Engine:
@@ -57,7 +57,7 @@ class GeneralDBConnector:
 
 def create_postgres_connector(database_url: str) -> DBConnectorProtocol:
     """Creates a postgres database connector."""
-    return GeneralDBConnector(database_url, connect_args={})
+    return GeneralDBConnector(database_url)
 
 
 def create_sqlite_connector(database_url: str) -> DBConnectorProtocol:
