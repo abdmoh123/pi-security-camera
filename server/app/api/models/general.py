@@ -1,5 +1,7 @@
 """This module contains pydantic models for general use cases."""
 
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
 
@@ -9,5 +11,5 @@ class PaginationParams(BaseModel):
     Also includes some validation.
     """
 
-    page_index: int = Field(default=0, ge=0)
-    page_size: int = Field(default=100, ge=1)
+    page_index: Annotated[int, Field(default=0, ge=0)]
+    page_size: Annotated[int, Field(default=100, ge=1)]
