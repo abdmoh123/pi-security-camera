@@ -20,7 +20,7 @@ class DBConnectorProtocol(Protocol):
         """
         ...
 
-    def get_session(self) -> Generator[Session, None, None]:
+    def get_session(self) -> Session:
         """Returns the database session.
 
         Used when querying the database.
@@ -43,16 +43,12 @@ class GeneralDBConnector:
         """
         return self._engine
 
-    def get_session(self) -> Generator[Session, None, None]:
+    def get_session(self) -> Session:
         """Returns the database session.
 
         Used when querying the database.
         """
-        session = self._session_maker()
-        try:
-            yield session
-        finally:
-            session.close()
+        return self._session_maker()
 
 
 def create_postgres_connector(database_url: str) -> DBConnectorProtocol:
@@ -76,7 +72,11 @@ def create_db_connector(db_type: DBType) -> DBConnectorProtocol:
 
 def get_db() -> Generator[Session, None, None]:
     """Returns an instance of the database that you can query against."""
-    yield from db_connector.get_session()
+    session = db_connector.get_session()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 db_connector: DBConnectorProtocol = create_db_connector(settings.DB_TYPE)
