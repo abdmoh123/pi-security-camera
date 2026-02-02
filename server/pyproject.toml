@@ -17,6 +17,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.37.2",
     "debugpy>=1.8.17",
     "httpx>=0.28.1",
     "mypy>=1.18.2",
