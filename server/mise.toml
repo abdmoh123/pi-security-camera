@@ -36,5 +36,16 @@ run = [
     { tasks = [ 'ruff', 'mypy', 'pyright' ] },
 ]
 
+[tasks.test]
+description = "Run tests"
+run = "pytest ."
+
+[tasks.check]
+description = "Run linters and tests"
+run = [
+    { task = 'lint' },
+    { task = 'test' }
+]
+
 [settings]
 python.uv_venv_auto = "create|source"
