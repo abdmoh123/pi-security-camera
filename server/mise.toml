@@ -16,6 +16,7 @@ else
     fastapi run ${usage_dev} ${usage_verbose}
 fi
 '''
+quiet = true
 
 [tasks.ruff]
 description = "Run ruff linter"
@@ -37,4 +38,3 @@ run = [
 
 [settings]
 python.uv_venv_auto = "create|source"
-quiet = true
