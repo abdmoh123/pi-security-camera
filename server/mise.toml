@@ -1,11 +1,22 @@
 [tools]
-uv = '0.8.23'
+uv = "0.10.0"
 
 [tasks.start]
-run = """
-!/usr/bin/bash
-uv run {{ if get(name='dev') { fastapi --reload } else { main.py } }}
-"""
+description = "Start the fastapi server"
+usage = '''
+arg "<environment>" help="Target environment" default="prod" { choices "dev" "prod" }
+flag "--dev" help="Run in development mode"
+flag "-v --verbose" help="Run in verbose mode"
+'''
+run = '''
+#!/usr/bin/env bash
+if [ ${usage_environment} = "dev" ]; then
+    uv run fastapi dev ${usage_dev} ${usage_verbose}
+else
+    uv run fastapi run ${usage_dev} ${usage_verbose}
+fi
+'''
 
 [settings]
 python.uv_venv_auto = "create|source"
+quiet = true
