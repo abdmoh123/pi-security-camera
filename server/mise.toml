@@ -25,14 +25,17 @@ quiet = true
 [tasks.ruff]
 description = "Run ruff linter"
 run = "ruff check ."
+hide = true
 
 [tasks.mypy]
 description = "Run mypy linter"
 run = "mypy ."
+hide = true
 
 [tasks.pyright]
 description = "Run basedpyright linter"
 run = "basedpyright ."
+hide = true
 
 [tasks.lint]
 description = "Run linters"
