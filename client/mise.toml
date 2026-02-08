@@ -1,9 +1,213 @@
 [tools]
 flutter = { version = "3.38.9", platforms = """
-
 [linux-arm64]
 url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_arm64_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
 
 [linux-x64]
 url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
 """, url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/{{ os() }}/flutter_{{ os() }}{{ arch(x64="", arm64="_arm64") }}_{{ version | replace(from="-stable", to="") }}-stable.zip', version_json_path = ".releases[?channel=stable].version", version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json" }
+
+[tasks.run]
+description = "Run the flutter app"
+usage = '''
+flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
+flag "-d --debug" help="Run in debug mode" default=#true
+flag "-r --release" help="Run in release mode"
+flag "-n --dry-run" help="Output what command would be run"
+flag "--profile" help="Run in profiling mode"
+flag "--wasm" help="Compile to WebAssembly"
+'''
+run = '''
+#!/usr/bin/env bash
+if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
+    echo "Can't run in both release and debug mode"
+    exit 1
+fi
+
+CMD="flutter run --disable-analytics"
+
+# Propagate verbosity level
+VERBOSITY="-"
+if [ -n "${usage_verbose}" ]; then
+    for i in $(seq 1 "${usage_verbose}"); do
+        VERBOSITY="${VERBOSITY}v"
+    done
+fi
+
+[ -n "${usage_release}" ] && CMD="$CMD --release"
+[ -n "${usage_debug}" ] && CMD="$CMD --debug"
+[ -n "${usage_profile}" ] && CMD="$CMD --profile"
+[ -n "${usage_wasm}" ] && CMD="$CMD --wasm"
+[ -n "${usage_verbose}" ] && CMD="$CMD $VERBOSITY"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
+
+[tasks.build]
+description = "Build the flutter app"
+usage = '''
+arg <type> default="web" help="What type of build to run" { choices "apk" "web" }
+flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
+flag "--wasm" help="Compile to WebAssembly"
+flag "-d --debug" help="Build in debug mode"
+flag "-r --release" help="Build in release mode" default=#true
+flag "-n --dry-run" help="Output what command would be run"
+flag "--build-number <buildnumber>" help="Unique identifier to differentiate from previous builds"
+flag "--build-name <buildname>" help="Semantic versioning based build number (major.minor.patch)"
+'''
+run = '''
+#!/usr/bin/env bash
+if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
+    echo "Can't build in both release and debug mode"
+    exit 1
+fi
+
+CMD="flutter build --disable-analytics ${usage_type?}"
+
+# Propagate verbosity level
+VERBOSITY="-"
+if [ -n "${usage_verbose}" ]; then
+    for i in $(seq 1 "${usage_verbose}"); do
+        VERBOSITY="${VERBOSITY}v"
+    done
+fi
+
+# Add flags if they're set
+[ -n "${usage_release}" ] && CMD="$CMD --release"
+[ -n "${usage_debug}" ] && CMD="$CMD --debug"
+[ -n "${usage_verbose}" ] && CMD="$CMD $VERBOSITY"
+[ -n "${usage_wasm}" ] && [ "${usage_type}" = "web" ] && CMD="$CMD --wasm"
+[ -n "${usage_build_number}" ] && CMD="$CMD --build-number ${usage_build_number}"
+[ -n "${usage_build_name}" ] && CMD="$CMD --build-name ${usage_build_name}"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
+
+[tasks.clean]
+description = "Clean the flutter project"
+run = "flutter clean --disable-analytics"
+quiet = true
+
+[tasks.test]
+description = "Run the flutter tests"
+usage = '''
+flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
+flag "-n --dry-run" help="Output what command would be run"
+flag "--wasm" help="Compile to WebAssembly"
+'''
+run = '''
+CMD="flutter test --disable-analytics"
+
+# Propagate verbosity level
+VERBOSITY="-"
+if [ -n "${usage_verbose}" ]; then
+    for i in $(seq 1 "${usage_verbose}"); do
+        VERBOSITY="${VERBOSITY}v"
+    done
+fi
+
+[ -n "${usage_wasm}" ] && CMD="$CMD --wasm"
+[ -n "${usage_verbose}" ] && CMD="$CMD $VERBOSITY"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
+
+[tasks.install]
+description = "Install the flutter dependencies"
+run = "flutter pub get --disable-analytics"
+quiet = true
+
+[tasks.add]
+description = "Add a package to the flutter project"
+usage = '''
+arg "<packages...>" help="Packages to add"
+flag "-n --dry-run" help="Output what command would be run"
+flag "--dev" help="Add packages as dev dependencies"
+'''
+run = '''
+#!/usr/bin/env bash
+CMD="flutter pub add --disable-analytics"
+
+PACKAGES=""
+if [ -n "${usage_dev}" ]; then
+    for pkg in ${usage_packages?}; do
+        echo $pkg
+        PACKAGES="$PACKAGES dev:$pkg"
+    done
+else
+    PACKAGES=" ${usage_packages?}"
+fi
+
+CMD="$CMD$PACKAGES"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
+
+[tasks.remove]
+description = "Remove a package from the flutter project"
+usage = '''
+arg "<packages...>" help="Packages to remove"
+flag "-n --dry-run" help="Output what command would be run"
+'''
+run = '''
+#!/usr/bin/env bash
+CMD="flutter pub remove --disable-analytics ${usage_packages?}"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
+
+[tasks.upgrade]
+description = "Upgrade a package in the flutter project"
+usage = '''
+arg "<packages...>" help="Packages to upgrade (optional)" default=""
+flag "-n --dry-run" help="Output what command would be run"
+flag "-c --changes" help="Show changes without making the change"
+'''
+run = '''
+#!/usr/bin/env bash
+CMD="flutter pub upgrade --disable-analytics"
+
+# When no packages were inputted, '' shouldn't be passed through
+[ "${usage_packages}" != \'\' ] && CMD="$CMD ${usage_packages?}"
+
+# Flutter's upgrade command has a --dry-run flag which shows the changes that the upgrade would make without making them
+[ -n "${usage_changes}" ] && CMD="$CMD --dry-run"
+
+if [ -n "${usage_dry_run}" ]; then
+    echo "$CMD"
+    exit 0
+fi
+
+$CMD
+'''
+quiet = true
