@@ -55,7 +55,7 @@ run = [
 ]
 
 [tasks.devcontainer]
-description = "Enter devcontainer"
+description = "Build, start and enter devcontainer"
 run = '''
 #!/usr/bin/env bash
 devcontainer build --docker-path=$DOCKER_PATH
