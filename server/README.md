@@ -51,6 +51,11 @@ All environment variables are loaded and accessed from the app.core.config modul
 - ENABLE_FIRST_USER_ADMIN
     - Default is true (so we can easily setup an admin user)
 
+#### Other
+
+- DOCKER_PATH
+    - Used by mise devcontainer task to allow users to choose docker alternatives like podman
+
 > [!TIP]
 > You can use the `.env` file to set these environment variables, as the application uses dotenv to load them.
 
