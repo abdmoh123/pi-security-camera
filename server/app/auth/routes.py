@@ -30,7 +30,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/token", response_model=Token)
-async def login_for_access_token(
+def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db_session: Annotated[Session, Depends(get_db)]
 ) -> Token:
     """Authenticates a user and returns an access token and a refresh token."""
@@ -51,7 +51,7 @@ async def login_for_access_token(
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_access_token(
+def refresh_access_token(
     refresh_token_str: Annotated[str, Form(alias="refresh_token")], db_session: Annotated[Session, Depends(get_db)]
 ) -> Token:
     """Refreshes an access token using a valid refresh token."""
@@ -75,7 +75,7 @@ async def refresh_access_token(
 
 
 @router.post("/pat", response_model=Token)
-async def generate_personal_access_token(
+def generate_personal_access_token(
     current_user: Annotated[User, Depends(get_current_user)],
     expires_in_minutes: Annotated[int | None, Form()] = None,
 ) -> Token:
@@ -100,7 +100,7 @@ async def generate_personal_access_token(
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(
+def logout(
     current_user: Annotated[User, Depends(get_current_user)],
     refresh_token_str: Annotated[str, Form(alias="refresh_token")],  # Expect refresh token to revoke specific session
     db_session: Annotated[Session, Depends(get_db)],
@@ -120,7 +120,7 @@ async def logout(
 
 
 @router.post("/logout/all", status_code=status.HTTP_204_NO_CONTENT)
-async def logout_all(
+def logout_all(
     current_user: Annotated[User, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> None:
