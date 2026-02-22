@@ -63,5 +63,14 @@ devcontainer up --dotfiles-repository=https://github.com/abdmoh123/.dotfiles.git
 exec devcontainer exec --docker-path=$DOCKER_PATH bash 
 '''
 
+[tasks.clean]
+description = "Clean the project"
+run = """
+#!/usr/bin/env bash
+rm -r .venv
+rm -r .*_cache
+find . -type d -name "__pycache__" -exec rm -rf {} + && find . -name "*.pyc" -delete
+"""
+
 [settings]
 python.uv_venv_auto = "create|source"
