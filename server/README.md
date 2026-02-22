@@ -24,7 +24,8 @@ FastAPI based API for managing Pi cameras and videos.
 
 ### Installing dependencies
 
-Install `uv` then run `uv sync` to install the required dependencies.
+Use `mise init` to automatically install python and the required dependencies.
+Alternatively, you can manually install `uv` then run `uv sync` instead.
 
 ### Environment variables
 
@@ -63,3 +64,14 @@ All environment variables are loaded and accessed from the app.core.config modul
 
 To run the project, you can use `uv run main.py` or run the fastapi cli through `uv run fastapi --reload`.
 The `--reload` flag will reload the server whenever you save any changes.
+
+## CI/CD
+
+There are a few mise tasks that can be used to help with CI/CD.
+
+- `mise lint`
+- `mise test`
+- `mise clean`
+
+> [!INFO]
+> There is also a `mise check` command that lints and then tests the project automatically.
