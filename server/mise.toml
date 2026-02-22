@@ -5,6 +5,14 @@ _.file = ".env"
 devcontainer-cli = "0.83.0"
 uv = "0.10.0"
 
+[tasks.init]
+description = "Initialize the project and install all dependencies"
+run = """
+#!/usr/bin/env bash
+uv python install
+uv sync --frozen --dev
+"""
+
 [tasks.start]
 description = "Start the fastapi server"
 usage = '''
@@ -12,6 +20,7 @@ arg "<environment>" help="Target environment" default="prod" { choices "dev" "pr
 flag "--dev" help="Run in development mode"
 flag "-v --verbose" help="Run in verbose mode"
 '''
+depends = "init"
 run = '''
 #!/usr/bin/env bash
 if [ ${usage_environment} = "dev" ]; then
@@ -24,16 +33,19 @@ quiet = true
 
 [tasks.ruff]
 description = "Run ruff linter"
+depends = "init"
 run = "ruff check ."
 hide = true
 
 [tasks.mypy]
 description = "Run mypy linter"
+depends = "init"
 run = "mypy ."
 hide = true
 
 [tasks.pyright]
 description = "Run basedpyright linter"
+depends = "init"
 run = "basedpyright ."
 hide = true
 
@@ -45,6 +57,7 @@ run = [
 
 [tasks.test]
 description = "Run tests"
+depends = "init"
 run = "pytest ."
 
 [tasks.check]
