@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -14,13 +14,14 @@ class Base(DeclarativeBase):
     pass
 
 
-camera_subscriptions_table = Table(
-    "camera_subscriptions",
-    Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("camera_id", Integer, ForeignKey("cameras.id"), primary_key=True),
-    Column("registered_at", DateTime, default=datetime.now(timezone.utc)),
-)
+class CameraSubscription(Base):
+    """Schema for the camera_subscription table."""
+
+    __tablename__: str = "camera_subscriptions"
+
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
+    camera_id: Mapped[int] = mapped_column(Integer, ForeignKey("cameras.id"), primary_key=True)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
 
 class User(Base):
@@ -35,7 +36,7 @@ class User(Base):
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     cameras: Mapped[list[Camera]] = relationship(
-        "Camera", secondary=camera_subscriptions_table, back_populates=__tablename__
+        "Camera", secondary="camera_subscriptions", back_populates=__tablename__
     )
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user")
 
@@ -52,7 +53,7 @@ class Camera(Base):
     mac_address: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
-    users: Mapped[list[User]] = relationship("User", secondary=camera_subscriptions_table, back_populates=__tablename__)
+    users: Mapped[list[User]] = relationship("User", secondary="camera_subscriptions", back_populates=__tablename__)
     videos: Mapped[list[Video]] = relationship("Video", back_populates="camera")
 
 
