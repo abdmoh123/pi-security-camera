@@ -15,3 +15,11 @@ class Camera(Protocol):
     def start_recording(self, time_s: int = 600) -> list[MatLike]:
         """Starts the camera recording routine."""
         ...
+
+    def enable(self) -> None:
+        """Enables the camera."""
+        ...
+
+    def disable(self) -> None:
+        """Disables the camera."""
+        ...
