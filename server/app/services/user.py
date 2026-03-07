@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.models.users import UserCreate, UserUpdate
 from app.core.config import settings
+from app.core.exceptions import InvalidDataError, RecordAlreadyExistsError, RecordNotFoundError
 from app.core.security.hashing import generate_hashed_password
 from app.db.db_models import User
 
@@ -48,6 +49,11 @@ def create_user(db: Session, user: UserCreate) -> User:
     is_first_user = db.query(User).count() == 0
     is_admin = is_first_user and settings.ENABLE_FIRST_USER_ADMIN
 
+    # check if user with given email already exists
+    db_user: User | None = get_user_by_email(db, user.email)
+    if db_user:
+        raise RecordAlreadyExistsError(f"User with email {user.email} already exists!")
+
     db_user = User(
         email=user.email, password_hash=generate_hashed_password(user.password, PasswordHasher()), is_admin=is_admin
     )
@@ -59,13 +65,16 @@ def create_user(db: Session, user: UserCreate) -> User:
     return db_user
 
 
-def update_user(db: Session, user_id: int, user: UserUpdate) -> User | None:
+def update_user(db: Session, user_id: int, user: UserUpdate) -> User:
     """Modifies a given user's parameters (excluding ID) via a given ID or email."""
     db_user: User | None = get_user(db, user_id)
 
     # skip modifying the database if inputs are empty or if user doesn't exist
-    if not user.model_fields_set or not db_user:
-        return db_user
+    if not user.model_fields_set:
+        raise InvalidDataError("No data was provided!")
+
+    if not db_user:
+        raise RecordNotFoundError(f"User {user_id} does not exist!")
 
     user_as_dict = user.model_dump(exclude_unset=True)
     if user.password:
@@ -81,12 +90,14 @@ def update_user(db: Session, user_id: int, user: UserUpdate) -> User | None:
     return db_user
 
 
-def delete_user(db: Session, user_id: int) -> User | None:
+def delete_user(db: Session, user_id: int) -> User:
     """Deletes a given user via ID or email."""
     db_user: User | None = get_user(db, user_id)
 
-    if db_user:
-        db.delete(db_user)
-        db.commit()
+    if not db_user:
+        raise RecordNotFoundError(f"User {user_id} does not exist!")
+
+    db.delete(db_user)
+    db.commit()
 
     return db_user

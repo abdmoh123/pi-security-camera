@@ -10,6 +10,7 @@ from app.api.models.general import PaginationParams
 from app.api.models.users import UserCreate, UserResponse, UserUpdate
 from app.api.models.videos import Video
 from app.auth.dependencies import get_current_admin_user, get_current_user
+from app.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from app.db.database import get_db
 from app.db.db_models import Camera
 from app.db.db_models import User as UserSchema
@@ -57,12 +58,11 @@ def create_user(
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user: UserSchema | None = user_service.get_user_by_email(db_session, user.email)
+    try:
+        db_user: UserSchema = user_service.create_user(db_session, user)
+    except RecordAlreadyExistsError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    if db_user:
-        raise HTTPException(status_code=400, detail="User already exists!")
-
-    db_user = user_service.create_user(db_session, user)
     return db_user
 
 
@@ -73,14 +73,13 @@ def get_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Returns a user's details using a given ID or email."""
-    db_user: UserSchema | None = user_service.get_user(db_session, id)
+    # Only allow admins to view other users' details
+    if not current_user.is_admin and current_user.id != id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
 
+    db_user: UserSchema | None = user_service.get_user(db_session, id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
-
-    # Only allow admins to view other users' details
-    if not current_user.is_admin and current_user.id != db_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return db_user
 
@@ -93,19 +92,14 @@ def update_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
-    db_user: UserSchema | None = user_service.get_user(db_session, id)
-
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found!")
-
     # Only allow admins to update other users' details
-    if not current_user.is_admin and current_user.id != db_user.id:
+    if not current_user.is_admin and current_user.id != id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    updated_user = user_service.update_user(db_session, id, user)
-
-    if not updated_user:
-        raise HTTPException(status_code=404, detail="User not found!")
+    try:
+        updated_user = user_service.update_user(db_session, id, user)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     return updated_user
 
@@ -117,16 +111,13 @@ def delete_user(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Deletes a given user by ID or email. Only Admin can delete other users."""
-    db_user: UserSchema | None = user_service.get_user(db_session, id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found!")
-
-    if not current_user.is_admin and current_user.id != db_user.id:
+    if not current_user.is_admin and current_user.id != id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    deleted_user: UserSchema | None = user_service.delete_user(db_session, user_id=id)
-    if not deleted_user:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        deleted_user: UserSchema = user_service.delete_user(db_session, user_id=id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     # TODO: Revoke all tokens associated with the deleted user
 
