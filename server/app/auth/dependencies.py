@@ -1,42 +1,19 @@
 """Module containing functions and dependencies for authentication and authorization."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
+from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 from sqlalchemy.orm import Session
 
-from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate
-from app.auth.utils import decode_token, encode_token
-from app.core.config import settings
+from app.auth.services import decode_access_token
 from app.db.database import get_db
 from app.db.db_models import User
 from app.services.user import get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v0/auth/token")
-
-
-def create_access_token(payload: TokenPayloadCreate, expires_delta: timedelta | None = None) -> str:
-    """Creates a new JWT access token."""
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = TokenPayload(sub=payload.sub, exp=expire, iat=datetime.now(timezone.utc))
-    try:
-        return encode_token(TokenHeader(alg=settings.JWT_ALGORITHM), to_encode)
-    except JWTError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not create access token") from e
-
-
-def decode_access_token(token: str) -> TokenPayload:
-    """Decodes a JWT access token and returns its payload."""
-    try:
-        return decode_token(token)
-    except (JWTError, ExpiredSignatureError, JWTClaimsError) as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials") from e
 
 
 def get_current_user(

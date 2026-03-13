@@ -2,11 +2,12 @@
 
 from datetime import datetime, timedelta, timezone
 
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import create_access_token
+from app.auth.exceptions import TokenDecodingError, TokenEncodingError
 from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate
-from app.auth.utils import encode_token
+from app.auth.utils import decode_token, encode_token
 from app.core.config import settings
 from app.db.db_models import RefreshToken
 
@@ -62,3 +63,24 @@ def create_personal_access_token(user_id: int, expires_delta: timedelta | None =
     # PATs are essentially long-lived access tokens. No refresh token associated.
     # The expiration is handled directly in the JWT.
     return create_access_token(payload=TokenPayloadCreate(sub=str(user_id)), expires_delta=expires_delta)
+
+
+def create_access_token(payload: TokenPayloadCreate, expires_delta: timedelta | None = None) -> str:
+    """Creates a new JWT access token."""
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode = TokenPayload(sub=payload.sub, exp=expire, iat=datetime.now(timezone.utc))
+    try:
+        return encode_token(TokenHeader(alg=settings.JWT_ALGORITHM), to_encode)
+    except JWTError as e:
+        raise TokenEncodingError("Could not create access token") from e
+
+
+def decode_access_token(token: str) -> TokenPayload:
+    """Decodes a JWT access token and returns its payload."""
+    try:
+        return decode_token(token)
+    except (JWTError, ExpiredSignatureError, JWTClaimsError) as e:
+        raise TokenDecodingError("Could not validate credentials") from e

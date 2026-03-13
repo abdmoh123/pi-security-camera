@@ -9,11 +9,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import (
-    create_access_token,
     get_current_user,
 )
+from app.auth.exceptions import TokenEncodingError
 from app.auth.models import Token, TokenPayloadCreate
 from app.auth.services import (
+    create_access_token,
     create_personal_access_token,
     create_refresh_token,
     get_refresh_token,
@@ -44,7 +45,10 @@ def login_for_access_token(
         )
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+    try:
+        access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+    except TokenEncodingError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     refresh_token = create_refresh_token(db_session, user.id)
 
     return Token(access_token=access_token, refresh_token=refresh_token.token, token_type="bearer")
@@ -69,7 +73,10 @@ def refresh_access_token(
     _ = revoke_refresh_token(db_session, refresh_token_db)
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    new_access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+    try:
+        new_access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+    except TokenEncodingError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
     return Token(access_token=new_access_token, refresh_token=new_refresh_token.token, token_type="bearer")
 
@@ -95,7 +102,10 @@ def generate_personal_access_token(
 
     # If the expires_in_minutes == None, the token will use the default expiry date
     # See settings.ACCESS_TOKEN_EXPIRE_MINUTES
-    pat_token = create_personal_access_token(current_user.id, expires_delta)
+    try:
+        pat_token = create_personal_access_token(current_user.id, expires_delta)
+    except TokenEncodingError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     return Token(access_token=pat_token, token_type="bearer")
 
 
