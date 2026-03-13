@@ -1,22 +1,20 @@
-from fastapi import FastAPI
+"""Main endpoint of the application."""
 
-from app.api.routes import functions
+from pathlib import Path
 
-app = FastAPI(
-    title="Pi Security Camera",
-    description="API for controlling a Pi camera device",
-)
+import typer
 
-app.include_router(functions.router)
+from app.core.cameras.opencv_camera import OpenCVCamera
 
-
-@app.get("/")
-def read_root() -> dict[str, str]:
-    """Root API function."""
-    return {"message": app.title, "description": app.description}
+app = typer.Typer()
 
 
-@app.get("/health")
-def check_health() -> dict[str, str]:
-    """Route to check health. Doesn't really do anything yet."""
-    return {"status": "ok"}
+@app.command()
+def record() -> None:
+    """Starts the camera recording routine."""
+    with OpenCVCamera() as camera:
+        camera.start_recording(Path(""))
+
+
+if __name__ == "__main__":
+    app()
