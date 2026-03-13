@@ -11,3 +11,5 @@ wheels/
 
 # Sensitive environment variables
 .env
+
+recordings/
