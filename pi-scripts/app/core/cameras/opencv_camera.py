@@ -53,7 +53,9 @@ class OpenCVCamera:
 
         frames: list[MatLike] = []
         frames_to_capture = int(time_s * frame_rate)
+        print(f"Capturing {frames_to_capture} frames")
         for _ in range(frames_to_capture):
+            start_time: float = time.time()
             ret, frame = self.camera.read()
 
             # If the frame couldn't be captured, break early
@@ -61,7 +63,10 @@ class OpenCVCamera:
                 break
 
             frames.append(frame)
-            time.sleep(1.0 / frame_rate)
+            end_time: float = time.time()
+            time_taken = end_time - start_time
+            time.sleep((1.0 / frame_rate) - time_taken)
+        print(f"Captured {len(frames)} frames")
 
         return frames
 
