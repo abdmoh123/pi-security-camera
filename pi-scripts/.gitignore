@@ -12,4 +12,6 @@ wheels/
 # Sensitive environment variables
 .env
 
+# Generated photos and video at default paths
 recordings/
+photos/

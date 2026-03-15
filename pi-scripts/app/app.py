@@ -31,15 +31,38 @@ def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
 
     print("Writing video...")
     out = cv2.VideoWriter(
-        str(video_dir_path / f"{current_timestamp}.mp4"),
-        fourcc,
-        24.0,
-        data[0].shape[1::-1],
+        filename=str(video_dir_path / f"{current_timestamp}.mp4"),
+        fourcc=fourcc,
+        fps=24.0,
+        frameSize=data[0].shape[1::-1],
     )
     for frame in data:
         out.write(frame)
     out.release()
     print("Video written succesfully")
+
+
+@app.command()
+def shoot(photo_dir: str = "./photos") -> None:
+    """Captures the current frame from the camera."""
+    with OpenCVCamera() as camera:
+        data = camera.capture_frame()
+
+    photo_dir_path = Path(photo_dir)
+    photo_dir_path.mkdir(exist_ok=True, parents=True)
+
+    current_timestamp: str = datetime.datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+    print(f"Current timestamp: {current_timestamp}")
+
+    res: bool = cv2.imwrite(
+        str(photo_dir_path / f"{current_timestamp}.jpg"), data
+    )
+    if res:
+        print("Image written successfully")
+    else:
+        raise RuntimeError("Failed to write image")
 
 
 if __name__ == "__main__":
