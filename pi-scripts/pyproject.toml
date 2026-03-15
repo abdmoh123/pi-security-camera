@@ -9,9 +9,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[standard]>=0.133.1",
     "httpx>=0.28.1",
     "opencv-python>=4.13.0.92",
+    "typer>=0.24.1",
     "websockets>=16.0",
 ]
 
