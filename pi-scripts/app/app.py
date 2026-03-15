@@ -25,14 +25,14 @@ def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
     current_timestamp: str = datetime.datetime.now().strftime(
         "%Y-%m-%d_%H-%M-%S"
     )
-    print(f"Current timestamp: {current_timestamp}")
 
-    fourcc: int = cv2.VideoWriter_fourcc(*"mp4v")
+    filename: str = f"video-{current_timestamp}.mp4"
+    print(f"Saving file: {filename}...")
 
     print("Writing video...")
     out = cv2.VideoWriter(
-        filename=str(video_dir_path / f"{current_timestamp}.mp4"),
-        fourcc=fourcc,
+        filename=video_dir_path / filename,
+        fourcc=cv2.VideoWriter_fourcc(*"mp4v"),
         fps=24.0,
         frameSize=data[0].shape[1::-1],
     )
@@ -54,11 +54,11 @@ def shoot(photo_dir: str = "./photos") -> None:
     current_timestamp: str = datetime.datetime.now().strftime(
         "%Y-%m-%d_%H-%M-%S"
     )
-    print(f"Current timestamp: {current_timestamp}")
 
-    res: bool = cv2.imwrite(
-        str(photo_dir_path / f"{current_timestamp}.jpg"), data
-    )
+    filename: str = f"photo-{current_timestamp}.jpg"
+    print(f"Saving file: {filename}...")
+
+    res: bool = cv2.imwrite(photo_dir_path / filename, data)
     if res:
         print("Image written successfully")
     else:
