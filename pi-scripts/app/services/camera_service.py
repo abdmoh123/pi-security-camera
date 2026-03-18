@@ -32,10 +32,15 @@ class CameraService:
         """Initializes the camera service."""
         self.camera = camera
         self.serializer = serializer
+
+        # Set default directories
         if video_dir is None:
-            self.video_dir = Path("./recordings")
+            video_dir = Path("./recordings")
         if photo_dir is None:
-            self.photo_dir = Path("./photos")
+            photo_dir = Path("./photos")
+
+        self.video_dir = video_dir
+        self.photo_dir = photo_dir
 
         # Ensure directories exist
         self.video_dir.mkdir(exist_ok=True, parents=True)
