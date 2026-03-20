@@ -2,16 +2,10 @@
 
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, BeforeValidator, EmailStr, Field
+from pydantic import AfterValidator, BaseModel, EmailStr, Field
 
 from app.core.validation.regex import email_regex
-from app.core.validation.user_validation import id_or_email_validator, password_validator
-
-
-class IDorEmail(BaseModel):
-    """ID or email pydantic model used for special validation."""
-
-    value: Annotated[int | str, BeforeValidator(id_or_email_validator)]
+from app.core.validation.user_validation import password_validator
 
 
 class BaseUser(BaseModel):
