@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from app.api.models.general import PaginationParams
+from app.api.models.users import UserResponse
 from app.api.models.videos import Video
 from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
@@ -15,6 +16,7 @@ from app.db.db_models import Camera as CameraSchema
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 from app.services import camera as camera_service
+from app.services import user as user_service
 from app.services import video as video_service
 
 router = APIRouter(prefix="/cameras", tags=["cameras"])
@@ -150,3 +152,21 @@ def get_videos(
         skip=pagination.page_index * pagination.page_size,
         limit=pagination.page_size,
     )
+
+
+@router.get("/{id}/users", response_model=list[UserResponse])
+def get_users(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    id: Annotated[int, Path(ge=1)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> list[UserSchema]:
+    """Gets a list of all of a camera's users with pagination."""
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
+    if not db_camera:
+        raise HTTPException(status_code=404, detail="Camera not found!")
+
+    # Only allow access if user is subscribed to the camera or is an admin
+    if not current_user.is_admin and db_camera not in current_user.cameras:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    return user_service.get_users(db_session, camera_ids=[id])
