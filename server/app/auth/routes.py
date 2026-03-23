@@ -165,8 +165,10 @@ def login_for_camera_token(
 
     access_token_expires = timedelta(hours=settings.CAMERA_TOKEN_EXPIRE_HOURS)
     try:
+        # camera_id might be null because there won't be a camera registered when the credential is first created
         access_token = create_access_token(
-            TokenPayloadCreate(sub=client_id, sub_type=TokenSubjectType.CAMERA), expires_delta=access_token_expires
+            TokenPayloadCreate(sub=str(camera_credential.camera_id), sub_type=TokenSubjectType.CAMERA),
+            expires_delta=access_token_expires,
         )
     except TokenEncodingError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
