@@ -8,9 +8,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from app.auth.models import TokenPayload, TokenSubjectType
 from app.auth.services import decode_access_token
 from app.db.database import get_db
-from app.db.db_models import User
+from app.db.db_models import Camera, User
+from app.services.camera import get_camera
 from app.services.user import get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v0/auth/token")
@@ -20,10 +22,14 @@ def get_current_user(
     db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
 ) -> User:
     """Dependency to get the current authenticated user."""
-    payload = decode_access_token(token)
+    payload: TokenPayload = decode_access_token(token)
     # Shouldn't need to check expiry due to ExpiredSignatureError, but kept just in case
     if payload.exp < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token")
+
+    # Check if the token is for a camera
+    if payload.sub_type != TokenSubjectType.CAMERA:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not a camera token")
 
     try:
         user_id: int = int(payload.sub)
@@ -41,3 +47,28 @@ def get_current_admin_user(current_user: Annotated[User, Depends(get_current_use
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     return current_user
+
+
+def get_current_camera(
+    db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
+) -> Camera:
+    """Dependency to get the current authenticated camera user."""
+    payload: TokenPayload = decode_access_token(token)
+
+    # Shouldn't need to check expiry due to ExpiredSignatureError, but kept just in case
+    if payload.exp < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token")
+
+    # Check if the token is for a camera
+    if payload.sub_type != TokenSubjectType.CAMERA:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not a camera token")
+
+    try:
+        camera_id: int = int(payload.sub)
+    except ValueError:
+        raise ValueError("Token subject isn't valid!")
+
+    camera: Camera | None = get_camera(db_session, camera_id)
+    if camera is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+    return camera

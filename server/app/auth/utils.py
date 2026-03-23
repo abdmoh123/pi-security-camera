@@ -16,4 +16,4 @@ def decode_token(
 ) -> TokenPayload:
     """Decodes a jwt to a pydantic model of a token payload."""
     payload = jwt.decode(token, secret, algorithms=[algorithm])
-    return TokenPayload(sub=payload["sub"], exp=payload["exp"], iat=payload["iat"])  # pyright: ignore[reportAny]
+    return TokenPayload(sub=payload["sub"], sub_type=payload["sub_type"], exp=payload["exp"], iat=payload["iat"])  # pyright: ignore[reportAny]

@@ -12,7 +12,7 @@ from app.auth.dependencies import (
     get_current_user,
 )
 from app.auth.exceptions import TokenEncodingError
-from app.auth.models import Token, TokenPayloadCreate
+from app.auth.models import Token, TokenPayloadCreate, TokenSubjectType
 from app.auth.services import (
     create_access_token,
     create_personal_access_token,
@@ -25,6 +25,7 @@ from app.core.config import settings
 from app.core.security.hashing import verify_password
 from app.db.database import get_db
 from app.db.db_models import User
+from app.services.camera_credential import get_credential
 from app.services.user import get_user_by_email, get_user_by_id  # Import get_user_by_id
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -46,7 +47,9 @@ def login_for_access_token(
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     try:
-        access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+        access_token = create_access_token(
+            TokenPayloadCreate(sub=str(user.id), sub_type=TokenSubjectType.USER), expires_delta=access_token_expires
+        )
     except TokenEncodingError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     refresh_token = create_refresh_token(db_session, user.id)
@@ -74,7 +77,9 @@ def refresh_access_token(
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     try:
-        new_access_token = create_access_token(TokenPayloadCreate(sub=str(user.id)), expires_delta=access_token_expires)
+        new_access_token = create_access_token(
+            TokenPayloadCreate(sub=str(user.id), sub_type=TokenSubjectType.USER), expires_delta=access_token_expires
+        )
     except TokenEncodingError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -103,7 +108,7 @@ def generate_personal_access_token(
     # If the expires_in_minutes == None, the token will use the default expiry date
     # See settings.ACCESS_TOKEN_EXPIRE_MINUTES
     try:
-        pat_token = create_personal_access_token(current_user.id, expires_delta)
+        pat_token = create_personal_access_token(current_user.id, TokenSubjectType.USER, expires_delta)
     except TokenEncodingError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
     return Token(access_token=pat_token, token_type="bearer")
@@ -136,3 +141,34 @@ def logout_all(
 ) -> None:
     """Logs out all sessions for the current user by revoking all their refresh tokens."""
     _ = revoke_all_user_refresh_tokens(db_session, current_user.id)
+
+
+@router.post("/camera_token", response_model=Token)
+def login_for_camera_token(
+    grant_type: Annotated[str, Form()],
+    client_id: Annotated[str, Form()],
+    client_secret: Annotated[str, Form()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> Token:
+    """Authenticates a camera and returns an access token."""
+    if grant_type != "client_credentials":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="unsupported_grant_type")
+
+    camera_credential = get_credential(db_session, client_id)
+    ph = PasswordHasher()
+    if not camera_credential or not verify_password(client_secret, camera_credential.client_secret_hash, ph):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid client credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token_expires = timedelta(hours=settings.CAMERA_TOKEN_EXPIRE_HOURS)
+    try:
+        access_token = create_access_token(
+            TokenPayloadCreate(sub=client_id, sub_type=TokenSubjectType.CAMERA), expires_delta=access_token_expires
+        )
+    except TokenEncodingError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+    return Token(access_token=access_token, token_type="bearer")

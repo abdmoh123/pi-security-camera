@@ -6,7 +6,7 @@ from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 from sqlalchemy.orm import Session
 
 from app.auth.exceptions import TokenDecodingError, TokenEncodingError
-from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate
+from app.auth.models import TokenHeader, TokenPayload, TokenPayloadCreate, TokenSubjectType
 from app.auth.utils import decode_token, encode_token
 from app.core.config import settings
 from app.db.db_models import RefreshToken
@@ -16,6 +16,7 @@ def create_refresh_token(db: Session, user_id: int, expires_at: datetime | None 
     """Creates and stores a new refresh token for a user.
 
     The expiry datetime can be defined in advance to allow rotation of refresh tokens.
+    This should only be used for normal users and not for a camera user.
     """
     # Allows rotation of refresh tokens (better security)
     if expires_at is None:
@@ -23,10 +24,11 @@ def create_refresh_token(db: Session, user_id: int, expires_at: datetime | None 
 
     # Generate a random string for the refresh token, or a JWT for specific needs
     # For simplicity, let's generate a JWT for the refresh token as well
+    # NOTE: This assumes that the user is a normal user
     issued_at = datetime.now(timezone.utc)
     refresh_token = encode_token(
         TokenHeader(alg=settings.JWT_ALGORITHM),
-        TokenPayload(sub=str(user_id), exp=expires_at, iat=issued_at),
+        TokenPayload(sub=str(user_id), sub_type=TokenSubjectType.USER, exp=expires_at, iat=issued_at),
         secret=settings.SECRET_KEY,
     )
 
@@ -58,11 +60,16 @@ def revoke_all_user_refresh_tokens(db: Session, user_id: int) -> list[RefreshTok
     return refresh_tokens
 
 
-def create_personal_access_token(user_id: int, expires_delta: timedelta | None = None) -> str:
+def create_personal_access_token(
+    client_id: int, subject_type: TokenSubjectType, expires_delta: timedelta | None = None
+) -> str:
     """Creates a long-lived or permanent personal access token (PAT)."""
     # PATs are essentially long-lived access tokens. No refresh token associated.
     # The expiration is handled directly in the JWT.
-    return create_access_token(payload=TokenPayloadCreate(sub=str(user_id)), expires_delta=expires_delta)
+    # NOTE: The ID may be for a regular user or a camera user.
+    return create_access_token(
+        payload=TokenPayloadCreate(sub=str(client_id), sub_type=subject_type), expires_delta=expires_delta
+    )
 
 
 def create_access_token(payload: TokenPayloadCreate, expires_delta: timedelta | None = None) -> str:
@@ -71,7 +78,7 @@ def create_access_token(payload: TokenPayloadCreate, expires_delta: timedelta | 
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = TokenPayload(sub=payload.sub, exp=expire, iat=datetime.now(timezone.utc))
+    to_encode = TokenPayload(sub=payload.sub, sub_type=payload.sub_type, exp=expire, iat=datetime.now(timezone.utc))
     try:
         return encode_token(TokenHeader(alg=settings.JWT_ALGORITHM), to_encode)
     except JWTError as e:

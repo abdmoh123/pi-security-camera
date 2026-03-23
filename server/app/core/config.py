@@ -91,6 +91,7 @@ class Settings:
     # Token expiry times
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    CAMERA_TOKEN_EXPIRE_HOURS: int = 12
 
     # Admin bootstrapping
     # The first registered user will automatically become an admin if this is enabled

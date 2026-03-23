@@ -47,11 +47,11 @@ class Camera(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     host_address: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String)
-    auth_key: Mapped[str] = mapped_column(String)
     mac_address: Mapped[str] = mapped_column(String)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     users: Mapped[list[User]] = relationship("User", secondary="camera_subscriptions", back_populates="cameras")
+    credential: Mapped[CameraCredential] = relationship("CameraCredential", back_populates="camera", uselist=False)
     videos: Mapped[list[Video]] = relationship("Video", back_populates="camera")
 
 
@@ -66,6 +66,19 @@ class Video(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     camera: Mapped[Camera] = relationship("Camera", back_populates="videos")
+
+
+class CameraCredential(Base):
+    """Schema for the camera_credentials table."""
+
+    __tablename__: str = "camera_credentials"
+
+    client_id: Mapped[str] = mapped_column(String, unique=True, primary_key=True)
+    camera_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(f"{Camera.__tablename__}.id"))
+    client_secret_hash: Mapped[str] = mapped_column(String, nullable=False)
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+
+    camera: Mapped[Camera | None] = relationship("Camera", back_populates="credential")
 
 
 class RefreshToken(Base):

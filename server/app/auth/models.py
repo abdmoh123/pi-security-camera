@@ -1,8 +1,16 @@
 """File containing pydantic models for authentication-related data."""
 
+import enum
 from datetime import datetime
 
 from pydantic import BaseModel
+
+
+class TokenSubjectType(str, enum.Enum):
+    """Enum for what type of subject a token is for."""
+
+    USER = "user"
+    CAMERA = "camera"
 
 
 class Token(BaseModel):
@@ -24,6 +32,7 @@ class TokenPayloadCreate(BaseModel):
     """Pydantic model for creating a JWT access token payload."""
 
     sub: str  # Subject (usually a user ID)
+    sub_type: TokenSubjectType
 
 
 class TokenPayload(TokenPayloadCreate):
