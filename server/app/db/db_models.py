@@ -35,6 +35,7 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
+    credentials: Mapped[list[CameraCredential]] = relationship("CameraCredential", back_populates="user")
     cameras: Mapped[list[Camera]] = relationship("Camera", secondary="camera_subscriptions", back_populates="users")
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user")
 
@@ -74,10 +75,12 @@ class CameraCredential(Base):
     __tablename__: str = "camera_credentials"
 
     client_id: Mapped[str] = mapped_column(String, unique=True, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey(f"{User.__tablename__}.id"))
     camera_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(f"{Camera.__tablename__}.id"))
     client_secret_hash: Mapped[str] = mapped_column(String, nullable=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
+    user: Mapped[User] = relationship("User", back_populates="credentials")
     camera: Mapped[Camera | None] = relationship("Camera", back_populates="credential")
 
 

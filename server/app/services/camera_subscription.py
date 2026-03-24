@@ -37,7 +37,7 @@ def get_camera_subscriptions_by_camera(db: Session, camera_id: int) -> list[Came
 
 
 def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: list[int]) -> list[CameraSubscription]:
-    """Subscribes to given user to the given cameras."""
+    """Subscribes the given user to the given cameras."""
     db_user: User | None = get_user(db, user_id)
     # don't bother subscribing if the user doesn't exist
     if not db_user:
