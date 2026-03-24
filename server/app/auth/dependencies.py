@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from app.auth.models import TokenPayload, TokenSubjectType
 from app.auth.services import decode_access_token
 from app.db.database import get_db
-from app.db.db_models import Camera, User
-from app.services.camera import get_camera
+from app.db.db_models import CameraCredential, User
+from app.services.camera_credential import get_credential
 from app.services.user import get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v0/auth/token")
@@ -49,9 +49,9 @@ def get_current_admin_user(current_user: Annotated[User, Depends(get_current_use
     return current_user
 
 
-def get_current_camera(
+def get_current_credential(
     db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
-) -> Camera:
+) -> CameraCredential:
     """Dependency to get the current authenticated camera user."""
     payload: TokenPayload = decode_access_token(token)
 
@@ -64,11 +64,11 @@ def get_current_camera(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not a camera token")
 
     try:
-        camera_id: int = int(payload.sub)
+        credential_id: str = payload.sub
     except ValueError:
         raise ValueError("Token subject isn't valid!")
 
-    camera: Camera | None = get_camera(db_session, camera_id)
-    if camera is None:
+    credential: CameraCredential | None = get_credential(db_session, credential_id)
+    if credential is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-    return camera
+    return credential
