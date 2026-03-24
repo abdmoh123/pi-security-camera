@@ -5,17 +5,21 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
+from app.api.models.camera_subscriptions import CameraSubscription
 from app.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from app.api.models.general import PaginationParams
 from app.api.models.users import UserResponse
 from app.api.models.videos import Video
-from app.auth.dependencies import get_current_admin_user, get_current_user
+from app.auth.dependencies import get_current_admin_user, get_current_credential, get_current_user
 from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
 from app.db.database import get_db
 from app.db.db_models import Camera as CameraSchema
+from app.db.db_models import CameraCredential as CameraCredentialSchema
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 from app.services import camera as camera_service
+from app.services import camera_credential as camera_credential_service
+from app.services import camera_subscription as subscription_service
 from app.services import user as user_service
 from app.services import video as video_service
 
@@ -56,17 +60,34 @@ def get_cameras(
 
 @router.post("/", response_model=CameraResponse)
 def create_camera(
-    current_user: Annotated[UserSchema, Depends(get_current_user)],  # pyright: ignore[reportUnusedParameter]
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
     camera: Annotated[CameraCreate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Creates a new camera with given details."""
-    db_cameras: list[CameraSchema] = camera_service.get_cameras(db_session, host_address=camera.host_address, limit=1)
+    if current_credential.camera_id is not None:
+        raise HTTPException(status_code=400, detail="Credential already linked to Camera!")
 
-    if db_cameras:
-        raise HTTPException(status_code=400, detail="Camera already exists: Host address is already in use!")
+    credential_owner: UserSchema | None = user_service.get_user(db_session, current_credential.user_id)
+    if not credential_owner:
+        raise HTTPException(status_code=500, detail="Camera credential somehow not registered to user!")
 
-    return camera_service.create_camera(db_session, camera)
+    # Create a new camera record along with an initial subscription (to user owner of credential)
+    new_camera: CameraSchema = camera_service.create_camera(db_session, camera)
+    init_subscription: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_camera(
+        db_session, new_camera.id, [credential_owner.id]
+    )
+    if len(init_subscription) != 1:
+        raise HTTPException(status_code=500, detail="Failed to create camera subscription!")
+
+    # Add the newly created camera to the credential
+    modified_credential: CameraCredentialSchema | None = camera_credential_service.assign_camera(
+        db_session, current_credential.client_id, new_camera.id
+    )
+    if not modified_credential:
+        raise HTTPException(status_code=500, detail="Failed to assign camera to user!")
+
+    return new_camera
 
 
 @router.get("/{id}", response_model=CameraResponse)
