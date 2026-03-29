@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
-from app.auth.dependencies import get_current_admin_user, get_current_user
+from app.auth.dependencies import get_current_credential, get_current_user
 from app.core.validation.regex import file_name_regex
 from app.db.database import get_db
 from app.db.db_models import Camera
+from app.db.db_models import CameraCredential as CameraCredentialSchema
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 from app.services import camera as camera_service
@@ -60,20 +61,21 @@ def get_videos(
 
 @router.post("/", response_model=Video)
 async def upload_video(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],  # pyright: ignore[reportUnusedParameter]
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
     video_data: Annotated[VideoCreate, Body()],
     video_file: Annotated[UploadFile, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Creates and uploads a new video with the given details."""
-    # TODO: Add authorisation for cameras (only cameras can upload videos), currently only admin users can upload
+    if not current_credential.camera_id:
+        raise HTTPException(status_code=403, detail="No camera registered with this credential!")
 
     # Check if video entry already exists in the database (file name and camera ID must be the same)
     db_videos: list[VideoSchema] = await run_in_threadpool(
         video_service.get_video_entries,
         db_session,
         file_name=video_data.file_name,
-        camera_ids=[video_data.camera_id],
+        camera_ids=[current_credential.camera_id],
         limit=1,
     )
     if db_videos:
@@ -84,7 +86,7 @@ async def upload_video(
         raise HTTPException(status_code=415, detail="File uploaded is not a video!")
 
     # Make sure the directory exists
-    file_path: FilePath = VIDEO_FILES_DIR / str(video_data.camera_id) / video_data.file_name
+    file_path: FilePath = VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write the uploaded video to the server's storage (async part)
@@ -178,6 +180,7 @@ def delete_video(
     if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
+    # Delete the video entry
     deleted_video: VideoSchema | None = video_service.delete_video_entry(db_session, id)
     if not deleted_video:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")

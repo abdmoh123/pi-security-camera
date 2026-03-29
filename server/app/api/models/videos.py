@@ -22,7 +22,6 @@ class VideoCreate(BaseModel):
     """Pydantic model for a video entry."""
 
     file_name: str = Field(pattern=file_name_regex, min_length=5)
-    camera_id: int = Field(ge=1)
 
 
 class VideoUpdate(BaseModel):
