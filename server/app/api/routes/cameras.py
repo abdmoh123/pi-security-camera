@@ -111,14 +111,16 @@ def get_camera(
 
 @router.put("/{id}", response_model=CameraResponse)
 def update_camera(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
     id: Annotated[int, Path(ge=1)],
     camera: Annotated[CameraUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
-    """Updates a camera's details using a given ID. Admin only."""
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    """Updates a camera's details using a given ID."""
+    if current_credential.camera_id is None:
+        raise HTTPException(status_code=403, detail="No camera linked to credential!")
+    if current_credential.camera_id != id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
     if camera.host_address:
         cameras_by_ip: list[CameraSchema] = camera_service.get_cameras(
@@ -136,13 +138,15 @@ def update_camera(
 
 @router.delete("/{id}", response_model=CameraResponse)
 def delete_camera(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
     id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
-    """Deletes a given camera by ID. Admin only."""
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    """Deletes a given camera by ID."""
+    if current_credential.camera_id is None:
+        raise HTTPException(status_code=403, detail="No camera linked to credential!")
+    if current_credential.camera_id != id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
     db_camera: CameraSchema | None = camera_service.delete_camera(db_session, camera_id=id)
     if not db_camera:
