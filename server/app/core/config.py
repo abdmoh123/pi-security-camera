@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -61,7 +62,7 @@ def _get_secret() -> str:
 
     Raises ValueError if the secret key is not set in the environment variables.
     """
-    secret = os.getenv("SECRET_KEY")
+    secret: str | None = os.getenv("SECRET_KEY")
     if not secret:
         raise ValueError("SECRET_KEY is not set!")
     return secret
@@ -72,15 +73,29 @@ def _get_jwt_algorithm() -> JWTAlgorithm:
 
     Default to HS256 if the environment variable is not set.
     """
-    algorithm = os.getenv("JWT_ALGORITHM")
+    algorithm: str | None = os.getenv("JWT_ALGORITHM")
     if not algorithm:
         return JWTAlgorithm.HS256
     return JWTAlgorithm(algorithm)
 
 
+def _get_video_dir() -> Path:
+    """Loads video directory from environment variables.
+
+    Returns a default path if the environment variable is not set.
+    """
+    video_dir: str | None = os.getenv("VIDEO_FILES_DIR")
+    if not video_dir:
+        video_dir = "/var/lib/pi-security-camera/videos"
+
+    return Path(video_dir)
+
+
 @dataclass
 class Settings:
     """Centralized settings management for the application."""
+
+    VIDEO_FILES_DIR: Path = _get_video_dir()
 
     DB_TYPE: DBType = _get_db_type()
     DB_URL: str = _get_db_url(DB_TYPE)

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
 from app.auth.dependencies import get_current_credential, get_current_user
+from app.core.config import settings
 from app.core.validation.regex import file_name_regex
 from app.db.database import get_db
 from app.db.db_models import Camera
@@ -21,12 +22,6 @@ from app.services import camera as camera_service
 from app.services import video as video_service
 
 router = APIRouter(prefix="/videos", tags=["videos"])
-
-# TODO: Make the video files get stored on the database container instead of api server
-
-# Make sure the path for storing the actual videos exists
-VIDEO_FILES_DIR = FilePath("/var/lib/pi-security-camera/videos")
-VIDEO_FILES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/", response_model=list[Video])
@@ -86,7 +81,8 @@ async def upload_video(
         raise HTTPException(status_code=415, detail="File uploaded is not a video!")
 
     # Make sure the directory exists
-    file_path: FilePath = VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
+    # TODO: Make the video files get stored on the database container instead of api server
+    file_path: FilePath = settings.VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write the uploaded video to the server's storage (async part)
@@ -186,7 +182,10 @@ def delete_video(
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
     # Delete the video file
-    file_path: FilePath = VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name
-    file_path.unlink()
+    file_path: FilePath = settings.VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name
+    try:
+        file_path.unlink()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
 
     return deleted_video
