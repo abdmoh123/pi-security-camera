@@ -27,9 +27,9 @@ def get_current_user(
     if payload.exp < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token")
 
-    # Check if the token is for a camera
-    if payload.sub_type != TokenSubjectType.CAMERA:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not a camera token")
+    # Check if the token is for a regular user
+    if payload.sub_type != TokenSubjectType.USER:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not a user token")
 
     try:
         user_id: int = int(payload.sub)
