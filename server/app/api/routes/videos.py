@@ -1,11 +1,13 @@
 """FastAPI routes related to the Video table."""
 
+import mimetypes
 from pathlib import Path as FilePath
 from typing import Annotated
 
 import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.models.general import PaginationParams
@@ -106,6 +108,36 @@ async def upload_video(
         raise
 
     return result_video
+
+
+@router.get("/{video_id}/file")
+async def download_video(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> FileResponse:
+    """Endpoint for downloading a video."""
+    db_video: VideoSchema | None = await run_in_threadpool(video_service.get_video_entry, db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    # Only allow access if the user is subscribed to the camera or is an admin
+    if not current_user.is_admin and current_user not in db_video.camera.users:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    # Get video file path and validate it
+    file_path: FilePath = (settings.VIDEO_FILES_DIR / str(db_video.camera_id) / db_video.file_name).resolve()
+    # Should reduce chance of injecting file paths to gain access to arbitrary files
+    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
+        raise HTTPException(status_code=400, detail="Invalid file path!")
+    if not await run_in_threadpool(file_path.exists):
+        raise HTTPException(status_code=500, detail="Video file not found!")
+
+    # Get mime type of the file (will probably always be video/mp4)
+    media_type, _ = mimetypes.guess_type(db_video.file_name)
+    media_type = media_type or "application/octet-stream"
+
+    return FileResponse(path=file_path, filename=db_video.file_name, media_type=media_type)
 
 
 @router.get("/{id}", response_model=Video)

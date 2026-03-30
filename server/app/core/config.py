@@ -95,7 +95,7 @@ def _get_video_dir() -> Path:
 class Settings:
     """Centralized settings management for the application."""
 
-    VIDEO_FILES_DIR: Path = _get_video_dir()
+    VIDEO_FILES_DIR: Path = _get_video_dir().resolve()
 
     DB_TYPE: DBType = _get_db_type()
     DB_URL: str = _get_db_url(DB_TYPE)
