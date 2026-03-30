@@ -31,7 +31,7 @@ def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+    video_ids: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
     file_name: Annotated[str | None, Query(regex=file_name_regex, min_length=5)] = None,
     camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
 ) -> list[VideoSchema]:
@@ -41,7 +41,7 @@ def get_videos(
     """
     videos = video_service.get_video_entries(
         db_session,
-        id,
+        video_ids,
         file_name,
         camera_id,
         skip=pagination.page_index * pagination.page_size,
@@ -140,17 +140,17 @@ async def download_video(
     return FileResponse(path=file_path, filename=db_video.file_name, media_type=media_type)
 
 
-@router.get("/{id}", response_model=Video)
+@router.get("/{video_id}", response_model=Video)
 def get_video(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    video_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Returns a video's details using a given ID.
 
     Users can only see videos from cameras they are subscribed to, or admins can see all.
     """
-    db_video: VideoSchema | None = video_service.get_video_entry(db_session, id)
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
 
@@ -162,10 +162,10 @@ def get_video(
     return db_video
 
 
-@router.put("/{id}", response_model=Video)
+@router.put("/{video_id}", response_model=Video)
 def update_video(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    video_id: Annotated[int, Path(ge=1)],
     video: Annotated[VideoUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
@@ -173,7 +173,7 @@ def update_video(
 
     Users can only update videos from cameras they are subscribed to, or admins can update all.
     """
-    db_video: VideoSchema | None = video_service.get_video_entry(db_session, id)
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
 
@@ -182,24 +182,24 @@ def update_video(
     if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    db_video = video_service.update_video_entry(db_session, id, video)
+    db_video = video_service.update_video_entry(db_session, video_id, video)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
 
     return db_video
 
 
-@router.delete("/{id}", response_model=Video)
+@router.delete("/{video_id}", response_model=Video)
 def delete_video(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    video_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Deletes a given video.
 
     Users can only delete videos from cameras they are subscribed to, or admins can delete all.
     """
-    db_video: VideoSchema | None = video_service.get_video_entry(db_session, id)
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
 
@@ -209,7 +209,7 @@ def delete_video(
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
     # Delete the video entry
-    deleted_video: VideoSchema | None = video_service.delete_video_entry(db_session, id)
+    deleted_video: VideoSchema | None = video_service.delete_video_entry(db_session, video_id)
     if not deleted_video:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 

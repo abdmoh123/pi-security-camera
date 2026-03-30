@@ -31,7 +31,7 @@ def get_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    id: Annotated[list[int] | None, Query(ge=1)] = None,
+    camera_ids: Annotated[list[int] | None, Query(ge=1)] = None,
     name: Annotated[str | None, Query(regex=camera_name_regex)] = None,
     host_address: Annotated[str | None, Query(regex=host_address_regex)] = None,
     mac_address: Annotated[str | None, Query(regex=mac_address_regex)] = None,
@@ -42,7 +42,7 @@ def get_cameras(
     """
     cameras = camera_service.get_cameras(
         db_session,
-        id,
+        camera_ids,
         name,
         host_address,
         mac_address,
@@ -90,14 +90,14 @@ def create_camera(
     return new_camera
 
 
-@router.get("/{id}", response_model=CameraResponse)
+@router.get("/{camera_id}", response_model=CameraResponse)
 def get_camera(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Returns a camera's details using a given ID."""
-    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
 
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -109,61 +109,61 @@ def get_camera(
     return db_camera
 
 
-@router.put("/{id}", response_model=CameraResponse)
+@router.put("/{camera_id}", response_model=CameraResponse)
 def update_camera(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
-    id: Annotated[int, Path(ge=1)],
+    camera_id: Annotated[int, Path(ge=1)],
     camera: Annotated[CameraUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Updates a camera's details using a given ID."""
     if current_credential.camera_id is None:
         raise HTTPException(status_code=403, detail="No camera linked to credential!")
-    if current_credential.camera_id != id:
+    if current_credential.camera_id != camera_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
     if camera.host_address:
         cameras_by_ip: list[CameraSchema] = camera_service.get_cameras(
             db_session, host_address=camera.host_address, limit=1
         )
-        if cameras_by_ip and cameras_by_ip[0].id != id:
+        if cameras_by_ip and cameras_by_ip[0].id != camera_id:
             raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
 
-    db_camera: CameraSchema | None = camera_service.update_camera(db_session, id, camera)
+    db_camera: CameraSchema | None = camera_service.update_camera(db_session, camera_id, camera)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
     return db_camera
 
 
-@router.delete("/{id}", response_model=CameraResponse)
+@router.delete("/{camera_id}", response_model=CameraResponse)
 def delete_camera(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
-    id: Annotated[int, Path(ge=1)],
+    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Deletes a given camera by ID."""
     if current_credential.camera_id is None:
         raise HTTPException(status_code=403, detail="No camera linked to credential!")
-    if current_credential.camera_id != id:
+    if current_credential.camera_id != camera_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
-    db_camera: CameraSchema | None = camera_service.delete_camera(db_session, camera_id=id)
+    db_camera: CameraSchema | None = camera_service.delete_camera(db_session, camera_id=camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found")
 
     return db_camera
 
 
-@router.get("/{id}/videos", response_model=list[Video])
+@router.get("/{camera_id}/videos", response_model=list[Video])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    camera_id: Annotated[int, Path(ge=1)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
-    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
@@ -179,14 +179,14 @@ def get_videos(
     )
 
 
-@router.get("/{id}/users", response_model=list[UserResponse])
+@router.get("/{camera_id}/users", response_model=list[UserResponse])
 def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path(ge=1)],
+    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[UserSchema]:
     """Gets a list of all of a camera's users with pagination."""
-    db_camera: CameraSchema | None = camera_service.get_camera(db_session, id)
+    db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
 
@@ -194,4 +194,4 @@ def get_users(
     if not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    return user_service.get_users(db_session, camera_ids=[id])
+    return user_service.get_users(db_session, camera_ids=[camera_id])

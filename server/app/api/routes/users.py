@@ -34,14 +34,14 @@ def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    id: Annotated[list[int] | None, Query()] = None,
+    user_ids: Annotated[list[int] | None, Query()] = None,
 ) -> list[UserSchema]:
     """Gets a list of all users with pagination. Admin only."""
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return user_service.get_users(
-        db_session, id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+        db_session, user_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
 
@@ -66,56 +66,56 @@ def create_user(
     return db_user
 
 
-@router.get("/{id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Returns a user's details using a given ID or email."""
     # Only allow admins to view other users' details
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user: UserSchema | None = user_service.get_user(db_session, id)
+    db_user: UserSchema | None = user_service.get_user(db_session, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 
     return db_user
 
 
-@router.put("/{id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     user: Annotated[UserUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
     # Only allow admins to update other users' details
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     try:
-        updated_user = user_service.update_user(db_session, id, user)
+        updated_user = user_service.update_user(db_session, user_id, user)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
     return updated_user
 
 
-@router.delete("/{id}", response_model=UserResponse)
+@router.delete("/{user_id}", response_model=UserResponse)
 def delete_user(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Deletes a given user by ID or email. Only Admin can delete other users."""
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     try:
-        deleted_user: UserSchema = user_service.delete_user(db_session, user_id=id)
+        deleted_user: UserSchema = user_service.delete_user(db_session, user_id=user_id)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -124,23 +124,23 @@ def delete_user(
     return deleted_user
 
 
-@router.post("/{id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+@router.post("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def create_camera_subscription(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[int, Path(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera."""
     # Users can only subscribe cameras to themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    if not user_service.get_user(db_session, id):
+    if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
-        db_session, id, [camera_id]
+        db_session, user_id, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to subscribe: Camera not found!")
@@ -148,19 +148,19 @@ def create_camera_subscription(
     return result[0]
 
 
-@router.post("/{id}/subscriptions/", response_model=list[CameraSubscription])
+@router.post("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
 def create_camera_subscriptions(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to given cameras."""
     # Users can only subscribe cameras to themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    if not user_service.get_user(db_session, id):
+    if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
     cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
@@ -168,26 +168,26 @@ def create_camera_subscriptions(
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
 
-    return subscription_service.create_camera_subscriptions_by_user(db_session, id, camera_id)
+    return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, camera_id)
 
 
-@router.delete("/{id}/subscriptions/{camera_id}", response_model=CameraSubscription)
+@router.delete("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def unsubscribe_from_camera(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
     # Users can only unsubscribe cameras from themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    if not user_service.get_user(db_session, id):
+    if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
     result: list[CameraSubscription] = subscription_service.delete_camera_subscriptions_by_user(
-        db_session, id, [camera_id]
+        db_session, user_id, [camera_id]
     )
     if len(result) == 0:
         raise HTTPException(status_code=404, detail="Failed to unsubscribe: Camera not found!")
@@ -195,19 +195,19 @@ def unsubscribe_from_camera(
     return result[0]
 
 
-@router.delete("/{id}/subscriptions/", response_model=list[CameraSubscription])
+@router.delete("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
 def unsubscribe_from_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from given cameras."""
     # Users can only unsubscribe cameras from themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    if not user_service.get_user(db_session, id):
+    if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
     cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
@@ -215,22 +215,22 @@ def unsubscribe_from_cameras(
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
-    return subscription_service.delete_camera_subscriptions_by_user(db_session, id, camera_id)
+    return subscription_service.delete_camera_subscriptions_by_user(db_session, user_id, camera_id)
 
 
-@router.get("/{id}/videos", response_model=list[Video])
+@router.get("/{user_id}/videos", response_model=list[Video])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    id: Annotated[int, Path()],
+    user_id: Annotated[int, Path(ge=1)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
     # Users can only view their own videos, admins can view anyone's videos
-    if not current_user.is_admin and current_user.id != id:
+    if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user: UserSchema | None = user_service.get_user(db_session, id)
+    db_user: UserSchema | None = user_service.get_user(db_session, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 
