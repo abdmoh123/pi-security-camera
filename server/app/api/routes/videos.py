@@ -82,9 +82,14 @@ async def upload_video(
     if video_file.content_type is None or "video" not in video_file.content_type:
         raise HTTPException(status_code=415, detail="File uploaded is not a video!")
 
-    # Make sure the directory exists
     # TODO: Make the video files get stored on the database container instead of api server
-    file_path: FilePath = settings.VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
+    file_path: FilePath = (
+        settings.VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
+    ).resolve()
+    # Reduce chance of injecting file paths to gain access to arbitrary files
+    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
+        raise HTTPException(status_code=400, detail="Invalid file name!")
+    # Make sure the directory exists
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write the uploaded video to the server's storage (async part)
@@ -129,7 +134,7 @@ async def download_video(
     file_path: FilePath = (settings.VIDEO_FILES_DIR / str(db_video.camera_id) / db_video.file_name).resolve()
     # Should reduce chance of injecting file paths to gain access to arbitrary files
     if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
-        raise HTTPException(status_code=400, detail="Invalid file path!")
+        raise HTTPException(status_code=500, detail="Invalid file path!")
     if not await run_in_threadpool(file_path.exists):
         raise HTTPException(status_code=500, detail="Video file not found!")
 
@@ -214,7 +219,11 @@ def delete_video(
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
     # Delete the video file
-    file_path: FilePath = settings.VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name
+    file_path: FilePath = (settings.VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name).resolve()
+    # Should reduce chance of injecting file paths to gain access to arbitrary files
+    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
+        raise HTTPException(status_code=500, detail="Invalid file path!")
+
     try:
         file_path.unlink()
     except FileNotFoundError as e:
