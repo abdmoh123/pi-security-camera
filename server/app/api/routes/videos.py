@@ -13,8 +13,9 @@ from sqlalchemy.orm import Session
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoCreate, VideoUpdate
 from app.auth.dependencies import get_current_credential, get_current_user
-from app.core.config import settings
+from app.core.exceptions import InvalidFileNameError
 from app.core.validation.regex import file_name_regex
+from app.core.validation.video_validation import get_video_file_path_safe
 from app.db.database import get_db
 from app.db.db_models import Camera
 from app.db.db_models import CameraCredential as CameraCredentialSchema
@@ -83,12 +84,10 @@ async def upload_video(
         raise HTTPException(status_code=415, detail="File uploaded is not a video!")
 
     # TODO: Make the video files get stored on the database container instead of api server
-    file_path: FilePath = (
-        settings.VIDEO_FILES_DIR / str(current_credential.camera_id) / video_data.file_name
-    ).resolve()
-    # Reduce chance of injecting file paths to gain access to arbitrary files
-    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
-        raise HTTPException(status_code=400, detail="Invalid file name!")
+    try:
+        file_path: FilePath = get_video_file_path_safe(video_data.file_name, current_credential.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=400, detail="Invalid file name!") from e
     # Make sure the directory exists
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -131,10 +130,10 @@ async def download_video(
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
     # Get video file path and validate it
-    file_path: FilePath = (settings.VIDEO_FILES_DIR / str(db_video.camera_id) / db_video.file_name).resolve()
-    # Should reduce chance of injecting file paths to gain access to arbitrary files
-    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
-        raise HTTPException(status_code=500, detail="Invalid file path!")
+    try:
+        file_path: FilePath = get_video_file_path_safe(db_video.file_name, db_video.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=500, detail="Invalid file path!") from e
     if not await run_in_threadpool(file_path.exists):
         raise HTTPException(status_code=500, detail="Video file not found!")
 
@@ -219,10 +218,10 @@ def delete_video(
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
 
     # Delete the video file
-    file_path: FilePath = (settings.VIDEO_FILES_DIR / str(deleted_video.camera_id) / deleted_video.file_name).resolve()
-    # Should reduce chance of injecting file paths to gain access to arbitrary files
-    if not str(file_path).startswith(str(settings.VIDEO_FILES_DIR)):
-        raise HTTPException(status_code=500, detail="Invalid file path!")
+    try:
+        file_path: FilePath = get_video_file_path_safe(deleted_video.file_name, deleted_video.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=500, detail="Invalid file path!") from e
 
     try:
         file_path.unlink()

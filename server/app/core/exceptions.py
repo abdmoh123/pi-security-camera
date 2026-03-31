@@ -17,3 +17,9 @@ class InvalidDataError(Exception):
     """Exception raised when invalid data is provided."""
 
     pass
+
+
+class InvalidFileNameError(Exception):
+    """Exception raised when a file name is not valid."""
+
+    pass
