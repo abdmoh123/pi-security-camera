@@ -11,4 +11,4 @@ mac_address_regex: str = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
 email_regex: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}$"
 
 # Any name excluding '/' characters
-file_name_regex: str = r"^[^\/\n]+$"
+file_name_regex: str = r"video-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.mp4"
