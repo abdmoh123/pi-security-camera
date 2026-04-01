@@ -26,6 +26,18 @@ from app.services import video as video_service
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 
+@router.get("/me", response_model=CameraResponse)
+def get_camera_me(
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
+) -> CameraSchema:
+    """Returns a camera's details using a given ID."""
+    current_camera: CameraSchema | None = current_credential.camera
+    if current_camera is None:
+        raise HTTPException(status_code=403, detail="No camera linked to credential!")
+
+    return current_camera
+
+
 @router.get("/", response_model=list[CameraResponse])
 def get_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
