@@ -1,9 +1,11 @@
 """A set of validation functions related to videos."""
 
+import re
 from pathlib import Path
 
 from app.core.config import settings
 from app.core.exceptions import InvalidFileNameError
+from app.core.validation.regex import file_name_regex
 
 
 def get_video_file_path_safe(file_name: str, camera_id: int) -> Path:
@@ -14,7 +16,11 @@ def get_video_file_path_safe(file_name: str, camera_id: int) -> Path:
     # Reduce chance of injecting file paths to gain access to arbitrary files
     # Technically this is overkill because a regex check is done at the pydantic
     # model level, making it impossible to inject a file path
-    if file_path.parent.name != str(camera_id) or file_path.parent.parent != settings.VIDEO_FILES_DIR:
+    if (
+        not re.match(file_name_regex, file_path.name)
+        or file_path.parent.name != str(camera_id)
+        or file_path.parent.parent != settings.VIDEO_FILES_DIR
+    ):
         raise InvalidFileNameError("Invalid file name!")
 
     return file_path
