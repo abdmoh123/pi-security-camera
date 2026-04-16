@@ -3,6 +3,8 @@
 
 import time
 from dataclasses import dataclass
+from types import TracebackType
+from typing import Self
 
 import cv2
 import numpy as np
@@ -16,6 +18,19 @@ class CV2FrameDifferenceDetectorService:
     """Detection service that uses frame difference to detect motion."""
 
     camera: Camera
+
+    def __enter__(self) -> Self:
+        """Method for context manager 'with' statement."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Frees resources."""
+        self.camera.disable()
 
     def __compute_mask(
         self,
