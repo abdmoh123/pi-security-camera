@@ -1,5 +1,6 @@
 """Main endpoint of the application."""
 
+import time
 from pathlib import Path
 
 import typer
@@ -7,8 +8,32 @@ import typer
 from app.core.cameras.opencv_camera import OpenCVCamera
 from app.core.serializers.opencv_serializer import OpenCVSerializer
 from app.services.camera_service import CameraService
+from app.services.motion.frame_difference_detector import (
+    CV2FrameDifferenceDetectorService,
+)
 
 app = typer.Typer()
+
+
+@app.command()
+def serve(
+    wait_time_ms: int = 1000,
+    delta_ms: int = 500,
+    video_length_s: int = 10,
+    video_dir: str = "./recordings"
+) -> None:
+    """Runs the motion detection service."""
+    with OpenCVCamera() as camera:
+        motion_detector = CV2FrameDifferenceDetectorService(camera)
+        camera_service = CameraService(
+            camera, OpenCVSerializer(), video_dir=Path(video_dir)
+        )
+        while True:
+            time.sleep(wait_time_ms // 1000)
+            detected = motion_detector.detect_motion(delta_ms)
+            if detected:
+                print("Motion detected: Recording video...")
+                camera_service.record_video(video_length_s)
 
 
 @app.command()
