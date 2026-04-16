@@ -37,6 +37,7 @@ class CV2FrameDifferenceDetectorService:
         frame1: MatLike,
         frame2: MatLike,
         kernel: np.ndarray[tuple[int, int], np.dtype[np.uint8]],
+        blur_value: int = 5,
     ) -> MatLike:
         """Creates a mask from the difference between 2 frames.
 
@@ -46,20 +47,15 @@ class CV2FrameDifferenceDetectorService:
         Args:
             frame1: The first frame (assumed grayscale).
             frame2: The second frame (assumed grayscale).
-            kernel: The kernel to use for morphological operations. Shape must
-                be square.
+            kernel: The kernel to use for morphological operations.
+            blur_value: The value to use for blurring, defaults to 5.
 
         Returns:
             The mask.
         """
-        # Ensure the kernel shape is square so the blurring is correct
-        if kernel.shape[0] != kernel.shape[1]:
-            raise ValueError("Kernel must be square")
-        kernel_size: int = kernel.shape[0]
-
         # Blur the frame before generating the mask
         blurred_frame = cv2.medianBlur(
-            cv2.subtract(frame1, frame2), kernel_size
+            cv2.subtract(frame1, frame2), blur_value
         )
         mask = cv2.adaptiveThreshold(
             blurred_frame,
@@ -67,12 +63,12 @@ class CV2FrameDifferenceDetectorService:
             adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             thresholdType=cv2.THRESH_BINARY_INV,
             blockSize=11,
-            C=kernel_size,
+            C=blur_value,
         )
 
         # Apply blur and morphological operations to improve accuracy
         return cv2.morphologyEx(
-            cv2.medianBlur(mask, kernel_size),
+            cv2.medianBlur(mask, blur_value),
             cv2.MORPH_CLOSE,
             kernel,
             iterations=1
