@@ -1,7 +1,7 @@
 """Tests for the camera service."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 import numpy as np
 from cv2.typing import MatLike
