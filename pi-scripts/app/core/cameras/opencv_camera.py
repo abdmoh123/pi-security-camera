@@ -50,11 +50,12 @@ class OpenCVCamera:
             raise RuntimeError("Camera is not enabled")
 
         frame_rate: int = 24  # fps
+        frame_time: float = 1.0 / frame_rate
 
         frames: list[MatLike] = []
         frames_to_capture = int(time_s * frame_rate)
         print(f"Capturing {frames_to_capture} frames")
-        for _ in range(frames_to_capture):
+        for i in range(frames_to_capture):
             start_time: float = time.time()
             ret, frame = self.camera.read()
 
@@ -65,7 +66,10 @@ class OpenCVCamera:
             frames.append(frame)
             end_time: float = time.time()
             time_taken = end_time - start_time
-            time.sleep((1.0 / frame_rate) - time_taken)
+            # Ensure sleep time isn't negative
+            time.sleep(max(0, frame_time - time_taken))
+            print(f"Time taken/frame time: {time_taken}/{frame_time} seconds",
+                  f"\nframe: {i}/{frames_to_capture}")
         print(f"Captured {len(frames)} frames")
 
         return frames
