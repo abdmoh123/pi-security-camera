@@ -29,11 +29,14 @@ def serve(
             camera, OpenCVSerializer(), video_dir=Path(video_dir)
         )
         while True:
+            print(f"Sleeping for {wait_time_ms // 1000} seconds...")
             time.sleep(wait_time_ms // 1000)
             detected = motion_detector.detect_motion(delta_ms)
             if detected:
                 print("Motion detected: Recording video...")
                 camera_service.record_video(video_length_s)
+            else:
+                print("Motion not detected")
 
 
 @app.command()
