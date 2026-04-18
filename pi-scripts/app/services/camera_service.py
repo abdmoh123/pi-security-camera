@@ -3,8 +3,6 @@
 import datetime
 from dataclasses import dataclass
 from pathlib import Path
-from types import TracebackType
-from typing import Self
 
 # TODO: Remove dependency on opencv for MatLike data structure
 from cv2.typing import MatLike
@@ -45,19 +43,6 @@ class CameraService:
         # Ensure directories exist
         self.video_dir.mkdir(exist_ok=True, parents=True)
         self.photo_dir.mkdir(exist_ok=True, parents=True)
-
-    def __enter__(self) -> Self:
-        """Method for use with the 'with' statement."""
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        """Frees resources."""
-        self.camera.disable()
 
     def record_video(self, seconds: int) -> None:
         """Creates a video recording of the camera."""

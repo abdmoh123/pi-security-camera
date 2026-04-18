@@ -42,18 +42,20 @@ def serve(
 @app.command()
 def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
     """Starts the camera recording routine."""
-    with CameraService(
-        OpenCVCamera(), OpenCVSerializer(), video_dir=Path(video_dir)
-    ) as camera_service:
+    with OpenCVCamera() as camera:
+        camera_service = CameraService(
+            camera, OpenCVSerializer(), video_dir=Path(video_dir)
+        )
         camera_service.record_video(seconds)
 
 
 @app.command()
 def shoot(photo_dir: str = "./photos") -> None:
     """Captures the current frame from the camera."""
-    with CameraService(
-        OpenCVCamera(), OpenCVSerializer(), photo_dir=Path(photo_dir)
-    ) as camera_service:
+    with OpenCVCamera() as camera:
+        camera_service = CameraService(
+            camera, OpenCVSerializer(), photo_dir=Path(photo_dir)
+        )
         camera_service.take_photo()
 
 
