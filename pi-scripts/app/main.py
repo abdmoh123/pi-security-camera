@@ -84,9 +84,7 @@ def shoot(photo_dir: str = "./photos") -> None:
         # Negative max_files disables the check
         file_manager = FileManager(Path(photo_dir), max_files=-1)
         serializer = OpenCVSerializer()
-        camera_service = CameraService(
-            camera, serializer, file_manager
-        )
+        camera_service = CameraService(camera, serializer, file_manager)
         camera_service.take_photo()
 
 

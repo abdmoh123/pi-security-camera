@@ -1,7 +1,6 @@
 """Camera service containing business logic for running the camera."""
 
 from dataclasses import dataclass
-from pathlib import Path
 
 # TODO: Remove dependency on opencv for MatLike data structure
 from cv2.typing import MatLike
@@ -22,18 +21,6 @@ class CameraService:
     camera: Camera
     serializer: Serializer
     file_manager: FileManager
-    photo_dir: Path
-
-    def __init__(
-        self,
-        camera: Camera,
-        serializer: Serializer,
-        file_manager: FileManager,
-    ) -> None:
-        """Initializes the camera service."""
-        self.camera = camera
-        self.serializer = serializer
-        self.file_manager = file_manager
 
     def record_video(self, seconds: int) -> None:
         """Creates a video recording of the camera."""
