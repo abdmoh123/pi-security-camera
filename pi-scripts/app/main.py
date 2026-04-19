@@ -24,7 +24,20 @@ def serve(
     video_dir: str = "./recordings",
     max_files: int = 5,
 ) -> None:
-    """Runs the motion detection service."""
+    """Runs the motion detection service.
+
+    Args:
+        wait_time_ms: The number of milliseconds to sleep between checks.
+            Defaults to 1000ms (1s).
+        delta_ms: The number of milliseconds to wait between frames.
+            Defaults to 500ms (0.5s).
+        video_length_s: The number of seconds to record a video.
+            Defaults to 10s.
+        video_dir: The directory (string) to save the video to.
+            Defaults to "./recordings".
+        max_files: The maximum number of files to keep in the directory.
+            Defaults to 5 files.
+    """
     with OpenCVCamera() as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
         file_manager = FileManager(Path(video_dir), max_files)
@@ -43,7 +56,14 @@ def serve(
 
 @app.command()
 def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
-    """Starts the camera recording routine."""
+    """Starts the camera recording routine.
+
+    Args:
+        seconds: The number of seconds to record.
+            Defaults to 600s (10mins).
+        video_dir: The directory (string) to save the video to.
+            Defaults to "./recordings".
+    """
     with OpenCVCamera() as camera:
         # Negative max_files disables the check
         file_manager = FileManager(Path(video_dir), max_files=-1)
@@ -54,7 +74,12 @@ def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
 
 @app.command()
 def shoot(photo_dir: str = "./photos") -> None:
-    """Captures the current frame from the camera."""
+    """Captures the current frame from the camera.
+
+    Args:
+        photo_dir: The directory (string) to save the photo to.
+            Defaults to "./photos".
+    """
     with OpenCVCamera() as camera:
         # Negative max_files disables the check
         file_manager = FileManager(Path(photo_dir), max_files=-1)
