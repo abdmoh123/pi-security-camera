@@ -22,11 +22,12 @@ def serve(
     delta_ms: int = 500,
     video_length_s: int = 10,
     video_dir: str = "./recordings",
+    max_files: int = 5,
 ) -> None:
     """Runs the motion detection service."""
     with OpenCVCamera() as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
-        file_manager = FileManager(Path(video_dir), max_files=5)
+        file_manager = FileManager(Path(video_dir), max_files)
         serializer = OpenCVSerializer()
         camera_service = CameraService(camera, serializer, file_manager)
         while True:
