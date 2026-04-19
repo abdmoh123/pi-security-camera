@@ -1,6 +1,6 @@
 """Manages the video files."""
 
-
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from cv2.typing import MatLike
 from app.core.serializers.serializer import Serializer
 
 
-@dataclass
+@dataclass(frozen=True)
 class FileManager:
     """Manages the video files directory."""
 
@@ -19,7 +19,7 @@ class FileManager:
     def save_data(
         self,
         data: list[MatLike],
-        file_name: str,
+        file_name_generator: Callable[[], str],
         serializer: Serializer,
     ) -> None:
         """Saves a file to the directory.
@@ -28,7 +28,7 @@ class FileManager:
 
         Args:
             data: The video or photo data to save.
-            file_name: The name of the file to save.
+            file_name_generator: Function to generate the file name.
             serializer: The serializer to use to save the file.
 
         Raises:
@@ -40,7 +40,7 @@ class FileManager:
             self.delete_oldest_file()
 
         # Ensure no files are overwritten
-        file_path = self.directory / file_name
+        file_path = self.directory / file_name_generator()
         if file_path.exists():
             raise FileExistsError(file_path)
 

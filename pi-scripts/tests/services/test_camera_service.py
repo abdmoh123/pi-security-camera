@@ -2,6 +2,7 @@
 
 import re
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 from cv2.typing import MatLike
@@ -10,6 +11,7 @@ from pytest_mock import MockFixture
 from app.core.cameras.camera import Camera
 from app.core.serializers.serializer import Serializer
 from app.services.camera_service import CameraService
+from app.services.file_manager import FileManager
 
 
 def test_camera_service_record_video(mocker: MockFixture) -> None:
@@ -27,12 +29,16 @@ def test_camera_service_record_video(mocker: MockFixture) -> None:
     )
 
     mocked_serializer = mocker.MagicMock(spec=Serializer)
-    mock_write_video = mocker.patch.object(mocked_serializer, "write_video")
+
+    mocked_file_manager = mocker.MagicMock(spec=FileManager)
+    mock_save_data = mocker.patch.object(mocked_file_manager, "save_data")
 
     # Disable the Path mkdir method to prevent creating directories
     _ = mocker.patch.object(Path, "mkdir")
 
-    camera_service = CameraService(mocked_camera, mocked_serializer)
+    camera_service = CameraService(
+        mocked_camera, mocked_serializer, mocked_file_manager
+    )
 
     # Call the method
     camera_service.record_video(0)
@@ -41,18 +47,26 @@ def test_camera_service_record_video(mocker: MockFixture) -> None:
     mock_start_recording.assert_called_once_with(0)
 
     # Check if writing the file was attempted
-    mock_write_video.assert_called_once()
+    mock_save_data.assert_called_once()
+
+    # Read passed arguments to the mocked file manager
+    actual_data: list[MatLike]
+    file_name_generator: Callable[[], str]
+    passed_serializer: Serializer
+    actual_data, file_name_generator, passed_serializer = (  # pyright: ignore[reportAny]
+        mock_save_data.call_args.args
+    )
 
     # Check if the data being written matches the mocked camera data
-    actual_data: list[MatLike]
-    actual_file_path: Path
-    actual_data, actual_file_path = mock_write_video.call_args.args  # pyright: ignore[reportAny]
     np.testing.assert_array_equal(actual_data, fake_data)
 
-    # Check if the file path is correct
-    assert actual_file_path.parent == Path("./recordings")
+    # File manager should use the same serializer passed to the camera service
+    assert passed_serializer == mocked_serializer
+
+    # Check if the file path generator is correct
+    generated_file_name: str = file_name_generator()
     assert re.match(
         r"video-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.mp4",
-        actual_file_path.name,
+        generated_file_name,
     )
-    assert actual_file_path.suffix == ".mp4"
+    assert generated_file_name.split(".")[-1] == "mp4"

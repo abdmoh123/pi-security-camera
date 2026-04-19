@@ -8,6 +8,7 @@ from cv2.typing import MatLike
 
 from app.core.cameras.camera import Camera
 from app.core.serializers.serializer import Serializer
+from app.services.file_manager import FileManager
 from app.services.file_name_generator import (
     generate_timestamp_photo_name,
     generate_timestamp_video_name,
@@ -20,31 +21,28 @@ class CameraService:
 
     camera: Camera
     serializer: Serializer
-    video_dir: Path
+    file_manager: FileManager
     photo_dir: Path
 
     def __init__(
         self,
         camera: Camera,
         serializer: Serializer,
-        video_dir: Path | None = None,
+        file_manager: FileManager,
         photo_dir: Path | None = None,
     ) -> None:
         """Initializes the camera service."""
         self.camera = camera
         self.serializer = serializer
+        self.file_manager = file_manager
 
         # Set default directories
-        if video_dir is None:
-            video_dir = Path("./recordings")
         if photo_dir is None:
             photo_dir = Path("./photos")
 
-        self.video_dir = video_dir
         self.photo_dir = photo_dir
 
         # Ensure directories exist
-        self.video_dir.mkdir(exist_ok=True, parents=True)
         self.photo_dir.mkdir(exist_ok=True, parents=True)
 
     def record_video(self, seconds: int) -> None:
@@ -53,10 +51,11 @@ class CameraService:
         data: list[MatLike] = self.camera.start_recording(seconds)
         print(f"Recorded {len(data)} frames successfully!")
 
-        filename: str = generate_timestamp_video_name("mp4")
+        def filename_func() -> str:
+            return generate_timestamp_video_name("mp4")
 
-        print(f"Writing video: {filename}...")
-        self.serializer.write_video(data, self.video_dir / filename)
+        print(f"Writing video: {filename_func()}...")
+        self.file_manager.save_data(data, filename_func, self.serializer)
         print("Video written succesfully!")
 
     def take_photo(self) -> None:
@@ -65,7 +64,10 @@ class CameraService:
         data: MatLike = self.camera.capture_frame()
         print("Photo taken successfully!")
 
-        filename: str = generate_timestamp_photo_name("jpg")
+        def filename_func() -> str:
+            return generate_timestamp_photo_name("jpg")
+
+        filename: str = filename_func()
 
         print(f"Saving photo: {filename}...")
         # WARN: Can raise a SerializationError
