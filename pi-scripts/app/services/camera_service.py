@@ -1,6 +1,5 @@
 """Camera service containing business logic for running the camera."""
 
-import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,6 +8,10 @@ from cv2.typing import MatLike
 
 from app.core.cameras.camera import Camera
 from app.core.serializers.serializer import Serializer
+from app.services.file_name_generator import (
+    generate_timestamp_photo_name,
+    generate_timestamp_video_name,
+)
 
 
 @dataclass
@@ -50,10 +53,7 @@ class CameraService:
         data: list[MatLike] = self.camera.start_recording(seconds)
         print(f"Recorded {len(data)} frames successfully!")
 
-        current_timestamp: str = datetime.datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S"
-        )
-        filename: str = f"video-{current_timestamp}.mp4"
+        filename: str = generate_timestamp_video_name("mp4")
 
         print(f"Writing video: {filename}...")
         self.serializer.write_video(data, self.video_dir / filename)
@@ -65,10 +65,7 @@ class CameraService:
         data: MatLike = self.camera.capture_frame()
         print("Photo taken successfully!")
 
-        current_timestamp: str = datetime.datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S"
-        )
-        filename: str = f"photo-{current_timestamp}.jpg"
+        filename: str = generate_timestamp_photo_name("jpg")
 
         print(f"Saving photo: {filename}...")
         # WARN: Can raise a SerializationError
