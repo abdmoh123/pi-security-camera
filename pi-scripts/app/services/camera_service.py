@@ -14,9 +14,15 @@ from app.services.file_name_generator import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class CameraService:
-    """Camera service containing business logic for running the camera."""
+    """Camera service containing business logic for running the camera.
+
+    Attributes:
+        camera: The camera to use.
+        serializer: The serializer to use.
+        file_manager: The file manager to use.
+    """
 
     camera: Camera
     serializer: Serializer
@@ -31,9 +37,9 @@ class CameraService:
         def filename_func() -> str:
             return generate_timestamp_video_name("mp4")
 
-        print(f"Writing video: {filename_func()}...")
+        print(f"Saving video: {filename_func()}...")
         self.file_manager.save_data(data, filename_func, self.serializer)
-        print("Video written succesfully!")
+        print("Video saved succesfully!")
 
     def take_photo(self) -> None:
         """Captures a frame from the camera and saves it to a file."""
@@ -47,4 +53,4 @@ class CameraService:
         print(f"Saving photo: {filename_func()}...")
         # WARN: Can raise a SerializationError
         self.file_manager.save_data(data, filename_func, self.serializer)
-        print("Image written successfully!")
+        print("Image saved successfully!")
