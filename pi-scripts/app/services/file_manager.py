@@ -16,6 +16,19 @@ class FileManager:
     directory: Path
     max_files: int
 
+    def __is_full(self, num_files: int) -> bool:
+        """Checks if the directory is full [private function].
+
+        Setting a negative number will disable this check.
+
+        Args:
+            num_files: The number of files in the directory.
+
+        Returns:
+            True if the directory is full, False otherwise.
+        """
+        return self.max_files > 0 and num_files >= self.max_files
+
     def save_data(
         self,
         data: list[MatLike] | MatLike,
@@ -36,7 +49,7 @@ class FileManager:
         """
         # Ensure the max number of files is not exceeded
         num_files = len(self.get_files())
-        if num_files >= self.max_files:
+        while self.__is_full(num_files):
             self.delete_oldest_file()
 
         # Ensure no files are overwritten

@@ -45,7 +45,8 @@ def serve(
 def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
     """Starts the camera recording routine."""
     with OpenCVCamera() as camera:
-        file_manager = FileManager(Path(video_dir), max_files=5)
+        # Negative max_files disables the check
+        file_manager = FileManager(Path(video_dir), max_files=-1)
         serializer = OpenCVSerializer()
         camera_service = CameraService(camera, serializer, file_manager)
         camera_service.record_video(seconds)
@@ -55,7 +56,8 @@ def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
 def shoot(photo_dir: str = "./photos") -> None:
     """Captures the current frame from the camera."""
     with OpenCVCamera() as camera:
-        file_manager = FileManager(Path(photo_dir), max_files=5)
+        # Negative max_files disables the check
+        file_manager = FileManager(Path(photo_dir), max_files=-1)
         serializer = OpenCVSerializer()
         camera_service = CameraService(
             camera, serializer, file_manager
