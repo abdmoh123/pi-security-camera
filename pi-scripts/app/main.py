@@ -54,10 +54,10 @@ def record(seconds: int = 600, video_dir: str = "./recordings") -> None:
 def shoot(photo_dir: str = "./photos") -> None:
     """Captures the current frame from the camera."""
     with OpenCVCamera() as camera:
-        _ = FileManager(Path(""), max_files=5)
+        file_manager = FileManager(Path(photo_dir), max_files=5)
         serializer = OpenCVSerializer()
         camera_service = CameraService(
-            camera, serializer, _, photo_dir=Path(photo_dir)
+            camera, serializer, file_manager
         )
         camera_service.take_photo()
 

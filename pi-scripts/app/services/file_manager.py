@@ -18,16 +18,16 @@ class FileManager:
 
     def save_data(
         self,
-        data: list[MatLike],
+        data: list[MatLike] | MatLike,
         file_name_generator: Callable[[], str],
         serializer: Serializer,
     ) -> None:
-        """Saves a file to the directory.
+        """Saves a video or image to the directory.
 
         Also ensures the max number of files is not exceeded.
 
         Args:
-            data: The video or photo data to save.
+            data: The video or image data to save.
             file_name_generator: Function to generate the file name.
             serializer: The serializer to use to save the file.
 
@@ -44,7 +44,11 @@ class FileManager:
         if file_path.exists():
             raise FileExistsError(file_path)
 
-        serializer.write_video(data, file_path)
+        # Save the data as a video or image accordingly
+        if isinstance(data, list):
+            serializer.write_video(data, file_path)
+        else:
+            serializer.write_image(data, file_path)
 
     def get_files(self) -> list[Path]:
         """Reads a list of files in the set directory.

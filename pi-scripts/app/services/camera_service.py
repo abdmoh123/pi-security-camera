@@ -29,21 +29,11 @@ class CameraService:
         camera: Camera,
         serializer: Serializer,
         file_manager: FileManager,
-        photo_dir: Path | None = None,
     ) -> None:
         """Initializes the camera service."""
         self.camera = camera
         self.serializer = serializer
         self.file_manager = file_manager
-
-        # Set default directories
-        if photo_dir is None:
-            photo_dir = Path("./photos")
-
-        self.photo_dir = photo_dir
-
-        # Ensure directories exist
-        self.photo_dir.mkdir(exist_ok=True, parents=True)
 
     def record_video(self, seconds: int) -> None:
         """Creates a video recording of the camera."""
@@ -67,9 +57,7 @@ class CameraService:
         def filename_func() -> str:
             return generate_timestamp_photo_name("jpg")
 
-        filename: str = filename_func()
-
-        print(f"Saving photo: {filename}...")
+        print(f"Saving photo: {filename_func()}...")
         # WARN: Can raise a SerializationError
-        self.serializer.write_image(data, self.photo_dir / filename)
+        self.file_manager.save_data(data, filename_func, self.serializer)
         print("Image written successfully!")
