@@ -3,8 +3,6 @@
 
 import time
 from dataclasses import dataclass
-from types import TracebackType
-from typing import Self
 
 import cv2
 import numpy as np
@@ -13,24 +11,15 @@ from cv2.typing import MatLike
 from app.core.cameras.camera import Camera
 
 
-@dataclass
+@dataclass(frozen=True)
 class CV2FrameDifferenceDetectorService:
-    """Detection service that uses frame difference to detect motion."""
+    """Detection service that uses frame difference to detect motion.
+
+    Attributes:
+        camera: The camera implementation to use.
+    """
 
     camera: Camera
-
-    def __enter__(self) -> Self:
-        """Method for context manager 'with' statement."""
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        """Frees resources."""
-        self.camera.disable()
 
     def __compute_mask(
         self,
@@ -80,6 +69,7 @@ class CV2FrameDifferenceDetectorService:
 
         Args:
             delta_ms: The time in milliseconds to wait between the 2 frames.
+                Defaults to 1000ms (1s).
 
         Returns:
             True if motion is detected, False otherwise.
