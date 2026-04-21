@@ -34,11 +34,10 @@ class CameraService:
         data: list[MatLike] = self.camera.start_recording(seconds)
         print(f"Recorded {len(data)} frames successfully!")
 
-        def filename_func() -> str:
-            return generate_timestamp_video_name("mp4")
-
-        print(f"Saving video: {filename_func()}...")
-        self.file_manager.save_data(data, filename_func, self.serializer)
+        print(f"Saving video: {generate_timestamp_video_name()}...")
+        self.file_manager.save_data(
+            data, generate_timestamp_video_name, self.serializer
+        )
         print("Video saved succesfully!")
 
     def take_photo(self) -> None:
@@ -47,10 +46,8 @@ class CameraService:
         data: MatLike = self.camera.capture_frame()
         print("Photo taken successfully!")
 
-        def filename_func() -> str:
-            return generate_timestamp_photo_name("jpg")
-
-        print(f"Saving photo: {filename_func()}...")
-        # WARN: Can raise a SerializationError
-        self.file_manager.save_data(data, filename_func, self.serializer)
+        print(f"Saving photo: {generate_timestamp_photo_name()}...")
+        self.file_manager.save_data(
+            data, generate_timestamp_photo_name, self.serializer
+        )
         print("Image saved successfully!")

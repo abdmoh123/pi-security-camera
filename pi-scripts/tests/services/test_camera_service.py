@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 from cv2.typing import MatLike
@@ -12,6 +11,7 @@ from app.core.cameras.camera import Camera
 from app.core.serializers.serializer import Serializer
 from app.services.camera_service import CameraService
 from app.services.file_manager import FileManager
+from app.services.file_name_generator import FileNameGenerator
 
 
 def test_camera_service_record_video(mocker: MockFixture) -> None:
@@ -51,7 +51,7 @@ def test_camera_service_record_video(mocker: MockFixture) -> None:
 
     # Read passed arguments to the mocked file manager
     actual_data: list[MatLike]
-    file_name_generator: Callable[[], str]
+    file_name_generator: FileNameGenerator
     passed_serializer: Serializer
     actual_data, file_name_generator, passed_serializer = (  # pyright: ignore[reportAny]
         mock_save_data.call_args.args

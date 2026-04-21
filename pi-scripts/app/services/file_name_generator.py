@@ -1,8 +1,11 @@
 """Module for generating file names."""
 
 import datetime
+from typing import Callable
 
 __timestamp_format: str = "%Y-%m-%d_%H-%M-%S"
+
+type FileNameGenerator = Callable[[], str]
 
 
 def generate_timestamp_video_name(file_ext: str = "mp4") -> str:

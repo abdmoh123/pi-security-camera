@@ -1,12 +1,12 @@
 """Manages the video files."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 from cv2.typing import MatLike
 
 from app.core.serializers.serializer import Serializer
+from app.services.file_name_generator import FileNameGenerator
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class FileManager:
     def save_data(
         self,
         data: list[MatLike] | MatLike,
-        file_name_generator: Callable[[], str],
+        file_name_generator: FileNameGenerator,
         serializer: Serializer,
     ) -> None:
         """Saves a video or image to the directory.
@@ -61,6 +61,7 @@ class FileManager:
         if isinstance(data, list):
             serializer.write_video(data, file_path)
         else:
+            # WARN: Can raise a SerializationError
             serializer.write_image(data, file_path)
 
     def get_files(self) -> list[Path]:
