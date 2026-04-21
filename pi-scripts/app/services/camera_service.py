@@ -29,7 +29,11 @@ class CameraService:
     file_manager: FileManager
 
     def record_video(self, seconds: int) -> None:
-        """Creates a video recording of the camera."""
+        """Creates a video recording of the camera.
+
+        Args:
+            seconds: The number of seconds to record.
+        """
         print(f"Recording for {seconds} seconds")
         data: list[MatLike] = self.camera.start_recording(seconds)
         print(f"Recorded {len(data)} frames successfully!")
