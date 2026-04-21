@@ -21,6 +21,9 @@ class OpenCVSerializer:
         Args:
             data: The video data to write.
             file_path: The path to write the video to.
+
+        Raises:
+            SerializationError: If the video could not be written.
         """
         out = VideoWriter(
             filename=file_path,
@@ -28,9 +31,18 @@ class OpenCVSerializer:
             fps=24.0,
             frameSize=data[0].shape[1::-1],  # pyright: ignore[reportAny]
         )
-        for frame in data:
-            out.write(frame)
-        out.release()
+        writer_error: Exception | None = None
+        try:
+            for frame in data:
+                out.write(frame)
+        except Exception as e:
+            writer_error = e
+        finally:
+            # Ensure that the video writer is closed
+            out.release()
+
+        if not writer_error:
+            raise SerializationError(file_path) from writer_error
 
     def write_image(self, data: MatLike, file_path: Path) -> None:
         """OpenCV based implementation of the write_image method.
