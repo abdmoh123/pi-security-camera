@@ -11,13 +11,23 @@ from cv2.typing import MatLike
 
 @dataclass
 class OpenCVCamera:
-    """Generic camera implementation using opencv."""
+    """Generic camera implementation using opencv.
+
+    Attributes:
+        camera: The internal camera object used by the class. For usability's
+            sake, the field is exposed publicly.
+    """
 
     _camera_id: int
     camera: cv2.VideoCapture | None = None
 
     def __init__(self, camera_id: int = 0) -> None:
-        """Initializes the camera."""
+        """Initializes the camera.
+
+        Args:
+            camera_id: The internal id of the camera to use, defaults to 0 (main
+                camera).
+        """
         self._camera_id = camera_id
         self.enable()
 
@@ -35,7 +45,11 @@ class OpenCVCamera:
         self.disable()
 
     def capture_frame(self) -> MatLike:
-        """Captures the current frame from the camera."""
+        """Captures the current frame from the camera.
+
+        Returns:
+            The current frame from the camera at the time of the function call.
+        """
         if self.camera is None:
             raise RuntimeError("Camera is not enabled")
 
@@ -45,7 +59,14 @@ class OpenCVCamera:
         return frame
 
     def start_recording(self, time_s: int = 600) -> list[MatLike]:
-        """Starts the camera recording routine."""
+        """Starts the camera recording routine.
+
+        Args:
+            time_s: The number of seconds to record, defaults to 600s (10mins).
+
+        Returns:
+            A list of frames captured during the recording.
+        """
         if self.camera is None:
             raise RuntimeError("Camera is not enabled")
 

@@ -11,7 +11,12 @@ from app.services.file_name_generator import FileNameGenerator
 
 @dataclass(frozen=True)
 class FileManager:
-    """Manages the video files directory."""
+    """Manages the video files directory.
+
+    Attributes:
+        directory: The directory to save the files to.
+        max_files: The maximum number of files to keep in the directory.
+    """
 
     directory: Path
     max_files: int

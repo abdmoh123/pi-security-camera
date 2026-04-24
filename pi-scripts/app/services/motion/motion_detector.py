@@ -9,6 +9,10 @@ class MotionDetectorService(Protocol):
     def detect_motion(self, delta_ms: int = 1000) -> bool:
         """Detects motion in the camera feed.
 
+        Args:
+            delta_ms: The time in milliseconds to wait between the 2 frames.
+                Defaults to 1000ms (1s).
+
         Returns:
             True if motion is detected, False otherwise.
         """
