@@ -1,6 +1,5 @@
 """Main endpoint of the application."""
 
-import time
 from pathlib import Path
 
 import typer
@@ -8,6 +7,12 @@ import typer
 from app.core.cameras.opencv_camera import OpenCVCamera
 from app.core.serializers.opencv_serializer import OpenCVSerializer
 from app.services.camera_service import CameraService
+from app.services.camera_state_machine import (
+    CameraCtx,
+    CameraFSM,
+    CameraSettings,
+    CameraState,
+)
 from app.services.file_manager import FileManager
 from app.services.motion.frame_difference_detector import (
     CV2FrameDifferenceDetectorService,
@@ -38,20 +43,32 @@ def serve(
         max_files: The maximum number of files to keep in the directory.
             Defaults to 5 files.
     """
+    # Context manager as safety-net in case FSM fails to cleanup on STOP event
     with OpenCVCamera() as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
         file_manager = FileManager(Path(video_dir), max_files)
         serializer = OpenCVSerializer()
-        camera_service = CameraService(camera, serializer, file_manager)
-        while True:
-            print(f"Sleeping for {wait_time_ms // 1000} seconds...")
-            time.sleep(wait_time_ms // 1000)
-            detected = motion_detector.detect_motion(delta_ms)
-            if detected:
-                print("Motion detected: Recording video...")
-                camera_service.record_video(video_length_s)
-            else:
-                print("Motion not detected")
+
+        settings = CameraSettings(
+            wait_time_ms=wait_time_ms,
+            detect_delta_ms=delta_ms,
+            video_length_s=video_length_s,
+        )
+        camera_fsm = CameraFSM(
+            CameraCtx(
+                camera, motion_detector, file_manager, serializer, settings
+            )
+        )
+
+        # Generator has an infinite loop
+        for event in camera_fsm.events():
+            # Exit the loop if the camera is stopped.
+            if camera_fsm.state is CameraState.STOPPED:
+                break
+
+            camera_fsm.handle_event(event)
+
+        raise typer.Exit(1 if camera_fsm.context.error else 0)
 
 
 @app.command()
