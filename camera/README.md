@@ -27,7 +27,7 @@ stateDiagram-v2
     Saving --> Stopped: Error
     Sleeping --> Stopped: Error
 
-    Error --> [*]
+    Stopped --> [*]
 ```
 
 This system continues looping until the service is force-stopped (SIGINT) or an error occurs.
