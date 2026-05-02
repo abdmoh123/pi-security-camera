@@ -30,6 +30,7 @@ class CameraEvent(StrEnum):
     RECORD = auto()
     SAVE = auto()
     SLEEP = auto()
+    WAKE = auto()
     STOP = auto()
 
 
@@ -114,6 +115,15 @@ def __sleep_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedF
 
 
 @__camera_fsm.transition(
+    CameraState.SLEEPING,
+    CameraState.DETECTING,
+    CameraEvent.WAKE
+)
+def __wake_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
+    print("Waking up...")
+
+
+@__camera_fsm.transition(
     (
         CameraState.DETECTING,
         CameraState.RECORDING,
@@ -143,7 +153,10 @@ class CameraFSM:
     state: CameraState = CameraState.DETECTING
 
     _event_loop: ClassVar[tuple[CameraEvent, ...]] = (
-        CameraEvent.RECORD, CameraEvent.SAVE, CameraEvent.SLEEP
+        CameraEvent.RECORD,
+        CameraEvent.SAVE,
+        CameraEvent.SLEEP,
+        CameraEvent.WAKE,
     )
     # Don't run the save event if the camera is in the detect state
     # As no data has been recorded
