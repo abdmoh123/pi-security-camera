@@ -12,8 +12,12 @@ The motion detection service is modelled as a finite state machine (see below).
 
 ```mermaid
 stateDiagram-v2
-    Detecting --> Recording: Record
-    Detecting --> Sleeping: Sleep
+    [*] --> Detecting
+
+    state if_detected <<choice>>
+    Detecting --> if_detected
+    if_detected --> Recording: if motion
+    if_detected --> Sleeping: if no motion
     Recording --> Saving: Save
     Saving --> Sleeping: Sleep
     Sleeping --> Detecting: Wake
@@ -22,6 +26,8 @@ stateDiagram-v2
     Recording --> Stopped: Error
     Saving --> Stopped: Error
     Sleeping --> Stopped: Error
+
+    Error --> [*]
 ```
 
 This system continues looping until the service is force-stopped (SIGINT) or an error occurs.
