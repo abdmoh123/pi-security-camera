@@ -55,7 +55,7 @@ class CameraCtx(SMContext):
     data: list[MatLike] | None = None
 
 
-__camera_fsm: StateMachine[CameraState, CameraEvent, CameraCtx] = StateMachine(
+_camera_fsm: StateMachine[CameraState, CameraEvent, CameraCtx] = StateMachine(
     CameraEvent.STOP
 )
 
@@ -66,7 +66,7 @@ def __motion_detect_guard(context: CameraCtx) -> bool:
     )
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     CameraState.DETECTING,
     CameraState.RECORDING,
     CameraEvent.RECORD,
@@ -78,7 +78,7 @@ def __record_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnused
     )
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     CameraState.DETECTING,
     CameraState.DETECTING,
     CameraEvent.RECORD,
@@ -87,7 +87,7 @@ def __skip_record_action(_: CameraCtx) -> None:  # pyright: ignore[reportUnusedF
     print("Motion not detected, skipping recording...")
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     CameraState.RECORDING,
     CameraState.SAVING,
     CameraEvent.SAVE
@@ -102,7 +102,7 @@ def __save_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFu
     context.data = None
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     (CameraState.DETECTING, CameraState.SAVING),
     CameraState.SLEEPING,
     CameraEvent.SLEEP
@@ -114,16 +114,16 @@ def __sleep_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedF
     time.sleep(context.settings.wait_time_ms // 1000)
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     CameraState.SLEEPING,
     CameraState.DETECTING,
     CameraEvent.WAKE
 )
-def __wake_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
+def __wake_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction, reportUnusedParameter]
     print("Waking up...")
 
 
-@__camera_fsm.transition(
+@_camera_fsm.transition(
     (
         CameraState.DETECTING,
         CameraState.RECORDING,
@@ -178,4 +178,4 @@ class CameraFSM:
         Args:
             event: The event to handle.
         """
-        self.state = __camera_fsm.handle_event(self.state, event, self.context)
+        self.state = _camera_fsm.handle_event(self.state, event, self.context)
