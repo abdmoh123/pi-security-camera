@@ -53,8 +53,7 @@ class FileManager:
             FileExistsError: If the file already exists.
         """
         # Ensure the max number of files is not exceeded
-        num_files = len(self.get_files())
-        while self.__is_full(num_files):
+        while self.__is_full(len(self.get_files())):
             self.delete_oldest_file()
 
         # Ensure no files are overwritten
@@ -80,6 +79,7 @@ class FileManager:
     def delete_oldest_file(self) -> None:
         """Deletes the oldest file in the directory."""
         files = list(self.directory.iterdir())
-        if len(files) > self.max_files:
+        # Don't try to delete a file if no files exist
+        if len(files) > 0:
             oldest_file = min(files, key=lambda f: f.stat().st_mtime)
             oldest_file.unlink()
