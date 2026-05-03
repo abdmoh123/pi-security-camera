@@ -43,17 +43,18 @@ def serve(
         max_files: The maximum number of files to keep in the directory.
             Defaults to 5 files.
     """
+    # Prepare things before starting the FSM
+    video_dir_path: Path = Path(video_dir).resolve()
+    if not video_dir_path.exists():
+        raise FileNotFoundError(video_dir_path)
+
     # Context manager as safety-net in case FSM fails to cleanup on STOP event
     with OpenCVCamera() as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
-        file_manager = FileManager(Path(video_dir), max_files)
+        file_manager = FileManager(video_dir_path, max_files)
         serializer = OpenCVSerializer()
 
-        settings = CameraSettings(
-            wait_time_ms=wait_time_ms,
-            detect_delta_ms=delta_ms,
-            video_length_s=video_length_s,
-        )
+        settings = CameraSettings(wait_time_ms, delta_ms, video_length_s)
         camera_fsm = CameraFSM(
             CameraCtx(
                 camera, motion_detector, file_manager, serializer, settings
