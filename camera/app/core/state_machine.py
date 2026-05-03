@@ -3,7 +3,7 @@
 from abc import ABC
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Callable
 
 from app.core.exceptions.state_machine import TransitionError
@@ -57,7 +57,10 @@ class StateMachine[S: Enum, E: Enum, C: SMContext]:
                 Defaults to None as it's optional (unless you have more than one
                 to_state transition registered).
         """
-        if not isinstance(from_state, Iterable):
+        if (
+            isinstance(from_state, StrEnum)
+            or not isinstance(from_state, Iterable)
+        ):
             from_state = (from_state,)
 
         for state in from_state:
