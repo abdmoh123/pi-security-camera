@@ -41,7 +41,7 @@ class OpenCVSerializer:
             # Ensure that the video writer is closed
             out.release()
 
-        if not writer_error:
+        if writer_error:
             raise SerializationError(file_path) from writer_error
 
     def write_image(self, data: MatLike, file_path: Path) -> None:
