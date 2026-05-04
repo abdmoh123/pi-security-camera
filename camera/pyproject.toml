@@ -11,6 +11,7 @@ requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
     "opencv-python>=4.13.0.92",
+    "pydantic>=2.13.3",
     "typer>=0.24.1",
     "websockets>=16.0",
 ]
