@@ -102,7 +102,10 @@ async def upload_video(
     # Create the video entry
     try:
         result_video: VideoSchema | None = await run_in_threadpool(
-            video_service.create_video_entry, db_session, video_data
+            video_service.create_video_entry,
+            db_session,
+            video_data,
+            current_credential.camera_id,
         )
         if not result_video:
             raise HTTPException(status_code=404, detail="Camera not found!")
