@@ -18,6 +18,7 @@ from app.services.motion.motion_detector import MotionDetectorService
 
 class CameraState(StrEnum):
     """The states of the camera."""
+
     DETECTING = auto()
     RECORDING = auto()
     SAVING = auto()
@@ -27,6 +28,7 @@ class CameraState(StrEnum):
 
 class CameraEvent(StrEnum):
     """The events of the camera."""
+
     RECORD = auto()
     SAVE = auto()
     SLEEP = auto()
@@ -37,6 +39,7 @@ class CameraEvent(StrEnum):
 @dataclass(frozen=True)
 class CameraSettings:
     """Settings for the camera."""
+
     wait_time_ms: int = 1000
     detect_delta_ms: int = 500
     video_length_s: int = 10
@@ -45,6 +48,7 @@ class CameraSettings:
 @dataclass
 class CameraCtx(SMContext):
     """Data to be used by the camera state machine."""
+
     camera: Camera
     motion_detector: MotionDetectorService
     file_manager: FileManager
@@ -70,7 +74,7 @@ def __motion_detect_guard(context: CameraCtx) -> bool:
     CameraState.DETECTING,
     CameraState.RECORDING,
     CameraEvent.RECORD,
-    __motion_detect_guard
+    __motion_detect_guard,
 )
 def __record_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
     context.data = context.camera.start_recording(
@@ -88,9 +92,7 @@ def __skip_record_action(_: CameraCtx) -> None:  # pyright: ignore[reportUnusedF
 
 
 @_camera_fsm.transition(
-    CameraState.RECORDING,
-    CameraState.SAVING,
-    CameraEvent.SAVE
+    CameraState.RECORDING, CameraState.SAVING, CameraEvent.SAVE
 )
 def __save_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
     if not context.data:
@@ -105,19 +107,15 @@ def __save_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFu
 @_camera_fsm.transition(
     (CameraState.DETECTING, CameraState.SAVING),
     CameraState.SLEEPING,
-    CameraEvent.SLEEP
+    CameraEvent.SLEEP,
 )
 def __sleep_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
-    print(
-        f"Sleeping for {context.settings.wait_time_ms // 1000} seconds..."
-    )
+    print(f"Sleeping for {context.settings.wait_time_ms // 1000} seconds...")
     time.sleep(context.settings.wait_time_ms // 1000)
 
 
 @_camera_fsm.transition(
-    CameraState.SLEEPING,
-    CameraState.DETECTING,
-    CameraEvent.WAKE
+    CameraState.SLEEPING, CameraState.DETECTING, CameraEvent.WAKE
 )
 def __wake_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction, reportUnusedParameter]
     print("Waking up...")
@@ -128,10 +126,10 @@ def __wake_action(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFu
         CameraState.DETECTING,
         CameraState.RECORDING,
         CameraState.SAVING,
-        CameraState.SLEEPING
+        CameraState.SLEEPING,
     ),
     CameraState.STOPPED,
-    CameraEvent.STOP
+    CameraEvent.STOP,
 )
 def __shutdown(context: CameraCtx) -> None:  # pyright: ignore[reportUnusedFunction]
     if context.error:

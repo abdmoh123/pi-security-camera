@@ -17,6 +17,7 @@ type Guard[C] = Callable[[C], bool]
 @dataclass(kw_only=True)
 class SMContext(ABC):
     """Context for the state machine."""
+
     error: Exception | None = None
 
 
@@ -40,7 +41,7 @@ class StateMachine[S: Enum, E: Enum, C: SMContext]:
         to_state: S,
         event: E,
         action: Action[C],
-        guard: Guard[C] | None = None
+        guard: Guard[C] | None = None,
     ) -> None:
         """Adds a state-event pair (transition) to the state machine.
 
@@ -57,9 +58,8 @@ class StateMachine[S: Enum, E: Enum, C: SMContext]:
                 Defaults to None as it's optional (unless you have more than one
                 to_state transition registered).
         """
-        if (
-            isinstance(from_state, StrEnum)
-            or not isinstance(from_state, Iterable)
+        if isinstance(from_state, StrEnum) or not isinstance(
+            from_state, Iterable
         ):
             from_state = (from_state,)
 
@@ -126,6 +126,7 @@ class StateMachine[S: Enum, E: Enum, C: SMContext]:
         Returns:
             The decorated function.
         """
+
         def wrapper(action: Action[C]) -> Action[C]:
             self.add_transition(from_state, to_state, event, action, guard)
             return action

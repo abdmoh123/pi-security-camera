@@ -89,8 +89,10 @@ class OpenCVCamera:
             time_taken = end_time - start_time
             # Ensure sleep time isn't negative
             time.sleep(max(0, frame_time - time_taken))
-            print(f"Time taken/frame time: {time_taken}/{frame_time} seconds",
-                  f"\nframe: {i}/{frames_to_capture}")
+            print(
+                f"Time taken/frame time: {time_taken}/{frame_time} seconds",
+                f"\nframe: {i}/{frames_to_capture}",
+            )
         print(f"Captured {len(frames)} frames")
 
         return frames

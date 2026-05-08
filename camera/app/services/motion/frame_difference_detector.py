@@ -1,6 +1,5 @@
 """Frame difference implementation of the MotionDetectorService."""
 
-
 import time
 from dataclasses import dataclass
 
@@ -43,9 +42,7 @@ class CV2FrameDifferenceDetectorService:
             The mask.
         """
         # Blur the frame before generating the mask
-        blurred_frame = cv2.medianBlur(
-            cv2.subtract(frame1, frame2), blur_value
-        )
+        blurred_frame = cv2.medianBlur(cv2.subtract(frame1, frame2), blur_value)
         mask = cv2.adaptiveThreshold(
             blurred_frame,
             maxValue=255,
@@ -60,9 +57,8 @@ class CV2FrameDifferenceDetectorService:
             cv2.medianBlur(mask, blur_value),
             cv2.MORPH_CLOSE,
             kernel,
-            iterations=1
+            iterations=1,
         )
-
 
     def detect_motion(self, delta_ms: int = 1000) -> bool:
         """Detects motion in the camera feed.
