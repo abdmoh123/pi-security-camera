@@ -47,17 +47,13 @@ def get_users(
 
 @router.post("/", response_model=UserResponse)
 def create_user(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     user: Annotated[UserCreate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
-    """Creates a new user with given details. Admin only.
+    """Creates a new user with given details.
 
     The first registered user will automatically be made an admin.
     """
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-
     try:
         db_user: UserSchema = user_service.create_user(db_session, user)
     except RecordAlreadyExistsError as e:
