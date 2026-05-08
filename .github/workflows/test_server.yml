@@ -18,8 +18,14 @@ jobs:
         with:
           version: 2026.3.10
       - run: mise run lint
+
   test:
     runs-on: ubuntu-latest
+    environment: development
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DB_TYPE: ${{ vars.DB_TYPE }}
+      JWT_ALGORITHM: ${{ vars.JWT_ALGORITHM }}
     defaults:
       run:
         working-directory: ./server
