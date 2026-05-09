@@ -1,12 +1,15 @@
 """File containing crud functions related to the CameraCredential table."""
 
+import secrets
+import uuid
+
 from argon2 import PasswordHasher
 from sqlalchemy.orm import Session
 
 from app.api.models.camera_credentials import CameraCredentialCreate
 from app.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from app.core.security.hashing import generate_hashed_password
-from app.db.db_models import Camera, CameraCredential
+from app.db.db_models import Camera, CameraCredential, User
 from app.services.camera import get_camera
 
 
@@ -14,6 +17,15 @@ from app.services.camera import get_camera
 def get_credential(db: Session, client_id: str) -> CameraCredential | None:
     """Queries the database to get a camera credential using the given ID."""
     return db.query(CameraCredential).filter(CameraCredential.client_id == client_id).first()
+
+
+def generate_credential(user: User) -> CameraCredentialCreate:
+    """Generates a new credential for a given user."""
+    # Credential ID includes user's name (from email) and a random UUID
+    client_id: str = f"{user.email.split("@")[0]}:{uuid.uuid4().hex}"
+    # Credential secret is generated randomly
+    client_secret: str = secrets.token_hex(64)
+    return CameraCredentialCreate(client_id=client_id, client_secret=client_secret)
 
 
 def create_credential(db: Session, credential: CameraCredentialCreate) -> CameraCredential:

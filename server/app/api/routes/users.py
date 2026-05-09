@@ -12,10 +12,11 @@ from app.api.models.videos import Video
 from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from app.db.database import get_db
-from app.db.db_models import Camera
+from app.db.db_models import Camera, CameraCredential
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 from app.services import camera as camera_service
+from app.services import camera_credential as credential_service
 from app.services import camera_subscription as subscription_service
 from app.services import user as user_service
 from app.services import video as video_service
@@ -233,4 +234,18 @@ def get_videos(
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
     return video_service.get_video_entries(
         db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+    )
+
+@router.post("/{user_id}/credential")
+def create_credential(
+    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> CameraCredential:
+    """Creates a new credential for a given user."""
+    if not user_service.get_user(db_session, current_user.id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    new_credential = credential_service.generate_credential(current_user)
+    return credential_service.create_credential(
+        db_session, new_credential
     )
