@@ -28,7 +28,7 @@ def generate_credential(user: User) -> CameraCredentialCreate:
     return CameraCredentialCreate(client_id=client_id, client_secret=client_secret)
 
 
-def create_credential(db: Session, credential: CameraCredentialCreate) -> CameraCredential:
+def create_credential(db: Session, user_id: int, credential: CameraCredentialCreate) -> CameraCredential:
     """Creates a new camera credential using the given inputs."""
     db_credential: CameraCredential | None = get_credential(db, credential.client_id)
     if db_credential:
@@ -36,6 +36,7 @@ def create_credential(db: Session, credential: CameraCredentialCreate) -> Camera
 
     db_credential = CameraCredential(
         client_id=credential.client_id,
+        user_id=user_id,
         client_secret_hash=generate_hashed_password(credential.client_secret, PasswordHasher()),
     )
     db.add(db_credential)

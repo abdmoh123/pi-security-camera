@@ -247,5 +247,5 @@ def create_credential(
 
     new_credential = credential_service.generate_credential(current_user)
     return credential_service.create_credential(
-        db_session, new_credential
+        db_session, current_user.id, new_credential
     )
