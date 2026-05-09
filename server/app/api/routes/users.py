@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
+from app.api.models.camera_credentials import CameraCredentialResponse
 from app.api.models.camera_subscriptions import CameraSubscription
 from app.api.models.general import PaginationParams
 from app.api.models.users import UserCreate, UserResponse, UserUpdate
@@ -12,7 +13,7 @@ from app.api.models.videos import Video
 from app.auth.dependencies import get_current_admin_user, get_current_user
 from app.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from app.db.database import get_db
-from app.db.db_models import Camera, CameraCredential
+from app.db.db_models import Camera
 from app.db.db_models import User as UserSchema
 from app.db.db_models import Video as VideoSchema
 from app.services import camera as camera_service
@@ -236,16 +237,25 @@ def get_videos(
         db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
-@router.post("/{user_id}/credential")
+@router.post("/{user_id}/credential", response_model=CameraCredentialResponse)
 def create_credential(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     db_session: Annotated[Session, Depends(get_db)],
-) -> CameraCredential:
+) -> CameraCredentialResponse:
     """Creates a new credential for a given user."""
     if not user_service.get_user(db_session, current_user.id):
         raise HTTPException(status_code=404, detail="User not found!")
 
     new_credential = credential_service.generate_credential(current_user)
-    return credential_service.create_credential(
-        db_session, current_user.id, new_credential
-    )
+    try:
+        result = credential_service.create_credential(
+            db_session, current_user.id, new_credential
+        )
+        # Result secret is hashed, so the value from the pydantic model is used
+        return CameraCredentialResponse(
+            client_id=result.client_id,
+            user_id=result.user_id,
+            client_secret=new_credential.client_secret  
+        )
+    except RecordAlreadyExistsError as e:
+        raise HTTPException(status_code=409) from e
