@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.models.videos import VideoCreate, VideoUpdate
+from app.api.models.videos import VideoUpdate
 from app.db.db_models import Camera, Video
 from app.services.camera import get_camera
 
@@ -37,14 +37,14 @@ def get_video_entries(
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 
 
-def create_video_entry(db: Session, video: VideoCreate, camera_id: int) -> Video | None:
+def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video | None:
     """Creates a new video entry using the given inputs."""
     # Check if the camera exists before creating the video entry
     db_camera: Camera | None = get_camera(db, camera_id)
     if not db_camera:
         return None
 
-    db_video = Video(file_name=video.file_name, camera_id=db_camera.id)
+    db_video = Video(file_name=file_name, camera_id=db_camera.id)
 
     db.add(db_video)
     db.commit()

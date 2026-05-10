@@ -5,13 +5,13 @@ from pathlib import Path as FilePath
 from typing import Annotated
 
 import aiofiles
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.models.general import PaginationParams
-from app.api.models.videos import Video, VideoCreate, VideoUpdate
+from app.api.models.videos import Video, VideoUpdate
 from app.auth.dependencies import get_current_credential, get_current_user
 from app.core.exceptions import InvalidFileNameError
 from app.core.validation.regex import file_name_regex
@@ -60,8 +60,8 @@ def get_videos(
 @router.post("/", response_model=Video)
 async def upload_video(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
-    video_data: Annotated[VideoCreate, Body()],
-    video_file: Annotated[UploadFile, Body()],
+    file_name: Annotated[str, Form(pattern=file_name_regex, min_length=5)],
+    video_file: Annotated[UploadFile, File()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> VideoSchema:
     """Creates and uploads a new video with the given details."""
@@ -72,7 +72,7 @@ async def upload_video(
     db_videos: list[VideoSchema] = await run_in_threadpool(
         video_service.get_video_entries,
         db_session,
-        file_name=video_data.file_name,
+        file_name=file_name,
         camera_ids=[current_credential.camera_id],
         limit=1,
     )
@@ -85,7 +85,7 @@ async def upload_video(
 
     # TODO: Make the video files get stored on the database container instead of api server
     try:
-        file_path: FilePath = get_video_file_path_safe(video_data.file_name, current_credential.camera_id)
+        file_path: FilePath = get_video_file_path_safe(file_name, current_credential.camera_id)
     except InvalidFileNameError as e:
         raise HTTPException(status_code=400, detail="Invalid file name!") from e
     # Make sure the directory exists
@@ -104,7 +104,7 @@ async def upload_video(
         result_video: VideoSchema | None = await run_in_threadpool(
             video_service.create_video_entry,
             db_session,
-            video_data,
+            file_name,
             current_credential.camera_id,
         )
         if not result_video:
