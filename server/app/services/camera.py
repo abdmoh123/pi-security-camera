@@ -42,7 +42,7 @@ def get_cameras(
 def create_camera(db: Session, camera: CameraCreate) -> Camera:
     """Creates a new camera using the given inputs."""
     db_camera = Camera(
-        name=camera.name, host_address=camera.host_address, auth_key=camera.auth_key, mac_address=camera.mac_address
+        name=camera.name, host_address=camera.host_address, mac_address=camera.mac_address
     )
 
     db.add(db_camera)

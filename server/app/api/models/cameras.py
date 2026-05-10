@@ -42,7 +42,6 @@ class CameraCreate(BaseModel):
 
     host_address: str = Field(pattern=host_address_regex)
     name: str = Field(pattern=camera_name_regex)
-    auth_key: str
     mac_address: str = Field(pattern=mac_address_regex)
 
 
