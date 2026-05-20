@@ -62,7 +62,7 @@ class Video(Base):
     __tablename__: str = "videos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"), primary_key=True, nullable=True)
+    camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"))
     file_name: Mapped[str] = mapped_column(String)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
