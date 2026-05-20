@@ -75,6 +75,10 @@ def get_db() -> Generator[Session, None, None]:
     session = db_connector.get_session()
     try:
         yield session
+    except Exception:
+        # Undo any changes if an error occured
+        session.rollback()
+        raise
     finally:
         session.close()
 
