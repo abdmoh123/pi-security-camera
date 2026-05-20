@@ -48,7 +48,6 @@ def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video | N
 
     db.add(db_video)
     db.commit()
-    db.refresh(db_video)
 
     return db_video
 
@@ -71,7 +70,6 @@ def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) 
         db_video.file_name = new_video_data.file_name
 
     db.commit()
-    db.refresh(db_video)
 
     return db_video
 
