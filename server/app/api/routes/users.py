@@ -237,6 +237,7 @@ def get_videos(
         db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
+
 @router.post("/{user_id}/credential", response_model=CameraCredentialResponse)
 def create_credential(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
@@ -248,14 +249,10 @@ def create_credential(
 
     new_credential = credential_service.generate_credential(current_user)
     try:
-        result = credential_service.create_credential(
-            db_session, current_user.id, new_credential
-        )
+        result = credential_service.create_credential(db_session, current_user.id, new_credential)
         # Result secret is hashed, so the value from the pydantic model is used
         return CameraCredentialResponse(
-            client_id=result.client_id,
-            user_id=result.user_id,
-            client_secret=new_credential.client_secret  
+            client_id=result.client_id, user_id=result.user_id, client_secret=new_credential.client_secret
         )
     except RecordAlreadyExistsError as e:
         raise HTTPException(status_code=409) from e

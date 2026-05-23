@@ -22,7 +22,7 @@ def get_credential(db: Session, client_id: str) -> CameraCredential | None:
 def generate_credential(user: User) -> CameraCredentialCreate:
     """Generates a new credential for a given user."""
     # Credential ID includes user's name (from email) and a random UUID
-    client_id: str = f"{user.email.split("@")[0]}:{uuid.uuid4().hex}"
+    client_id: str = f"{user.email.split('@')[0]}:{uuid.uuid4().hex}"
     # Credential secret is generated randomly
     client_secret: str = secrets.token_hex(64)
     return CameraCredentialCreate(client_id=client_id, client_secret=client_secret)
