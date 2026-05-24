@@ -55,6 +55,14 @@ class DataReader:
             self.credentials_path.read_text()
         )
 
+    def update_credentials_file(self, new_credentials: Credential) -> None:
+        """Update the credentials file with new credentials.
+
+        Args:
+            new_credentials: The new credentials.
+        """
+        _ = self.credentials_path.write_text(new_credentials.model_dump_json())
+
 
 def prepare_data_reader(data_directory: Path) -> None:
     """Does some preparation for the DataReader."""
