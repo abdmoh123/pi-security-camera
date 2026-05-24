@@ -23,13 +23,22 @@ class DataReader:
                 f"Data directory not found at {self.data_directory}"
             )
 
+    @property
+    def credentials_path(self) -> Path:
+        """Property for the path to the credentials file.
+
+        Returns:
+            The path to the credentials file.
+        """
+        return self.data_directory / "credentials.json"
+
     def credentials_file_exists(self) -> bool:
         """Check if the credentials file exists.
 
         Returns:
             True if the credentials file exists, False otherwise.
         """
-        return (self.data_directory / "credentials.json").exists()
+        return self.credentials_path.exists()
 
     def read_credentials(self) -> Credential:
         """Read the camera credentials from the data directory.
@@ -37,13 +46,14 @@ class DataReader:
         Returns:
             The camera credentials.
         """
-        credentials_path = self.data_directory / "credentials.json"
         if not self.credentials_file_exists():
             raise FileNotFoundError(
-                f"Credentials file not found at {credentials_path}"
+                f"Credentials file not found at {self.credentials_path}"
             )
 
-        return Credential.model_validate_json(credentials_path.read_text())
+        return Credential.model_validate_json(
+            self.credentials_path.read_text()
+        )
 
 
 def prepare_data_reader(data_directory: Path) -> None:
