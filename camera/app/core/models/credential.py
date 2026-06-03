@@ -16,6 +16,7 @@ class Credential(BaseModel):
 
     client_id: str
     user_id: int = Field(ge=1)
+    camera_id: int | None = None
     client_secret: str
 
     @classmethod
