@@ -15,3 +15,4 @@ wheels/
 # Generated photos and video at default paths
 recordings/
 photos/
+data/
