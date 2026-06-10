@@ -1,5 +1,6 @@
 """Reads data from a given data folder."""
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,8 +74,11 @@ class DataReader:
                 f"Server address file not found at {self.server_address_path}"
             )
 
-        raw_address = self.server_address_path.read_text().strip()
-        # TODO: Do some validation for the address
+        raw_address: str = self.server_address_path.read_text().strip()
+        pattern = r"^https?://.*"
+        if "\n" in raw_address or re.match(pattern, raw_address) is None:
+            raise ValueError(f"Invalid server address: {raw_address}")
+
         return raw_address
 
 
