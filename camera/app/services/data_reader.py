@@ -24,6 +24,15 @@ class DataReader:
             )
 
     @property
+    def server_address_path(self) -> Path:
+        """Property for the path to the file containing the API server address.
+
+        Returns:
+            The path to the API server address file.
+        """
+        return self.data_directory / "server_address.txt"
+
+    @property
     def credentials_path(self) -> Path:
         """Property for the path to the credentials file.
 
@@ -32,28 +41,18 @@ class DataReader:
         """
         return self.data_directory / "credentials.json"
 
-    def credentials_file_exists(self) -> bool:
-        """Check if the credentials file exists.
-
-        Returns:
-            True if the credentials file exists, False otherwise.
-        """
-        return self.credentials_path.exists()
-
     def read_credentials(self) -> Credential:
         """Read the camera credentials from the data directory.
 
         Returns:
             The camera credentials.
         """
-        if not self.credentials_file_exists():
+        if not self.credentials_path.exists():
             raise FileNotFoundError(
                 f"Credentials file not found at {self.credentials_path}"
             )
 
-        return Credential.model_validate_json(
-            self.credentials_path.read_text()
-        )
+        return Credential.model_validate_json(self.credentials_path.read_text())
 
     def update_credentials_file(self, new_credentials: Credential) -> None:
         """Update the credentials file with new credentials.
@@ -62,6 +61,21 @@ class DataReader:
             new_credentials: The new credentials.
         """
         _ = self.credentials_path.write_text(new_credentials.model_dump_json())
+
+    def read_server_address(self) -> str:
+        """Read the API server address from the data directory.
+
+        Returns:
+            The server host.
+        """
+        if not self.server_address_path.exists():
+            raise FileNotFoundError(
+                f"Server address file not found at {self.server_address_path}"
+            )
+
+        raw_address = self.server_address_path.read_text().strip()
+        # TODO: Do some validation for the address
+        return raw_address
 
 
 def prepare_data_reader(data_directory: Path) -> None:
