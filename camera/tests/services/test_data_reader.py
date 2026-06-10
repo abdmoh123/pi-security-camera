@@ -39,3 +39,26 @@ def test_DataReader_read_credentials(
     actual_credential = data_reader.read_credentials()
 
     assert actual_credential == expected_credential
+
+
+def test_DataReader_read_server_address(
+    mocker: MockerFixture, tmp_path: Path
+) -> None:
+    """Check if the read function works normally."""
+    expected_address = "http://localhost:8000"
+
+    mocked_file = f"""
+{expected_address}
+"""
+
+    # Disable the Path methods to prevent unimportant IO operations
+    _ = mocker.patch.object(Path, "exists", return_value=True)
+    _ = mocker.patch.object(Path, "read_text", return_value=mocked_file)
+
+    data_reader = DataReader(tmp_path)
+
+    assert data_reader.server_address_path == tmp_path / "server_address.txt"
+
+    actual_address = data_reader.read_server_address()
+
+    assert actual_address == expected_address
