@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 from pytest_mock import MockerFixture
 
 from app.core.models.credential import Credential
@@ -62,3 +63,23 @@ def test_DataReader_read_server_address(
     actual_address = data_reader.read_server_address()
 
     assert actual_address == expected_address
+
+
+def test_DataReader_read_bad_server_address(
+    mocker: MockerFixture, tmp_path: Path
+) -> None:
+    """Check if the read function fails on bad addresses."""
+    test_address = "dumb fake address"
+
+    mocked_file = f"""
+{test_address}
+"""
+
+    # Disable the Path methods to prevent unimportant IO operations
+    _ = mocker.patch.object(Path, "exists", return_value=True)
+    _ = mocker.patch.object(Path, "read_text", return_value=mocked_file)
+
+    data_reader = DataReader(tmp_path)
+
+    with pytest.raises(ValueError):
+        _ = data_reader.read_server_address()
