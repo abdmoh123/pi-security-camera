@@ -9,11 +9,11 @@ from app.core.serializers.opencv_serializer import OpenCVSerializer
 from app.fsms.camera.data import CameraCtx, CameraSettings
 from app.fsms.camera.types import CameraState
 from app.services.camera_service import CameraService
-from app.services.camera_state_machine import CameraFSM
 from app.services.file_manager import FileManager
 from app.services.motion.frame_difference_detector import (
     CV2FrameDifferenceDetectorService,
 )
+from app.surveillance_system import SurveillanceSystem
 
 app = typer.Typer()
 
@@ -52,7 +52,7 @@ def serve(
         serializer = OpenCVSerializer()
 
         settings = CameraSettings(wait_time_ms, delta_ms, video_length_s)
-        camera_fsm = CameraFSM(
+        camera_fsm = SurveillanceSystem(
             CameraCtx(
                 camera, motion_detector, file_manager, serializer, settings
             )

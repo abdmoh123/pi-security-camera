@@ -10,8 +10,8 @@ from app.fsms.camera.types import CameraEvent, CameraState
 
 
 @dataclass
-class CameraFSM:
-    """A camera system using the state machine pattern.
+class SurveillanceSystem:
+    """A camera surveillance system using the state machine pattern.
 
     Attributes:
         context: The context/data of the camera system.
@@ -36,8 +36,8 @@ class CameraFSM:
     def events(self) -> Generator[CameraEvent, None, None]:
         """Iterates through the event loop of the camera system."""
         while True:
-            for event in CameraFSM._event_loop:
-                if (self.state, event) in CameraFSM._skip_transitions:
+            for event in SurveillanceSystem._event_loop:
+                if (self.state, event) in SurveillanceSystem._skip_transitions:
                     continue
                 yield event
 
