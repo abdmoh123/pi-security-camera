@@ -26,7 +26,7 @@ class OpenCVCamera:
 
         Args:
             camera_id: The internal id of the camera to use, defaults to 0 (main
-                camera).
+              camera).
         """
         self._camera_id = camera_id
         self.enable()
