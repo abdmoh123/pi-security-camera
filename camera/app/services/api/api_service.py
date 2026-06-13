@@ -74,7 +74,7 @@ class APIService:
             video_path: The path to the video to upload.
         """
         with open(video_path, "rb") as video_file:
-            _ = httpx.post(
+            _ = self._client.post(
                 url="/videos/",
                 auth=self.authenticator,
                 data={"file_name": video_path.name},
@@ -91,7 +91,7 @@ class APIService:
             name: The name of the camera.
             mac_address: The MAC address of the camera.
         """
-        response = httpx.post(
+        response = self._client.post(
             url="/cameras/",
             auth=self.authenticator,
             json={
@@ -109,7 +109,7 @@ class APIService:
         Args:
             camera_id: The ID of the camera to unregister.
         """
-        _ = httpx.delete(
+        _ = self._client.delete(
             url=f"/cameras/{camera_id}",
             auth=self.authenticator,
         ).raise_for_status()
@@ -125,7 +125,7 @@ class APIService:
         if self.authenticator.credential.camera_id is None:
             raise ValueError("Camera ID is not set")
 
-        _ = httpx.put(
+        _ = self._client.put(
             url=f"/cameras/{self.authenticator.credential.camera_id}",
             auth=self.authenticator,
             json=camera_data.model_dump(),
