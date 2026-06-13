@@ -7,7 +7,7 @@ from types import TracebackType
 import httpx
 from httpx import Response
 
-from app.core.models.camera import CameraUpdate
+from app.core.models.camera import Camera, CameraUpdate
 from app.core.models.user import User
 from app.services.api.auth import OAuth2Authenticator
 
@@ -100,8 +100,9 @@ class APIService:
                 "mac_address": mac_address,
             },
         ).raise_for_status()
+        camera = Camera(**response.json())  # pyright: ignore[reportAny]
         # Update the credential camera ID in case we want to use it later
-        self.authenticator.credential.camera_id = response.json()["id"]
+        self.authenticator.credential.camera_id = camera.id
 
     def unregister_camera(self, camera_id: int) -> None:
         """Unregisters the camera from the server.

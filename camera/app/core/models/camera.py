@@ -10,6 +10,27 @@ host_address_regex: str = r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"
 mac_address_regex: str = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
 
 
+class Camera(BaseModel):
+    """Model for the camera's data gained from the server API.
+
+    Attributes:
+        id: A camera's ID
+        host_address: A camera's host address
+        name: A camera's name
+        mac_address: A camera's MAC address
+    """
+
+    id: int = Field(ge=1)
+    host_address: str = Field(pattern=host_address_regex)
+    name: str = Field(pattern=camera_name_regex)
+    mac_address: str = Field(pattern=mac_address_regex)
+
+    class Config:
+        """Config subclass of CameraResponse."""
+
+        from_attributes: bool = True
+
+
 class CameraUpdate(BaseModel):
     """Pydantic model used when updating a Camera record."""
 
