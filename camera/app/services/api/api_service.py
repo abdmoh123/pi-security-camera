@@ -91,6 +91,12 @@ class APIService:
             name: The name of the camera.
             mac_address: The MAC address of the camera.
         """
+        # Don't try to register if registration was already done
+        if self.authenticator.credential.camera_id is None:
+            camera_id = self.authenticator.credential.camera_id
+            print(f"Skipped: Camera id={camera_id} already registered")
+            return
+
         response = self._client.post(
             url="/cameras/",
             auth=self.authenticator,
