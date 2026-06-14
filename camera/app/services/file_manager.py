@@ -76,6 +76,18 @@ class FileManager:
         """
         return list(self.directory.iterdir())
 
+    def get_latest_file(self) -> Path:
+        """Gets the path for the latest file saved.
+
+        Returns:
+            The path to the latest file.
+        """
+        files = list(self.directory.iterdir())
+        if len(files) == 0:
+            raise FileNotFoundError("No files found in directory")
+
+        return max(files, key=lambda f: f.stat().st_mtime)
+
     def delete_oldest_file(self) -> None:
         """Deletes the oldest file in the directory."""
         files = list(self.directory.iterdir())
