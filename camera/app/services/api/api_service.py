@@ -46,6 +46,11 @@ class APIService:
         """Context manager exit point."""
         self._client.close()
 
+    def is_reachable(self) -> bool:
+        """Checks if the API server is reachable."""
+        response = httpx.get(url=self.api_url)
+        return response.status_code == 200
+
     def get_registered_users(
         self, page_index: int, page_size: int
     ) -> list[User]:
