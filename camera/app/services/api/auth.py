@@ -30,9 +30,9 @@ class OAuth2Authenticator(httpx.Auth):
     @override
     def auth_flow(self, request: Request) -> Generator[Request, Response, None]:
         if self._access_token is None:
-            token_response = (
-                yield self._build_token_request()
-            ).raise_for_status()
+            token_response = yield self._build_token_request()
+            _ = token_response.read()
+            _ = token_response.raise_for_status()
             self._access_token = token_response.json()["access_token"]
 
         # Keep retrying to authenticate until it works out (with a limit)
@@ -52,9 +52,9 @@ class OAuth2Authenticator(httpx.Auth):
                 "[Auth]: Received 401 error, retrying... "
                 + f"({attempt}/{self._max_auth_retries})"
             )
-            token_response = (
-                yield self._build_token_request()
-            ).raise_for_status()
+            token_response = yield self._build_token_request()
+            _ = token_response.read()
+            _ = token_response.raise_for_status()
             self._access_token = token_response.json()["access_token"]
 
     def _build_token_request(self) -> Request:
