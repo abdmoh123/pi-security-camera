@@ -24,6 +24,7 @@ class APIService:
 
     api_url: str
     authenticator: OAuth2Authenticator
+
     _client: httpx.Client = field(init=False)
 
     def __post_init__(self) -> None:
@@ -92,7 +93,7 @@ class APIService:
             mac_address: The MAC address of the camera.
         """
         # Don't try to register if registration was already done
-        if self.authenticator.credential.camera_id is None:
+        if self.authenticator.credential.camera_id is not None:
             camera_id = self.authenticator.credential.camera_id
             print(f"Skipped: Camera id={camera_id} already registered")
             return
@@ -106,6 +107,7 @@ class APIService:
                 "mac_address": mac_address,
             },
         ).raise_for_status()
+
         camera = Camera(**response.json())  # pyright: ignore[reportAny]
         # Update the credential camera ID in case we want to use it later
         self.authenticator.credential.camera_id = camera.id
@@ -120,6 +122,7 @@ class APIService:
             url=f"/cameras/{camera_id}",
             auth=self.authenticator,
         ).raise_for_status()
+
         # Reset the credential camera ID back to None
         self.authenticator.credential.camera_id = None
 
