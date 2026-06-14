@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.config import settings
 from app.core.models.credential import Credential
 
 
@@ -105,3 +106,6 @@ def setup_data_reader(data_directory: Path) -> AppDataHandler:
     resolved_data_directory = data_directory.resolve()
     prepare_data_reader(resolved_data_directory)
     return AppDataHandler(resolved_data_directory)
+
+
+app_data_handler = setup_data_reader(settings.data_dir)
