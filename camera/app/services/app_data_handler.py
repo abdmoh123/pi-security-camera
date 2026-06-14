@@ -8,11 +8,13 @@ from app.core.models.credential import Credential
 
 
 @dataclass(frozen=True)
-class DataReader:
-    """Reads data from a given data folder.
+class AppDataHandler:
+    """Handles reading and writing data in the app's data directory.
+
+    The path is customisable and given via the constructor.
 
     Attributes:
-        data_directory: The directory to read data from.
+        data_directory: The data directory to read and write data.
     """
 
     data_directory: Path
@@ -83,19 +85,23 @@ class DataReader:
 
 
 def prepare_data_reader(data_directory: Path) -> None:
-    """Does some preparation for the DataReader."""
+    """Does some preparation for the AppDataHandler.
+
+    Args:
+        data_directory: The directory to read data from.
+    """
     data_directory.resolve().mkdir(parents=True, exist_ok=True)
 
 
-def setup_data_reader(data_directory: Path) -> DataReader:
-    """Creates a DataReader after doing some preparation and input validation.
+def setup_data_reader(data_directory: Path) -> AppDataHandler:
+    """Creates a AppDataHandler after doing some validation.
 
     Args:
         data_directory: The directory to read data from.
 
     Returns:
-        The DataReader.
+        The AppDataHandler.
     """
     resolved_data_directory = data_directory.resolve()
     prepare_data_reader(resolved_data_directory)
-    return DataReader(resolved_data_directory)
+    return AppDataHandler(resolved_data_directory)

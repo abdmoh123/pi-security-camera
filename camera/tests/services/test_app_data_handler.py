@@ -6,10 +6,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 from app.core.models.credential import Credential
-from app.services.data_reader import DataReader
+from app.services.app_data_handler import AppDataHandler
 
 
-def test_DataReader_read_credentials(
+def test_AppDataHandler_read_credentials(
     mocker: MockerFixture, tmp_path: Path
 ) -> None:
     """Check if the read function works normally."""
@@ -33,16 +33,16 @@ def test_DataReader_read_credentials(
     _ = mocker.patch.object(Path, "exists", return_value=True)
     _ = mocker.patch.object(Path, "read_text", return_value=mocked_file)
 
-    data_reader = DataReader(tmp_path)
+    data_handler = AppDataHandler(tmp_path)
 
-    assert data_reader.credentials_path == tmp_path / "credentials.json"
+    assert data_handler.credentials_path == tmp_path / "credentials.json"
 
-    actual_credential = data_reader.read_credentials()
+    actual_credential = data_handler.read_credentials()
 
     assert actual_credential == expected_credential
 
 
-def test_DataReader_read_server_address(
+def test_AppDataHandler_read_server_address(
     mocker: MockerFixture, tmp_path: Path
 ) -> None:
     """Check if the read function works normally."""
@@ -56,16 +56,16 @@ def test_DataReader_read_server_address(
     _ = mocker.patch.object(Path, "exists", return_value=True)
     _ = mocker.patch.object(Path, "read_text", return_value=mocked_file)
 
-    data_reader = DataReader(tmp_path)
+    data_handler = AppDataHandler(tmp_path)
 
-    assert data_reader.server_address_path == tmp_path / "server_address.txt"
+    assert data_handler.server_address_path == tmp_path / "server_address.txt"
 
-    actual_address = data_reader.read_server_address()
+    actual_address = data_handler.read_server_address()
 
     assert actual_address == expected_address
 
 
-def test_DataReader_read_bad_server_address(
+def test_AppDataHandler_read_bad_server_address(
     mocker: MockerFixture, tmp_path: Path
 ) -> None:
     """Check if the read function fails on bad addresses."""
@@ -79,7 +79,7 @@ def test_DataReader_read_bad_server_address(
     _ = mocker.patch.object(Path, "exists", return_value=True)
     _ = mocker.patch.object(Path, "read_text", return_value=mocked_file)
 
-    data_reader = DataReader(tmp_path)
+    data_handler = AppDataHandler(tmp_path)
 
     with pytest.raises(ValueError):
-        _ = data_reader.read_server_address()
+        _ = data_handler.read_server_address()
