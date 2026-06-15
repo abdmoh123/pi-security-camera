@@ -5,9 +5,9 @@ from pathlib import Path
 import typer
 
 from app.core.cameras.opencv_camera import OpenCVCamera
+from app.core.models.credential import Credential
 from app.core.serializers.opencv_serializer import OpenCVSerializer
 from app.fsms.camera.data import CameraCtx, CameraSettings
-from app.fsms.camera.types import CameraState
 from app.services.api.api_service import APIService
 from app.services.api.auth import OAuth2Authenticator
 from app.services.app_data_handler import app_data_handler
@@ -16,7 +16,7 @@ from app.services.file_manager import FileManager
 from app.services.motion.frame_difference_detector import (
     CV2FrameDifferenceDetectorService,
 )
-from app.surveillance_system import SurveillanceSystem
+from app.surveillance_system import SurveillanceSystem, run_loop
 
 app = typer.Typer()
 
@@ -61,39 +61,43 @@ def serve(
             )
         )
 
-        api_server_host = app_data_handler.read_server_address()
-        api_routes_root = f"{api_server_host}/api/v0"
-        credential = app_data_handler.read_credentials()
-        authenticator = OAuth2Authenticator(
-            f"{api_routes_root}/auth/camera_token", credential
-        )
-        with APIService(api_routes_root, authenticator) as api_service:
-            is_reachable = api_service.is_reachable()
-            if is_reachable and credential.camera_id is None:
-                api_service.register_camera(
-                    host_address="1.2.3.4",
-                    name="test-camera-1",
-                    mac_address="00:00:00:00:00:00",
-                )
-                app_data_handler.update_credentials_file(
-                    api_service.authenticator.credential
-                )
+        api_routes_root: str | None = None
+        authenticator: OAuth2Authenticator | None = None
+        credential: Credential | None = None
+        try:
+            api_server_host = app_data_handler.read_server_address()
+            api_routes_root = f"{api_server_host}/api/v0"
+            credential = app_data_handler.read_credentials()
+            authenticator = OAuth2Authenticator(
+                f"{api_routes_root}/auth/camera_token", credential
+            )
+        except FileNotFoundError as e:
+            print("Warning: Videos won't be uploaded to a remote server.")
+            print(e)
 
-            # Generator has an infinite loop
-            for event in camera_fsm.events():
-                # Exit the loop if the camera is stopped.
-                if camera_fsm.state is CameraState.STOPPED:
-                    break
-                camera_fsm.handle_event(event)
+        if (
+            api_routes_root is None
+            or authenticator is None
+            or credential is None
+        ):
+            run_loop(camera_fsm, file_manager)
+        else:
+            with APIService(api_routes_root, authenticator) as api_service:
+                is_reachable = api_service.is_reachable()
+                if is_reachable and credential.camera_id is None:
+                    # TODO: Make this not hardcoded
+                    api_service.register_camera(
+                        host_address="1.2.3.4",
+                        name="test-camera-1",
+                        mac_address="00:00:00:00:00:00",
+                    )
+                    app_data_handler.update_credentials_file(
+                        api_service.authenticator.credential
+                    )
 
-                # Upload the video if the API server is reachable
-                if is_reachable and camera_fsm.state is CameraState.SAVING:
-                    try:
-                        api_service.upload_video(file_manager.get_latest_file())
-                    except Exception as e:
-                        print(e)
+                run_loop(camera_fsm, file_manager, api_service)
 
-            raise typer.Exit(1 if camera_fsm.context.error else 0)
+        raise typer.Exit(1 if camera_fsm.context.error else 0)
 
 
 @app.command()
