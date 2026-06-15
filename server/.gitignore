@@ -9,8 +9,17 @@ wheels/
 # Virtual environments
 .venv
 
-# sqlite database
+# SQLite database
 *.db
+# Video files
+videos/
+
+# SQL migrations
+alembic/
+alembic.ini
 
 # Sensitive environment variables
 .env
+
+# Other
+*.bak
