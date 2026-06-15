@@ -83,8 +83,10 @@ class APIService:
             _ = self._client.post(
                 url="/videos/",
                 auth=self.authenticator,
-                data={"file_name": video_path.name},
-                files={"file": (video_path.name, video_file, "video/mp4")},
+                files={
+                    "video_file": (video_path.name, video_file, "video/mp4"),
+                    "file_name": (None, video_path.name),
+                },
             ).raise_for_status()
 
     def register_camera(
