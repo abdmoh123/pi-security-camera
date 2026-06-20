@@ -83,7 +83,7 @@ def serve(
             run_loop(camera_fsm, file_manager)
         else:
             with APIService(api_routes_root, authenticator) as api_service:
-                is_reachable = api_service.is_reachable()
+                is_reachable = api_service.can_connect()
                 if is_reachable and credential.camera_id is None:
                     # TODO: Make this not hardcoded
                     api_service.register_camera(
@@ -95,7 +95,10 @@ def serve(
                         api_service.authenticator.credential
                     )
 
-                run_loop(camera_fsm, file_manager, api_service)
+                if is_reachable:
+                    run_loop(camera_fsm, file_manager, api_service)
+                else:
+                    run_loop(camera_fsm, file_manager)
 
         raise typer.Exit(1 if camera_fsm.context.error else 0)
 

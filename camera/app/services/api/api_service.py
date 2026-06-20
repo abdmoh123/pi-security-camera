@@ -5,7 +5,7 @@ from pathlib import Path
 from types import TracebackType
 
 import httpx
-from httpx import Response
+from httpx import ConnectError, Response
 
 from app.core.models.camera import Camera, CameraUpdate
 from app.core.models.user import User
@@ -46,10 +46,30 @@ class APIService:
         """Context manager exit point."""
         self._client.close()
 
-    def is_reachable(self) -> bool:
-        """Checks if the API server is reachable."""
-        response = httpx.get(url=self.api_url)
-        return response.status_code == 200
+    @classmethod
+    def is_reachable(cls, api_url: str) -> bool:
+        """Checks if the given API server is reachable.
+
+        Args:
+            api_url: The URL of the API server.
+
+        Returns:
+            True if the API server is reachable, False otherwise.
+        """
+        try:
+            response = httpx.get(url=api_url)
+            return response.status_code == 200
+        except ConnectError as e:
+            print(e)
+            return False
+
+    def can_connect(self) -> bool:
+        """Checks if the API server is reachable.
+
+        Returns:
+            True if the API server is reachable, False otherwise.
+        """
+        return APIService.is_reachable(self.api_url)
 
     def get_registered_users(
         self, page_index: int, page_size: int
