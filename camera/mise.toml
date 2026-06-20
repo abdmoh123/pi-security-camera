@@ -32,6 +32,11 @@ depends = "init"
 run = "basedpyright ."
 hide = true
 
+[tasks.check-format]
+description = "Check if code is formatted"
+depends = "init"
+run = "ruff format --check"
+
 [tasks.lint]
 description = "Run linters"
 run = [
@@ -44,8 +49,9 @@ depends = "init"
 run = "pytest ."
 
 [tasks.check]
-description = "Run linters and tests"
+description = "Check format, lint and test the codebase"
 run = [
+    { task = 'check-format' },
     { task = 'lint' },
     { task = 'test' }
 ]
