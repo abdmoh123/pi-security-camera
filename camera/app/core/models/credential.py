@@ -21,9 +21,9 @@ class Credential(BaseModel):
 
     @classmethod
     def _split_client_id(cls, client_id: str) -> list[str]:
-        return list(filter(lambda x: x != '', client_id.split(':')))
+        return list(filter(lambda x: x != "", client_id.split(":")))
 
-    @field_validator('client_id', mode='after')
+    @field_validator("client_id", mode="after")
     @classmethod
     def _verify_client_id(cls, value: str) -> str:
         """Client ID should follow format <user_name>:<bunch-of-chars>.
@@ -37,7 +37,7 @@ class Credential(BaseModel):
         Raises:
             ValueError: If the client ID is not in the correct format
         """
-        if (len(Credential._split_client_id(value)) != 2):
+        if len(Credential._split_client_id(value)) != 2:
             raise ValueError("Client ID is not in the correct format")
         return value
 
