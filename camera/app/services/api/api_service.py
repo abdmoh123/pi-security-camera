@@ -109,9 +109,7 @@ class APIService:
                 },
             ).raise_for_status()
 
-    def register_camera(
-        self, host_address: str, name: str, mac_address: str
-    ) -> None:
+    def register_camera(self, name: str, mac_address: str) -> None:
         """Registers the camera with the server.
 
         Args:
@@ -129,7 +127,6 @@ class APIService:
             url="/cameras/",
             auth=self.authenticator,
             json={
-                "host_address": host_address,
                 "name": name,
                 "mac_address": mac_address,
             },

@@ -87,7 +87,6 @@ def serve(
                 if is_reachable and credential.camera_id is None:
                     # TODO: Make this not hardcoded
                     api_service.register_camera(
-                        host_address="1.2.3.4",
                         name="test-camera-1",
                         mac_address="00:00:00:00:00:00",
                     )

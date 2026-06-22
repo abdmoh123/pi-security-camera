@@ -21,7 +21,6 @@ class Camera(BaseModel):
     """
 
     id: int = Field(ge=1)
-    host_address: str = Field(pattern=host_address_regex)
     name: str = Field(pattern=camera_name_regex)
     mac_address: str = Field(pattern=mac_address_regex)
 
@@ -35,6 +34,5 @@ class CameraUpdate(BaseModel):
     """Pydantic model used when updating a Camera record."""
 
     name: str | None = Field(default=None, pattern=camera_name_regex)
-    host_address: str | None = Field(default=None, pattern=host_address_regex)
     auth_key: str | None = None
     mac_address: str | None = Field(default=None, pattern=mac_address_regex)
