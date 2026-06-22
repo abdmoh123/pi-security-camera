@@ -1,12 +1,26 @@
 """Protocol for camera implementations."""
 
-from typing import Protocol
+from types import TracebackType
+from typing import Protocol, Self
 
 from cv2.typing import MatLike
 
 
 class Camera(Protocol):
     """Generic camera protocol."""
+
+    def __enter__(self) -> Self:
+        """Can be used to create a camera."""
+        ...
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Releases the camera."""
+        ...
 
     def capture_frame(self) -> MatLike:
         """Captures the current frame from the camera.

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import typer
 
+from app import config
 from app.core.cameras.opencv_camera import OpenCVCamera
 from app.core.models.credential import Credential
 from app.core.serializers.opencv_serializer import OpenCVSerializer
@@ -12,6 +13,7 @@ from app.services.api.api_service import APIService
 from app.services.api.auth import OAuth2Authenticator
 from app.services.app_data_handler import app_data_handler
 from app.services.camera_service import CameraService
+from app.services.factories.camera_factory import create_camera
 from app.services.file_manager import FileManager
 from app.services.motion.frame_difference_detector import (
     CV2FrameDifferenceDetectorService,
@@ -49,7 +51,7 @@ def serve(
         raise FileNotFoundError(video_dir_path)
 
     # Context manager as safety-net in case FSM fails to cleanup on STOP event
-    with OpenCVCamera() as camera:
+    with create_camera(config.settings.camera_type) as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
         file_manager = FileManager(video_dir_path, max_files)
         serializer = OpenCVSerializer()

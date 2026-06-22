@@ -2,6 +2,8 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
+from types import TracebackType
+from typing import Self
 
 import numpy as np
 from cv2.typing import MatLike
@@ -17,6 +19,20 @@ class DummyCamera:
     _frame_count: int = 0
 
     is_enabled: bool = False
+
+    def __enter__(self) -> Self:
+        """Method for use with the 'with' statement."""
+        self.enable()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Releases the camera."""
+        self.disable()
 
     def _frames(self) -> Generator[MatLike, None, None]:
         """A generator simulating a stream of frames from of a camera.
