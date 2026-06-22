@@ -11,7 +11,7 @@ from app.api.models.general import PaginationParams
 from app.api.models.users import UserResponse
 from app.api.models.videos import Video
 from app.auth.dependencies import get_current_credential, get_current_user
-from app.core.validation.regex import camera_name_regex, host_address_regex, mac_address_regex
+from app.core.validation.regex import camera_name_regex, mac_address_regex
 from app.db.database import get_db
 from app.db.db_models import Camera as CameraSchema
 from app.db.db_models import CameraCredential as CameraCredentialSchema
@@ -45,7 +45,6 @@ def get_cameras(
     db_session: Annotated[Session, Depends(get_db)],
     camera_ids: Annotated[list[int] | None, Query(ge=1)] = None,
     name: Annotated[str | None, Query(regex=camera_name_regex)] = None,
-    host_address: Annotated[str | None, Query(regex=host_address_regex)] = None,
     mac_address: Annotated[str | None, Query(regex=mac_address_regex)] = None,
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination.
@@ -56,7 +55,6 @@ def get_cameras(
         db_session,
         camera_ids,
         name,
-        host_address,
         mac_address,
         pagination.page_index * pagination.page_size,
         pagination.page_size,
@@ -133,13 +131,6 @@ def update_camera(
         raise HTTPException(status_code=403, detail="No camera linked to credential!")
     if current_credential.camera_id != camera_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
-
-    if camera.host_address:
-        cameras_by_ip: list[CameraSchema] = camera_service.get_cameras(
-            db_session, host_address=camera.host_address, limit=1
-        )
-        if cameras_by_ip and cameras_by_ip[0].id != camera_id:
-            raise HTTPException(status_code=409, detail="Failed to change Host address: Already in use!")
 
     db_camera: CameraSchema | None = camera_service.update_camera(db_session, camera_id, camera)
     if not db_camera:

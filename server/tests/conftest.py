@@ -28,19 +28,16 @@ def _seed_test_db() -> None:
     test_cameras: list[Camera] = [
         Camera(
             id=1,
-            host_address="1.1.1.1",
             name="camera-1",
             mac_address="A1:B2:C3:D4:E5:F6",
         ),
         Camera(
             id=2,
-            host_address="2.2.2.2",
             name="camera-2",
             mac_address="F6:E5:D4:C3:B2:A1",
         ),
         Camera(
             id=3,
-            host_address="3.3.3.3",
             name="camera-3",
             mac_address="A6:B5:C4:D3:E2:F1",
         ),

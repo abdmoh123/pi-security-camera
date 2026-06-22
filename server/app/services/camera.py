@@ -16,7 +16,6 @@ def get_cameras(
     db: Session,
     camera_ids: list[int] | None = None,
     camera_name: str | None = None,
-    host_address: str | None = None,
     mac_address: str | None = None,
     skip: int = 0,
     limit: int = 100,
@@ -31,8 +30,6 @@ def get_cameras(
         query = query.where(Camera.id.in_(camera_ids))
     if camera_name:
         query = query.where(Camera.name.ilike(f"%{camera_name}%"))
-    if host_address:
-        query = query.where(Camera.host_address.ilike(f"%{host_address}%"))
     if mac_address:
         query = query.where(Camera.mac_address.ilike(f"%{mac_address}%"))
 
@@ -41,7 +38,7 @@ def get_cameras(
 
 def create_camera(db: Session, camera: CameraCreate) -> Camera:
     """Creates a new camera using the given inputs."""
-    db_camera = Camera(name=camera.name, host_address=camera.host_address, mac_address=camera.mac_address)
+    db_camera = Camera(name=camera.name, mac_address=camera.mac_address)
 
     db.add(db_camera)
     db.commit()
@@ -56,10 +53,6 @@ def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera |
 
     # skip modifying the database if inputs are empty or if camera doesn't exist
     if not camera.model_fields_set or not db_camera:
-        return db_camera
-
-    db_camera_ip = db.query(Camera).filter(Camera.host_address == camera.host_address).all()
-    if db_camera_ip:
         return db_camera
 
     # fields left as None will not be included in the dictionary
