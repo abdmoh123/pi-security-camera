@@ -4,21 +4,18 @@ from pathlib import Path
 
 import typer
 
-from app import config
+from app.config import settings
 from app.core.cameras.opencv_camera import OpenCVCamera
-from app.core.models.credential import Credential
 from app.core.serializers.opencv_serializer import OpenCVSerializer
 from app.fsms.camera.data import CameraCtx, CameraSettings
-from app.services.api.api_service import APIService
-from app.services.api.auth import OAuth2Authenticator
-from app.services.app_data_handler import app_data_handler
 from app.services.camera_service import CameraService
 from app.services.factories.camera_factory import create_camera
+from app.services.factories.loop_policy_factory import create_loop_policy
 from app.services.file_manager import FileManager
 from app.services.motion.frame_difference_detector import (
     CV2FrameDifferenceDetectorService,
 )
-from app.surveillance_system import SurveillanceSystem, run_loop
+from app.surveillance_system import SurveillanceSystem
 
 app = typer.Typer()
 
@@ -51,57 +48,25 @@ def serve(
         raise FileNotFoundError(video_dir_path)
 
     # Context manager as safety-net in case FSM fails to cleanup on STOP event
-    with create_camera(config.settings.camera_type) as camera:
+    with create_camera(settings.camera_type) as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
         file_manager = FileManager(video_dir_path, max_files)
         serializer = OpenCVSerializer()
 
-        settings = CameraSettings(wait_time_ms, delta_ms, video_length_s)
         camera_fsm = SurveillanceSystem(
             CameraCtx(
-                camera, motion_detector, file_manager, serializer, settings
+                camera,
+                motion_detector,
+                file_manager,
+                serializer,
+                CameraSettings(wait_time_ms, delta_ms, video_length_s),
             )
         )
 
-        api_routes_root: str | None = None
-        authenticator: OAuth2Authenticator | None = None
-        credential: Credential | None = None
-        try:
-            api_server_host = app_data_handler.read_server_address()
-            api_routes_root = f"{api_server_host}/api/v0"
-            credential = app_data_handler.read_credentials()
-            authenticator = OAuth2Authenticator(
-                f"{api_routes_root}/auth/camera_token", credential
-            )
-        except FileNotFoundError as e:
-            print("Warning: Videos won't be uploaded to a remote server.")
-            print(e)
+        loop_policy = create_loop_policy(settings.loop_policy_type, camera_fsm)
+        loop_policy.run_loop()
 
-        if (
-            api_routes_root is None
-            or authenticator is None
-            or credential is None
-        ):
-            run_loop(camera_fsm, file_manager)
-        else:
-            with APIService(api_routes_root, authenticator) as api_service:
-                is_reachable = api_service.can_connect()
-                if is_reachable and credential.camera_id is None:
-                    # TODO: Make this not hardcoded
-                    api_service.register_camera(
-                        name="test-camera-1",
-                        mac_address="00:00:00:00:00:00",
-                    )
-                    app_data_handler.update_credentials_file(
-                        api_service.authenticator.credential
-                    )
-
-                if is_reachable:
-                    run_loop(camera_fsm, file_manager, api_service)
-                else:
-                    run_loop(camera_fsm, file_manager)
-
-        raise typer.Exit(1 if camera_fsm.context.error else 0)
+        raise typer.Exit(1 if loop_policy.camera_system.context.error else 0)
 
 
 @app.command()

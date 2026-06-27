@@ -1,32 +1,68 @@
 """Factory for selecting the type of loop policy."""
 
+from app.core.models.credential import Credential
 from app.core.types.loop_policy_type import LoopPolicyType
 from app.policies.api_loop_policy import APILoopPolicy
 from app.policies.loop_policy import LoopPolicy
 from app.policies.offline_loop_policy import OfflineLoopPolicy
 from app.services.api.api_service import APIService
+from app.services.api.auth import OAuth2Authenticator
+from app.services.app_data_handler import app_data_handler
 from app.surveillance_system import SurveillanceSystem
 
 
 def create_loop_policy(
     loop_type: LoopPolicyType,
     camera_system: SurveillanceSystem,
-    api_service: APIService | None = None,
 ) -> LoopPolicy:
     """Factory for selecting the type of loop policy.
 
     Args:
         loop_type: The type of loop policy to create.
         camera_system: The camera state machine wrapper.
-        api_service: The API service.
 
     Returns:
         The loop policy.
     """
     match loop_type:
         case LoopPolicyType.API:
-            if api_service is None:
-                raise ValueError("API service is not provided")
-            return APILoopPolicy(camera_system, api_service)
+            api_routes_root: str | None = None
+            credential: Credential | None = None
+            authenticator: OAuth2Authenticator | None = None
+            try:
+                api_server_host = app_data_handler.read_server_address()
+                api_routes_root = f"{api_server_host}/api/v0"
+                credential = app_data_handler.read_credentials()
+                authenticator = OAuth2Authenticator(
+                    f"{api_routes_root}/auth/camera_token", credential
+                )
+            except FileNotFoundError as e:
+                print("Warning: Videos won't be uploaded to a remote server.")
+                print(e)
+
+            if (
+                api_routes_root is None
+                or credential is None
+                or authenticator is None
+            ):
+                return OfflineLoopPolicy(camera_system)
+
+            with APIService(api_routes_root, authenticator) as api_service:
+                is_reachable = api_service.can_connect()
+                if is_reachable and credential.camera_id is None:
+                    # TODO: Make this not hardcoded
+                    api_service.register_camera(
+                        name="test-camera-1",
+                        mac_address="00:00:00:00:00:00",
+                    )
+                    app_data_handler.update_credentials_file(
+                        api_service.authenticator.credential
+                    )
+
+                return (
+                    APILoopPolicy(camera_system, api_routes_root, authenticator)
+                    if is_reachable
+                    else OfflineLoopPolicy(camera_system)
+                )
         case LoopPolicyType.OFFLINE:
             return OfflineLoopPolicy(camera_system)

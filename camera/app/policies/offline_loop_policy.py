@@ -1,21 +1,21 @@
 """Main SurveillanceSystem loop with no API connection."""
 
 from dataclasses import dataclass
+from typing import override
 
 from app.fsms.camera.types import CameraState
-from app.surveillance_system import SurveillanceSystem
+from app.policies.loop_policy import AbstractLoopPolicy
 
 
 @dataclass(frozen=True)
-class OfflineLoopPolicy:
+class OfflineLoopPolicy(AbstractLoopPolicy):
     """Main SurveillanceSystem loop with video uploads to a remote server.
 
     Attributes:
         camera_system: The camera state machine wrapper.
     """
 
-    camera_system: SurveillanceSystem
-
+    @override
     def run_loop(self) -> None:
         """Main loop for the surveillance system system."""
         # Generator has an infinite loop
