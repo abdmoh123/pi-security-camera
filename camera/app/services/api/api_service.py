@@ -7,9 +7,9 @@ from types import TracebackType
 import httpx
 from httpx import ConnectError, Response
 
+from app.core.api.api_service_context import APIServiceContext
 from app.core.models.camera import Camera, CameraCreate, CameraUpdate
 from app.core.models.user import User
-from app.services.api.auth import OAuth2Authenticator
 
 
 @dataclass
@@ -22,15 +22,14 @@ class APIService:
             server.
     """
 
-    api_url: str
-    authenticator: OAuth2Authenticator
+    context: APIServiceContext
 
     _client: httpx.Client = field(init=False)
 
     def __post_init__(self) -> None:
         """Post init constructor for this API service dataclass."""
         self._client = httpx.Client(
-            base_url=self.api_url, auth=self.authenticator
+            base_url=self.context.api_url, auth=self.context.authenticator
         )
 
     def __enter__(self) -> "APIService":
@@ -69,7 +68,7 @@ class APIService:
         Returns:
             True if the API server is reachable, False otherwise.
         """
-        return APIService.is_reachable(self.api_url)
+        return APIService.is_reachable(self.context.api_url)
 
     def get_registered_users(
         self, page_index: int, page_size: int
@@ -83,12 +82,12 @@ class APIService:
         Returns:
             A list of users registered to this camera.
         """
-        if self.authenticator.credential.camera_id is None:
+        if self.context.authenticator.credential.camera_id is None:
             raise ValueError("Camera ID is not set")
 
         response: Response = self._client.get(
-            url=f"/cameras/{self.authenticator.credential.camera_id}/users",
-            auth=self.authenticator,
+            url=f"/cameras/{self.context.authenticator.credential.camera_id}/users",
+            auth=self.context.authenticator,
             params={"page_index": page_index, "page_size": page_size},
         ).raise_for_status()
         return [User(**user) for user in response.json()]  # pyright: ignore[reportAny]
@@ -102,7 +101,7 @@ class APIService:
         with open(video_path, "rb") as video_file:
             _ = self._client.post(
                 url="/videos/",
-                auth=self.authenticator,
+                auth=self.context.authenticator,
                 files={
                     "video_file": (video_path.name, video_file, "video/mp4"),
                     "file_name": (None, video_path.name),
@@ -116,14 +115,14 @@ class APIService:
             camera_details: The details of the camera to register.
         """
         # Don't try to register if registration was already done
-        if self.authenticator.credential.camera_id is not None:
-            camera_id = self.authenticator.credential.camera_id
+        if self.context.authenticator.credential.camera_id is not None:
+            camera_id = self.context.authenticator.credential.camera_id
             print(f"Skipped: Camera id={camera_id} already registered")
             return
 
         response = self._client.post(
             url="/cameras/",
-            auth=self.authenticator,
+            auth=self.context.authenticator,
             json={
                 "name": camera_details.name,
                 "mac_address": camera_details.mac_address,
@@ -132,7 +131,7 @@ class APIService:
 
         camera = Camera(**response.json())  # pyright: ignore[reportAny]
         # Update the credential camera ID in case we want to use it later
-        self.authenticator.credential.camera_id = camera.id
+        self.context.authenticator.credential.camera_id = camera.id
 
     def unregister_camera(self, camera_id: int) -> None:
         """Unregisters the camera from the server.
@@ -142,11 +141,11 @@ class APIService:
         """
         _ = self._client.delete(
             url=f"/cameras/{camera_id}",
-            auth=self.authenticator,
+            auth=self.context.authenticator,
         ).raise_for_status()
 
         # Reset the credential camera ID back to None
-        self.authenticator.credential.camera_id = None
+        self.context.authenticator.credential.camera_id = None
 
     def update_camera(self, camera_data: CameraUpdate) -> None:
         """Updates the camera's data on the server.
@@ -154,11 +153,11 @@ class APIService:
         Args:
             camera_data: The data to update the camera with.
         """
-        if self.authenticator.credential.camera_id is None:
+        if self.context.authenticator.credential.camera_id is None:
             raise ValueError("Camera ID is not set")
 
         _ = self._client.put(
-            url=f"/cameras/{self.authenticator.credential.camera_id}",
-            auth=self.authenticator,
+            url=f"/cameras/{self.context.authenticator.credential.camera_id}",
+            auth=self.context.authenticator,
             json=camera_data.model_dump(),
         ).raise_for_status()

@@ -3,10 +3,10 @@
 from dataclasses import dataclass
 from typing import override
 
+from app.core.api.api_service_context import APIServiceContext
 from app.fsms.camera.types import CameraState
 from app.policies.loop_policy import AbstractLoopPolicy
 from app.services.api.api_service import APIService
-from app.services.api.auth import OAuth2Authenticator
 
 
 @dataclass(frozen=True)
@@ -18,13 +18,12 @@ class APILoopPolicy(AbstractLoopPolicy):
         api_service: The API service.
     """
 
-    api_url: str
-    authenticator: OAuth2Authenticator
+    context: APIServiceContext
 
     @override
     def run_loop(self) -> None:
         """Main loop for the surveillance system system."""
-        with APIService(self.api_url, self.authenticator) as api_service:
+        with APIService(self.context) as api_service:
             # Generator has an infinite loop
             for event in self.camera_system.events():
                 # Exit the loop if the camera is stopped.

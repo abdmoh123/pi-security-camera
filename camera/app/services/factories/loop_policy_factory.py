@@ -2,6 +2,7 @@
 
 from httpx import HTTPStatusError
 
+from app.core.api.api_service_context import APIServiceContext
 from app.core.models.camera import CameraCreate
 from app.core.models.credential import Credential
 from app.core.types.loop_policy_type import LoopPolicyType
@@ -51,7 +52,8 @@ def create_loop_policy(
             ):
                 return OfflineLoopPolicy(camera_system)
 
-            with APIService(api_routes_root, authenticator) as api_service:
+            api_context = APIServiceContext(api_routes_root, authenticator)
+            with APIService(api_context) as api_service:
                 is_reachable = api_service.can_connect()
                 is_registered = credential.camera_id is not None
                 if is_reachable and not is_registered:
@@ -65,7 +67,7 @@ def create_loop_policy(
                         )
                         api_service.register_camera(camera_details)
                         app_data_handler.update_credentials_file(
-                            api_service.authenticator.credential
+                            api_service.context.authenticator.credential
                         )
                         is_registered = True
                     except FileNotFoundError as e:
@@ -76,7 +78,7 @@ def create_loop_policy(
                         print(f"Failed to register camera: {e}")
 
                 return (
-                    APILoopPolicy(camera_system, api_routes_root, authenticator)
+                    APILoopPolicy(camera_system, api_context)
                     if is_reachable and is_registered
                     else OfflineLoopPolicy(camera_system)
                 )
