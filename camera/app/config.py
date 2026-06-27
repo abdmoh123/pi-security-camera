@@ -4,8 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.services.factories.camera_factory import CameraType
-from app.services.factories.loop_policy_factory import LoopPolicyType
+from app.core.types.camera_type import CameraType
+from app.core.types.loop_policy_type import LoopPolicyType
 
 
 @dataclass(frozen=True)

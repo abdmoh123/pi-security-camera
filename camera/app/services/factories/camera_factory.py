@@ -1,17 +1,9 @@
 """Factory for choosing between camera types."""
 
-from enum import StrEnum, auto
-
 from app.core.cameras.camera import Camera
 from app.core.cameras.dummy_camera import DummyCamera
 from app.core.cameras.opencv_camera import OpenCVCamera
-
-
-class CameraType(StrEnum):
-    """Camera types."""
-
-    OPENCV = auto()
-    DUMMY = auto()
+from app.core.types.camera_type import CameraType
 
 
 def create_camera(camera_type: CameraType) -> Camera:

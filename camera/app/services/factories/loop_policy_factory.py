@@ -1,19 +1,11 @@
 """Factory for selecting the type of loop policy."""
 
-from enum import StrEnum, auto
-
+from app.core.types.loop_policy_type import LoopPolicyType
 from app.policies.api_loop_policy import APILoopPolicy
 from app.policies.loop_policy import LoopPolicy
 from app.policies.offline_loop_policy import OfflineLoopPolicy
 from app.services.api.api_service import APIService
 from app.surveillance_system import SurveillanceSystem
-
-
-class LoopPolicyType(StrEnum):
-    """Enum for selecting the type of loop policy."""
-
-    API = auto()
-    OFFLINE = auto()
 
 
 def create_loop_policy(
