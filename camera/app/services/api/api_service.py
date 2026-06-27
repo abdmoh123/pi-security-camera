@@ -7,7 +7,7 @@ from types import TracebackType
 import httpx
 from httpx import ConnectError, Response
 
-from app.core.models.camera import Camera, CameraUpdate
+from app.core.models.camera import Camera, CameraCreate, CameraUpdate
 from app.core.models.user import User
 from app.services.api.auth import OAuth2Authenticator
 
@@ -109,13 +109,11 @@ class APIService:
                 },
             ).raise_for_status()
 
-    def register_camera(self, name: str, mac_address: str) -> None:
+    def register_camera(self, camera_details: CameraCreate) -> None:
         """Registers the camera with the server.
 
         Args:
-            host_address: The host address of the camera.
-            name: The name of the camera.
-            mac_address: The MAC address of the camera.
+            camera_details: The details of the camera to register.
         """
         # Don't try to register if registration was already done
         if self.authenticator.credential.camera_id is not None:
@@ -127,8 +125,8 @@ class APIService:
             url="/cameras/",
             auth=self.authenticator,
             json={
-                "name": name,
-                "mac_address": mac_address,
+                "name": camera_details.name,
+                "mac_address": camera_details.mac_address,
             },
         ).raise_for_status()
 

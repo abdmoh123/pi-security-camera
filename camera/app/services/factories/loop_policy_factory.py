@@ -1,5 +1,8 @@
 """Factory for selecting the type of loop policy."""
 
+from httpx import HTTPStatusError
+
+from app.core.models.camera import CameraCreate
 from app.core.models.credential import Credential
 from app.core.types.loop_policy_type import LoopPolicyType
 from app.policies.api_loop_policy import APILoopPolicy
@@ -9,6 +12,7 @@ from app.services.api.api_service import APIService
 from app.services.api.auth import OAuth2Authenticator
 from app.services.app_data_handler import app_data_handler
 from app.surveillance_system import SurveillanceSystem
+from app.utils import get_mac_address
 
 
 def create_loop_policy(
@@ -49,19 +53,31 @@ def create_loop_policy(
 
             with APIService(api_routes_root, authenticator) as api_service:
                 is_reachable = api_service.can_connect()
-                if is_reachable and credential.camera_id is None:
-                    # TODO: Make this not hardcoded
-                    api_service.register_camera(
-                        name="test-camera-1",
-                        mac_address="00:00:00:00:00:00",
-                    )
-                    app_data_handler.update_credentials_file(
-                        api_service.authenticator.credential
-                    )
+                is_registered = credential.camera_id is not None
+                if is_reachable and not is_registered:
+                    try:
+                        camera_input_data = (
+                            app_data_handler.read_camera_details()
+                        )
+                        camera_details = CameraCreate(
+                            name=camera_input_data.name,
+                            mac_address=get_mac_address(),
+                        )
+                        api_service.register_camera(camera_details)
+                        app_data_handler.update_credentials_file(
+                            api_service.authenticator.credential
+                        )
+                        is_registered = True
+                    except FileNotFoundError as e:
+                        # TODO: If file failed to update after registering,
+                        #       unregister the camera
+                        print(f"Failed to read/write data: {e}")
+                    except HTTPStatusError as e:
+                        print(f"Failed to register camera: {e}")
 
                 return (
                     APILoopPolicy(camera_system, api_routes_root, authenticator)
-                    if is_reachable
+                    if is_reachable and is_registered
                     else OfflineLoopPolicy(camera_system)
                 )
         case LoopPolicyType.OFFLINE:

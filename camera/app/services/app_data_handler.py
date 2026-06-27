@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.config import settings
+from app.core.models.camera import BaseCamera
 from app.core.models.credential import Credential
 
 
@@ -45,11 +46,23 @@ class AppDataHandler:
         """
         return self.data_directory / "credentials.json"
 
+    @property
+    def camera_details_path(self) -> Path:
+        """Property for the path to the camera details file.
+
+        Returns:
+            The path to the camera details file.
+        """
+        return self.data_directory / "camera_details.json"
+
     def read_credentials(self) -> Credential:
         """Read the camera credentials from the data directory.
 
         Returns:
             The camera credentials.
+
+        Raises:
+            FileNotFoundError: If the credentials file is not found.
         """
         if not self.credentials_path.exists():
             raise FileNotFoundError(
@@ -71,6 +84,9 @@ class AppDataHandler:
 
         Returns:
             The server host.
+
+        Raises:
+            FileNotFoundError: If the server address file is not found.
         """
         if not self.server_address_path.exists():
             raise FileNotFoundError(
@@ -83,6 +99,24 @@ class AppDataHandler:
             raise ValueError(f"Invalid server address: {raw_address}")
 
         return raw_address
+
+    def read_camera_details(self) -> BaseCamera:
+        """Read the camera details from the data directory.
+
+        Returns:
+            The camera details pydantic model.
+
+        Raises:
+            FileNotFoundError: If the camera details file is not found.
+        """
+        if not self.camera_details_path.exists():
+            raise FileNotFoundError(
+                f"Camera details file not found at {self.camera_details_path}"
+            )
+
+        return BaseCamera.model_validate_json(
+            self.camera_details_path.read_text()
+        )
 
 
 def prepare_data_reader(data_directory: Path) -> None:
