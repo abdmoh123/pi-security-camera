@@ -37,20 +37,29 @@ class DummyCamera:
     def _frames(self) -> Generator[MatLike, None, None]:
         """A generator simulating a stream of frames from of a camera.
 
-        Every 10 frames, the camera will return a white frame. Otherwise, it
-        will return a black frame. That way, we can do some motion detection
-        still.
+        Every 9 frames, the camera will swap between black and white.
+        That way, we can do some motion detection still.
+
+        Decided to use an odd number so the frame difference motion detector can
+        see 2 frames with different values.
 
         Yields:
             The current frame from the camera at the time of the function call.
         """
         while True:
-            if self._frame_count == 10:
+            frame = _black_frame
+            frame_type = "BLACK"
+
+            if self._frame_count >= 19:
                 self._frame_count = 0
-                yield _white_frame
-            else:
-                yield _black_frame
+
+            if self._frame_count >= 9:
+                frame = _white_frame
+                frame_type = "WHITE"
+
+            print(f"{frame_type=} {self._frame_count=}")
             self._frame_count += 1
+            yield frame
 
     def capture_frame(self) -> MatLike:
         """Captures the current frame from the fake camera.
