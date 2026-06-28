@@ -59,7 +59,7 @@ class APIService:
             response = httpx.get(url=api_url)
             return response.status_code == 200
         except ConnectError as e:
-            print(e)
+            print(f"Failed to connect: {e}")
             return False
 
     def can_connect(self) -> bool:

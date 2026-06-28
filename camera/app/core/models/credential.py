@@ -25,7 +25,7 @@ class Credential(BaseModel):
 
     @field_validator("client_id", mode="after")
     @classmethod
-    def _verify_client_id(cls, value: str) -> str:
+    def verify_client_id(cls, value: str) -> str:
         """Client ID should follow format <user_name>:<bunch-of-chars>.
 
         Args:

@@ -7,8 +7,12 @@ import typer
 from app.config import settings
 from app.core.cameras.opencv_camera import OpenCVCamera
 from app.core.serializers.opencv_serializer import OpenCVSerializer
+from app.core.types.loop_policy_type import LoopPolicyType
 from app.fsms.camera.data import CameraCtx, CameraSettings
 from app.services.camera_service import CameraService
+from app.services.data_setup_service import (
+    setup_system,
+)
 from app.services.factories.camera_factory import create_camera
 from app.services.factories.loop_policy_factory import create_loop_policy
 from app.services.file_manager import FileManager
@@ -47,6 +51,11 @@ def serve(
     if not video_dir_path.exists():
         raise FileNotFoundError(video_dir_path)
 
+    # Ensure all the required data for using the API exists
+    loop_policy_type = settings.loop_policy_type
+    if loop_policy_type is LoopPolicyType.API:
+        _ = setup_system()
+
     # Context manager as safety-net in case FSM fails to cleanup on STOP event
     with create_camera(settings.camera_type) as camera:
         motion_detector = CV2FrameDifferenceDetectorService(camera)
@@ -63,7 +72,7 @@ def serve(
             )
         )
 
-        loop_policy = create_loop_policy(settings.loop_policy_type, camera_fsm)
+        loop_policy = create_loop_policy(loop_policy_type, camera_fsm)
         loop_policy.run_loop()
 
         raise typer.Exit(1 if loop_policy.camera_system.context.error else 0)
@@ -101,6 +110,14 @@ def shoot(photo_dir: str = "./photos") -> None:
         serializer = OpenCVSerializer()
         camera_service = CameraService(camera, serializer, file_manager)
         camera_service.take_photo()
+
+
+@app.command()
+def setup() -> None:
+    """Sets up data for the application."""
+    changed = setup_system()
+    if not changed:
+        print("All data is already set up!")
 
 
 if __name__ == "__main__":

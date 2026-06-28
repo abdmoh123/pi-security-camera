@@ -100,6 +100,14 @@ class AppDataHandler:
 
         return raw_address
 
+    def update_server_address_file(self, new_address: str) -> None:
+        """Update the server address file with a new address.
+
+        Args:
+            new_address: The new address.
+        """
+        _ = self.server_address_path.write_text(new_address)
+
     def read_camera_details(self) -> BaseCamera:
         """Read the camera details from the data directory.
 
@@ -116,6 +124,16 @@ class AppDataHandler:
 
         return BaseCamera.model_validate_json(
             self.camera_details_path.read_text()
+        )
+
+    def update_camera_details_file(self, camera_details: BaseCamera) -> None:
+        """Update the camera details file with new camera details.
+
+        Args:
+            camera_details: The new camera name.
+        """
+        _ = self.camera_details_path.write_text(
+            camera_details.model_dump_json()
         )
 
 
