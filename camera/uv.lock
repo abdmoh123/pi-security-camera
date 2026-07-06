@@ -362,7 +362,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pi-scripts"
+name = "pisec-cam"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

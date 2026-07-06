@@ -1,9 +1,5 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
-name = "pi-scripts"
+name = "pisec-cam"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -25,8 +21,15 @@ dev = [
     "ruff>=0.15.2",
 ]
 
-[tool.hatch.build.targets.wheel]
-packages = ["app/"]
+[project.scripts]
+pisec-cam = "pisec_cam.main:app"
+
+[build-system]
+requires = ["uv_build>=0.11.26,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "pisec_cam"
 
 [tool.mypy]
 strict = true
