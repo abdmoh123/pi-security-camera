@@ -37,7 +37,7 @@ if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
     exit 1
 fi
 
-CMD="flutter run --disable-analytics"
+CMD="flutter run -d web-server --web-port 8080"
 
 # Propagate verbosity level
 VERBOSITY="-"
@@ -81,7 +81,7 @@ if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
     exit 1
 fi
 
-CMD="flutter build --disable-analytics ${usage_type?}"
+CMD="flutter build ${usage_type?}"
 
 # Propagate verbosity level
 VERBOSITY="-"
@@ -110,7 +110,7 @@ quiet = true
 
 [tasks.clean]
 description = "Clean the flutter project"
-run = "flutter clean --disable-analytics"
+run = "flutter clean"
 quiet = true
 
 [tasks.test]
@@ -121,7 +121,7 @@ flag "-n --dry-run" help="Output what command would be run"
 flag "--wasm" help="Compile to WebAssembly"
 '''
 run = '''
-CMD="flutter test --disable-analytics"
+CMD="flutter test"
 
 # Propagate verbosity level
 VERBOSITY="-"
@@ -145,7 +145,7 @@ quiet = true
 
 [tasks.install]
 description = "Install the flutter dependencies"
-run = "flutter pub get --disable-analytics"
+run = "flutter pub get"
 quiet = true
 
 [tasks.add]
@@ -157,7 +157,7 @@ flag "--dev" help="Add packages as dev dependencies"
 '''
 run = '''
 #!/usr/bin/env bash
-CMD="flutter pub add --disable-analytics"
+CMD="flutter pub add"
 
 PACKAGES=""
 if [ -n "${usage_dev}" ]; then
@@ -188,7 +188,7 @@ flag "-n --dry-run" help="Output what command would be run"
 '''
 run = '''
 #!/usr/bin/env bash
-CMD="flutter pub remove --disable-analytics ${usage_packages?}"
+CMD="flutter pub remove ${usage_packages?}"
 
 if [ -n "${usage_dry_run}" ]; then
     echo "$CMD"
@@ -208,7 +208,7 @@ flag "-c --changes" help="Show changes without making the change"
 '''
 run = '''
 #!/usr/bin/env bash
-CMD="flutter pub upgrade --disable-analytics"
+CMD="flutter pub upgrade"
 
 # When no packages were inputted, '' shouldn't be passed through
 [ "${usage_packages}" != \'\' ] && CMD="$CMD ${usage_packages?}"
