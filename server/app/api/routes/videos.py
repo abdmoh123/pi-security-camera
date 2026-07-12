@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.models.general import PaginationParams
 from app.api.models.videos import Video, VideoUpdate
 from app.auth.dependencies import get_current_credential, get_current_user
-from app.core.exceptions import InvalidFileNameError
+from app.core.exceptions import InvalidFileNameError, RecordNotFoundError
 from app.core.validation.regex import file_name_regex
 from app.core.validation.video_validation import get_video_file_path_safe
 from app.db.database import get_db
@@ -101,14 +101,16 @@ async def upload_video(
 
     # Create the video entry
     try:
-        result_video: VideoSchema | None = await run_in_threadpool(
+        result_video: VideoSchema = await run_in_threadpool(
             video_service.create_video_entry,
             db_session,
             file_name,
             current_credential.camera_id,
         )
-        if not result_video:
-            raise HTTPException(status_code=404, detail="Camera not found!")
+    except RecordNotFoundError as e:
+        # Make sure the file is deleted if any unexpected error occurred
+        file_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=404, detail="Camera not found!") from e
     except Exception:
         # Make sure the file is deleted if any unexpected error occurred
         file_path.unlink(missing_ok=True)
@@ -189,9 +191,10 @@ def update_video(
     if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    db_video = video_service.update_video_entry(db_session, video_id, video)
-    if not db_video:
-        raise HTTPException(status_code=404, detail="Video not found!")
+    try:
+        db_video = video_service.update_video_entry(db_session, video_id, video)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Video not found!") from e
 
     return db_video
 
@@ -216,9 +219,10 @@ def delete_video(
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
     # Delete the video entry
-    deleted_video: VideoSchema | None = video_service.delete_video_entry(db_session, video_id)
-    if not deleted_video:
-        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!")
+    try:
+        deleted_video: VideoSchema = video_service.delete_video_entry(db_session, video_id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
 
     # Delete the video file
     try:

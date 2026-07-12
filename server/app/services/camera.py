@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.cameras import CameraCreate, CameraUpdate
+from app.core.exceptions import RecordNotFoundError
 from app.db.db_models import Camera
 
 
@@ -47,12 +48,15 @@ def create_camera(db: Session, camera: CameraCreate) -> Camera:
     return db_camera
 
 
-def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera | None:
+def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera:
     """Modifies a given camera's parameters (excluding ID) via a given ID."""
     db_camera = db.query(Camera).filter(Camera.id == camera_id).first()
 
-    # skip modifying the database if inputs are empty or if camera doesn't exist
-    if not camera.model_fields_set or not db_camera:
+    if not db_camera:
+        raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
+
+    # Skip modifying the database if inputs are empty or if camera doesn't exist
+    if not camera.model_fields_set:
         return db_camera
 
     # fields left as None will not be included in the dictionary
@@ -66,12 +70,14 @@ def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera |
     return db_camera
 
 
-def delete_camera(db: Session, camera_id: int) -> Camera | None:
+def delete_camera(db: Session, camera_id: int) -> Camera:
     """Deletes a given camera via ID."""
     db_camera = db.query(Camera).filter(Camera.id == camera_id).first()
 
-    if db_camera:
-        db.delete(db_camera)
-        db.commit()
+    if not db_camera:
+        raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
+
+    db.delete(db_camera)
+    db.commit()
 
     return db_camera

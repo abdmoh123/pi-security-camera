@@ -46,7 +46,7 @@ def create_credential(db: Session, user_id: int, credential: CameraCredentialCre
     return db_credential
 
 
-def assign_camera(db: Session, client_id: str, camera_id: int) -> CameraCredential | None:
+def assign_camera(db: Session, client_id: str, camera_id: int) -> CameraCredential:
     """Assigns a camera to a given camera credential.
 
     NOTE: This function will not create a Camera record if it does not exist.
@@ -67,7 +67,7 @@ def assign_camera(db: Session, client_id: str, camera_id: int) -> CameraCredenti
     return db_credential
 
 
-def delete_credential(db: Session, client_id: str) -> CameraCredential | None:
+def delete_credential(db: Session, client_id: str) -> CameraCredential:
     """Deletes a given camera credential by ID."""
     db_credential: CameraCredential | None = get_credential(db, client_id)
 

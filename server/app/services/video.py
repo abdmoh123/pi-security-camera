@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.models.videos import VideoUpdate
+from app.core.exceptions import RecordNotFoundError
 from app.db.db_models import Camera, Video
 from app.services.camera import get_camera
 
@@ -37,12 +38,12 @@ def get_video_entries(
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 
 
-def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video | None:
+def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video:
     """Creates a new video entry using the given inputs."""
     # Check if the camera exists before creating the video entry
     db_camera: Camera | None = get_camera(db, camera_id)
     if not db_camera:
-        return None
+        raise RecordNotFoundError(f"Failed to create video: Camera {camera_id} does not exist!")
 
     db_video = Video(file_name=file_name, camera_id=db_camera.id)
 
@@ -52,18 +53,18 @@ def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video | N
     return db_video
 
 
-def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) -> Video | None:
+def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) -> Video:
     """Modifies a given video entry's parameters (excluding ID) via a given ID.
 
     You can only modify the name of the video for now.
     """
-    # Skip modifying the database if inputs are empty
-    if not new_video_data.model_fields_set:
-        return None
-
     db_video: Video | None = get_video_entry(db, video_id)
     # Skip modifying the database if video doesn't exist
     if not db_video:
+        raise RecordNotFoundError(f"Video {video_id} does not exist!")
+
+    # Skip modifying the database if inputs are empty
+    if not new_video_data.model_fields_set:
         return db_video
 
     if new_video_data.file_name:
@@ -74,12 +75,14 @@ def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) 
     return db_video
 
 
-def delete_video_entry(db: Session, video_id: int) -> Video | None:
+def delete_video_entry(db: Session, video_id: int) -> Video:
     """Deletes a given video entry via ID."""
     db_video = db.query(Video).filter(Video.id == video_id).first()
 
-    if db_video:
-        db.delete(db_video)
-        db.commit()
+    if not db_video:
+        raise RecordNotFoundError(f"Video {video_id} does not exist!")
+
+    db.delete(db_video)
+    db.commit()
 
     return db_video

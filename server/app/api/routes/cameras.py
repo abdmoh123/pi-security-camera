@@ -11,6 +11,7 @@ from app.api.models.general import PaginationParams
 from app.api.models.users import UserResponse
 from app.api.models.videos import Video
 from app.auth.dependencies import get_current_credential, get_current_user
+from app.core.exceptions import RecordNotFoundError
 from app.core.validation.regex import camera_name_regex, mac_address_regex
 from app.db.database import get_db
 from app.db.db_models import Camera as CameraSchema
@@ -91,11 +92,10 @@ def create_camera(
         raise HTTPException(status_code=500, detail="Failed to create camera subscription!")
 
     # Add the newly created camera to the credential
-    modified_credential: CameraCredentialSchema | None = camera_credential_service.assign_camera(
-        db_session, current_credential.client_id, new_camera.id
-    )
-    if not modified_credential:
-        raise HTTPException(status_code=500, detail="Failed to assign camera to user!")
+    try:
+        _ = camera_credential_service.assign_camera(db_session, current_credential.client_id, new_camera.id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=500, detail="Failed to assign camera to user!") from e
 
     return new_camera
 
@@ -132,9 +132,10 @@ def update_camera(
     if current_credential.camera_id != camera_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
-    db_camera: CameraSchema | None = camera_service.update_camera(db_session, camera_id, camera)
-    if not db_camera:
-        raise HTTPException(status_code=404, detail="Camera not found!")
+    try:
+        db_camera: CameraSchema = camera_service.update_camera(db_session, camera_id, camera)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Camera not found!") from e
 
     return db_camera
 
@@ -151,9 +152,10 @@ def delete_camera(
     if current_credential.camera_id != camera_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this camera!")
 
-    db_camera: CameraSchema | None = camera_service.delete_camera(db_session, camera_id=camera_id)
-    if not db_camera:
-        raise HTTPException(status_code=404, detail="Camera not found")
+    try:
+        db_camera: CameraSchema = camera_service.delete_camera(db_session, camera_id=camera_id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Camera not found") from e
 
     return db_camera
 
