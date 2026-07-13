@@ -1,6 +1,10 @@
-# client
+# Pisec client app
 
-A new Flutter project.
+A flutter-based project for interacting with the pisec server.
+
+> [!NOTE]
+> This client is not the same as the client application running on the cameras.
+> That is part of the camera module.
 
 ## Getting Started
 
