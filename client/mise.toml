@@ -1,12 +1,6 @@
 [tools]
 devcontainer-cli = "0.83.0"
-flutter = { version = "3.38.9", platforms = """
-[linux-arm64]
-url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_arm64_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
-
-[linux-x64]
-url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version | replace(from="-stable", to="") }}-stable.tar.xz'
-""", url = 'https://storage.googleapis.com/flutter_infra_release/releases/stable/{{ os() }}/flutter_{{ os() }}{{ arch(x64="", arm64="_arm64") }}_{{ version | replace(from="-stable", to="") }}-stable.zip', version_json_path = ".releases[?channel=stable].version", version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json" }
+flutter = { version = "3.44.6", platforms = { linux-x64 = { url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version }}-stable.tar.xz" }, macos-arm64 = { url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_{{ version }}-stable.zip" }, macos-x64 = { url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_{{ version }}-stable.zip" }, windows-x64 = { url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_{{ version }}-stable.zip" } }, version_expr = 'fromJSON(body).releases | filter({ #.channel == "stable" }) | map({ replace(#.version, "-stable", "") }) | sortVersions()', version_list_url = "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json", url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version }}-stable.zip", version_json_path = ".releases[?channel=stable].version" }
 java = "26.0.0"
 
 [env]
