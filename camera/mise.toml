@@ -17,25 +17,25 @@ uv sync --frozen --dev
 [tasks.ruff]
 description = "Run ruff linter"
 depends = "init"
-run = "ruff check ."
+run = "uv run ruff check"
 hide = true
 
 [tasks.mypy]
 description = "Run mypy linter"
 depends = "init"
-run = "mypy ."
+run = "uv run mypy ."
 hide = true
 
 [tasks.pyright]
 description = "Run basedpyright linter"
 depends = "init"
-run = "basedpyright ."
+run = "uv run basedpyright ."
 hide = true
 
 [tasks.check-format]
 description = "Check if code is formatted"
 depends = "init"
-run = "ruff format --check"
+run = "uv run ruff format --check"
 
 [tasks.lint]
 description = "Run linters"
@@ -46,7 +46,7 @@ run = [
 [tasks.test]
 description = "Run tests"
 depends = "init"
-run = "pytest ."
+run = "uv run pytest"
 
 [tasks.check]
 description = "Check format, lint and test the codebase"
