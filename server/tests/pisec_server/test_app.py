@@ -1,0 +1,19 @@
+"""Main test entrypoint."""
+
+from fastapi.testclient import TestClient
+
+from pisec_server.main import app
+
+
+def test_read_root(client: TestClient) -> None:
+    """Root API function test."""
+    response = client.get("/api/v0/")
+    assert response.status_code == 200
+    assert response.json() == {"message": app.title, "description": app.description, "version": app.version}
+
+
+def test_check_health(client: TestClient) -> None:
+    """Health check API function test."""
+    response = client.get("/api/v0/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

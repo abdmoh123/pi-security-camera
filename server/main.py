@@ -3,7 +3,7 @@
 import uvicorn
 
 # Allows the main method to run the fast api application
-from app.app import app  # noqa: F401  # pyright: ignore[reportUnusedImport]
+from pisec_server.main import app  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 
 def main(reload: bool = True) -> None:

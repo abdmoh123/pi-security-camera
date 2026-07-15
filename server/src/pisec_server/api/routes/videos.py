@@ -1,0 +1,238 @@
+"""FastAPI routes related to the Video table."""
+
+import mimetypes
+from pathlib import Path as FilePath
+from typing import Annotated
+
+import aiofiles
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
+
+from pisec_server.api.models.general import PaginationParams
+from pisec_server.api.models.videos import Video, VideoUpdate
+from pisec_server.auth.dependencies import get_current_credential, get_current_user
+from pisec_server.core.exceptions import InvalidFileNameError, RecordNotFoundError
+from pisec_server.core.validation.regex import file_name_regex
+from pisec_server.core.validation.video_validation import get_video_file_path_safe
+from pisec_server.db.database import get_db
+from pisec_server.db.db_models import Camera
+from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
+from pisec_server.db.db_models import User as UserSchema
+from pisec_server.db.db_models import Video as VideoSchema
+from pisec_server.services import camera as camera_service
+from pisec_server.services import video as video_service
+
+router = APIRouter(prefix="/videos", tags=["videos"])
+
+
+@router.get("/", response_model=list[Video])
+def get_videos(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
+    video_ids: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+    file_name: Annotated[str | None, Query(regex=file_name_regex, min_length=5)] = None,
+    camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+) -> list[VideoSchema]:
+    """Gets a list of all videos with pagination.
+
+    Non-admin users can only see videos from cameras they are subscribed to.
+    """
+    videos = video_service.get_video_entries(
+        db_session,
+        video_ids,
+        file_name,
+        camera_id,
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
+    )
+
+    if not current_user.is_admin:
+        # Filter to only show videos from cameras user is subscribed to
+        subscribed_camera_ids = {camera.id for camera in current_user.cameras}
+        videos = [video for video in videos if video.camera_id in subscribed_camera_ids]
+
+    return videos
+
+
+@router.post("/", response_model=Video)
+async def upload_video(
+    current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
+    file_name: Annotated[str, Form(pattern=file_name_regex, min_length=5)],
+    video_file: Annotated[UploadFile, File()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
+    """Creates and uploads a new video with the given details."""
+    if not current_credential.camera_id:
+        raise HTTPException(status_code=403, detail="No camera registered with this credential!")
+
+    # Check if video entry already exists in the database (file name and camera ID must be the same)
+    db_videos: list[VideoSchema] = await run_in_threadpool(
+        video_service.get_video_entries,
+        db_session,
+        file_name=file_name,
+        camera_ids=[current_credential.camera_id],
+        limit=1,
+    )
+    if db_videos:
+        raise HTTPException(status_code=400, detail="Video already exists!")
+
+    # Check if the uploaded file is a video
+    if video_file.content_type is None or "video" not in video_file.content_type:
+        raise HTTPException(status_code=415, detail="File uploaded is not a video!")
+
+    # TODO: Make the video files get stored on the database container instead of api server
+    try:
+        file_path: FilePath = get_video_file_path_safe(file_name, current_credential.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=400, detail="Invalid file name!") from e
+    # Make sure the directory exists
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write the uploaded video to the server's storage (async part)
+    try:
+        video_contents: bytes = await video_file.read()
+        async with aiofiles.open(file_path, "wb") as file:
+            _ = await file.write(video_contents)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload video file: {str(e)}")
+
+    # Create the video entry
+    try:
+        result_video: VideoSchema = await run_in_threadpool(
+            video_service.create_video_entry,
+            db_session,
+            file_name,
+            current_credential.camera_id,
+        )
+    except RecordNotFoundError as e:
+        # Make sure the file is deleted if any unexpected error occurred
+        file_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=404, detail="Camera not found!") from e
+    except Exception:
+        # Make sure the file is deleted if any unexpected error occurred
+        file_path.unlink(missing_ok=True)
+        raise
+
+    return result_video
+
+
+@router.get("/{video_id}/file")
+async def download_video(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> FileResponse:
+    """Endpoint for downloading a video."""
+    db_video: VideoSchema | None = await run_in_threadpool(video_service.get_video_entry, db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    # Only allow access if the user is subscribed to the camera or is an admin
+    if not current_user.is_admin and current_user not in db_video.camera.users:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    # Get video file path and validate it
+    try:
+        file_path: FilePath = get_video_file_path_safe(db_video.file_name, db_video.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=500, detail="Invalid file path!") from e
+    if not await run_in_threadpool(file_path.exists):
+        raise HTTPException(status_code=500, detail="Video file not found!")
+
+    # Get mime type of the file (will probably always be video/mp4)
+    media_type, _ = mimetypes.guess_type(db_video.file_name)
+    media_type = media_type or "application/octet-stream"
+
+    return FileResponse(path=file_path, filename=db_video.file_name, media_type=media_type)
+
+
+@router.get("/{video_id}", response_model=Video)
+def get_video(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
+    """Returns a video's details using a given ID.
+
+    Users can only see videos from cameras they are subscribed to, or admins can see all.
+    """
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    # Only allow access if the user is subscribed to the camera or is an admin
+    db_camera: Camera | None = camera_service.get_camera(db_session, db_video.camera_id)
+    if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    return db_video
+
+
+@router.put("/{video_id}", response_model=Video)
+def update_video(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    video: Annotated[VideoUpdate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
+    """Updates a video's details using a given ID.
+
+    Users can only update videos from cameras they are subscribed to, or admins can update all.
+    """
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    # Only allow updates if the user is subscribed to the camera or is an admin
+    db_camera: Camera | None = camera_service.get_camera(db_session, db_video.camera_id)
+    if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    try:
+        db_video = video_service.update_video_entry(db_session, video_id, video)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Video not found!") from e
+
+    return db_video
+
+
+@router.delete("/{video_id}", response_model=Video)
+def delete_video(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> VideoSchema:
+    """Deletes a given video.
+
+    Users can only delete videos from cameras they are subscribed to, or admins can delete all.
+    """
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    # Only allow deletion if the user is subscribed to the camera or is an admin
+    db_camera: Camera | None = camera_service.get_camera(db_session, db_video.camera_id)
+    if db_camera and not current_user.is_admin and db_camera not in current_user.cameras:
+        raise HTTPException(status_code=403, detail="Not subscribed to this camera")
+
+    # Delete the video entry
+    try:
+        deleted_video: VideoSchema = video_service.delete_video_entry(db_session, video_id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
+
+    # Delete the video file
+    try:
+        file_path: FilePath = get_video_file_path_safe(deleted_video.file_name, deleted_video.camera_id)
+    except InvalidFileNameError as e:
+        raise HTTPException(status_code=500, detail="Invalid file path!") from e
+
+    try:
+        file_path.unlink()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
+
+    return deleted_video
