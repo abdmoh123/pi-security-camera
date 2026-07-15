@@ -35,6 +35,9 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "pisec_server"
 
+[tool.basedpyright]
+include = ["src", "tests"]
+
 [tool.mypy]
 strict = true
 disallow_untyped_globals = true

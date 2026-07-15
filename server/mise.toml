@@ -45,7 +45,7 @@ hide = true
 [tasks.pyright]
 description = "Run basedpyright linter"
 depends = "init"
-run = "uv run basedpyright ."
+run = "uv run basedpyright"
 hide = true
 
 [tasks.check-format]

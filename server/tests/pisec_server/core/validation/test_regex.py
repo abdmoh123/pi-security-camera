@@ -2,7 +2,7 @@
 
 import re
 
-import app.core.validation.regex as regex_patterns
+import pisec_server.core.validation.regex as regex_patterns
 
 
 def test_camera_name_regex() -> None:
