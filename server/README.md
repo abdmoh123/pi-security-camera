@@ -60,10 +60,16 @@ All environment variables are loaded and accessed from the app.core.config modul
 > [!TIP]
 > You can use the `.env` file to set these environment variables, as the application uses dotenv to load them.
 
-## Running the project
+## Usage
 
-To run the project, you can use `uv run main.py` or run the fastapi cli through `uv run fastapi --reload`.
-The `--reload` flag will reload the server whenever you save any changes.
+You can run a built executable of the project using `uv sync` then `pisec-server`.
+
+Alternatively, you can run the project via its source:
+
+`uv run src/pisec_server/main.py` or run the fastapi cli through `uv run fastapi --reload`.
+
+> [!TIP]
+> The `--reload` flag will reload the server whenever you save any changes.
 
 ## CI/CD
 
