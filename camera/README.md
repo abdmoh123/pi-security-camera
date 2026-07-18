@@ -34,17 +34,29 @@ This system continues looping until the service is force-stopped (SIGINT) or an 
 
 As this system has a sleep stage, the amount of data transferred can be massively reduced, which is ideal for metered mobile data plans.
 
-You can run this service in the terminal with the following command:
+## Usage
+
+After building the executable with `uv sync`, you can run this service in the terminal with the following command:
+
+```bash
+pisec-cam serve --wait-time-ms 1000 --delta-ms 500 --video-length-s 5 --video-dir ./recordings --max-files 5
+```
+
+Or alternatively, you can run the source code directly like below:
 
 ```bash
 uv run app/main.py serve --wait-time-ms 1000 --delta-ms 500 --video-length-s 5 --video-dir ./recordings --max-files 5
 ```
 
-## Other commands
-
 This CLI app also includes other useful commands for taking a photo or recording a video on demand.
 
 ```bash
-uv run app/main.py record --seconds 10 --video-dir ./recordings
-uv run app/main.py shoot --photo-dir ./photos
+pisec-cam record --seconds 10 --video-dir ./recordings
+pisec-cam shoot --photo-dir ./photos
+```
+
+The command below will help you discover all available commands:
+
+```bash
+pisec-cam --help
 ```
