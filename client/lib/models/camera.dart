@@ -1,7 +1,18 @@
-class Camera {
-  const Camera(this.id, this.name, this.macAddress);
+import 'package:pisec_client/models/json_serialisable.dart';
 
+class Camera implements JsonSerialisable {
   final int id;
   final String name;
   final String macAddress;
+
+  const Camera(this.id, this.name, this.macAddress);
+
+  factory Camera.fromJson(Map<String, dynamic> json) {
+    return Camera(json['id'], json['name'], json['macAddress']);
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'name': name, 'macAddress': macAddress};
+  }
 }
