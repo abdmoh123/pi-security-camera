@@ -25,10 +25,10 @@ class LoginAPIService {
       },
     );
 
-    if (response.statusCode == 200) {
-      return Token.fromJson(jsonDecode(response.body));
+    if (response.statusCode != 200) {
+      throw Exception('Error ${response.statusCode}: Failed to login');
     }
-    throw Exception('Error ${response.statusCode}: Failed to login');
+    return Token.fromJson(jsonDecode(response.body));
   }
 
   Future<void> logout(Token token) async {
@@ -63,9 +63,9 @@ class LoginAPIService {
       body: {"refresh_token": refreshTokenValue},
     );
 
-    if (response.statusCode == 200) {
-      return Token.fromJson(jsonDecode(response.body));
+    if (response.statusCode != 200) {
+      throw Exception('Error ${response.statusCode}: Failed to refresh token');
     }
-    throw Exception('Error ${response.statusCode}: Failed to refresh token');
+    return Token.fromJson(jsonDecode(response.body));
   }
 }
