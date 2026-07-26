@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:pisec_client/models/token.dart';
@@ -28,6 +29,31 @@ class LoginAPIService {
       return Token.fromJson(jsonDecode(response.body));
     }
     throw Exception('Error ${response.statusCode}: Failed to login');
+  }
+
+  Future<void> logout(Token token) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/auth/logout"),
+      headers: {HttpHeaders.authorizationHeader: "Bearer ${token.accessToken}"},
+      body: {"refresh_token": token.refreshToken},
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception('Error ${response.statusCode}: Failed to logout');
+    }
+  }
+
+  Future<void> logoutAll(String accessToken) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/auth/logout"),
+      headers: {HttpHeaders.authorizationHeader: "Bearer $accessToken"},
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception(
+        'Error ${response.statusCode}: Failed to logout from all devices',
+      );
+    }
   }
 
   Future<Token> refreshToken(String refreshTokenValue) async {
