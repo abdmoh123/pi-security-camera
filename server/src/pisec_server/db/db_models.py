@@ -21,7 +21,7 @@ class CameraSubscription(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
     camera_id: Mapped[int] = mapped_column(Integer, ForeignKey("cameras.id"), primary_key=True)
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class User(Base):
@@ -33,7 +33,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True)
     password_hash: Mapped[str] = mapped_column(String)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     credentials: Mapped[list[CameraCredential]] = relationship("CameraCredential", back_populates="user")
     cameras: Mapped[list[Camera]] = relationship("Camera", secondary="camera_subscriptions", back_populates="users")
@@ -48,7 +48,7 @@ class Camera(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String)
     mac_address: Mapped[str] = mapped_column(String)
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     users: Mapped[list[User]] = relationship("User", secondary="camera_subscriptions", back_populates="cameras")
     credential: Mapped[CameraCredential] = relationship("CameraCredential", back_populates="camera", uselist=False)
@@ -63,7 +63,7 @@ class Video(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     camera_id: Mapped[int] = mapped_column(ForeignKey(f"{Camera.__tablename__}.id"))
     file_name: Mapped[str] = mapped_column(String)
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     camera: Mapped[Camera] = relationship("Camera", back_populates="videos")
 
@@ -77,7 +77,7 @@ class CameraCredential(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey(f"{User.__tablename__}.id"))
     camera_id: Mapped[int | None] = mapped_column(Integer, ForeignKey(f"{Camera.__tablename__}.id"))
     client_secret_hash: Mapped[str] = mapped_column(String, nullable=False)
-    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user: Mapped[User] = relationship("User", back_populates="credentials")
     camera: Mapped[Camera | None] = relationship("Camera", back_populates="credential")
@@ -92,7 +92,7 @@ class RefreshToken(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey(f"{User.__tablename__}.id"))
     token: Mapped[str] = mapped_column(Text, unique=True, index=True)  # Text for potentially long tokens
     expires_at: Mapped[datetime] = mapped_column(DateTime)
-    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     device_info: Mapped[str | None] = mapped_column(String, nullable=True)  # Optional device info for specific logout
 
     user: Mapped[User] = relationship("User", back_populates="refresh_tokens")
