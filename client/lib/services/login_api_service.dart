@@ -10,7 +10,7 @@ class LoginAPIService {
   const LoginAPIService(this.baseUrl);
 
   Future<bool> isReachable() async {
-    final respose = await http.get(Uri.parse("$baseUrl/auth/token"));
+    final respose = await http.get(Uri.parse(baseUrl));
     return respose.statusCode == 200;
   }
 
