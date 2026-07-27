@@ -1,5 +1,7 @@
 """File containing pydantic models for video data."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 from pisec_server.core.validation.regex import file_name_regex
@@ -11,6 +13,7 @@ class Video(BaseModel):
     id: int = Field(ge=1)
     file_name: str = Field(pattern=file_name_regex, min_length=5)
     camera_id: int = Field(ge=1)
+    uploaded_at: datetime
 
     class Config:
         """Config subclass of Video."""
