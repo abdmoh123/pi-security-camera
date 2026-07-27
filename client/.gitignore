@@ -46,3 +46,6 @@ app.*.map.json
 
 # Mise related stuff
 mise.local.toml
+
+# Generated mock files
+*.mocks.dart
