@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:pisec_client/models/token.dart';
+import 'package:pisec_client/extensions/http.dart';
 
 class LoginAPIService {
   final http.Client client;
@@ -12,7 +13,7 @@ class LoginAPIService {
 
   Future<bool> isReachable() async {
     final respose = await client.get(Uri.parse(baseUrl));
-    return respose.statusCode == 200;
+    return respose.ok;
   }
 
   Future<Token> login(String username, String password) async {
@@ -26,7 +27,7 @@ class LoginAPIService {
       },
     );
 
-    if (response.statusCode != 200) {
+    if (response.notOk) {
       throw Exception('Error ${response.statusCode}: Failed to login');
     }
     return Token.fromJson(jsonDecode(response.body));
@@ -64,7 +65,7 @@ class LoginAPIService {
       body: {"refresh_token": refreshTokenValue},
     );
 
-    if (response.statusCode != 200) {
+    if (response.notOk) {
       throw Exception('Error ${response.statusCode}: Failed to refresh token');
     }
     return Token.fromJson(jsonDecode(response.body));
