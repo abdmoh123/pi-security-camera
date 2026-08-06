@@ -15,4 +15,15 @@ class Camera implements JsonSerialisable {
   Map<String, dynamic> toJson() {
     return {'id': id, 'name': name, 'macAddress': macAddress};
   }
+
+  static bool validateJson(Map<String, dynamic> json) {
+    return json.containsKey('id') &&
+        json.containsKey('name') &&
+        json.containsKey('macAddress');
+  }
+
+  static Map<String, dynamic> generateJsonStruct() {
+    final keys = Camera(1, '', '').toJson().keys;
+    return JsonSerialisable.createFakeJson(keys);
+  }
 }

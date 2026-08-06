@@ -13,8 +13,8 @@ class LoginAPIService {
   const LoginAPIService(this.client, this.baseUrl);
 
   Future<bool> isReachable() async {
-    final respose = await client.get(Uri.parse(baseUrl));
-    return respose.ok;
+    final response = await client.get(Uri.parse(baseUrl));
+    return response.ok;
   }
 
   Future<Token> login(String username, String password) async {
@@ -34,7 +34,12 @@ class LoginAPIService {
         message: 'Failed to login',
       );
     }
-    return Token.fromJson(jsonDecode(response.body));
+
+    final json = jsonDecode(response.body);
+    if (!Token.validateJson(json)) {
+      throw ResponseMismatchException(Token.generateJsonStruct(), json);
+    }
+    return Token.fromJson(json);
   }
 
   Future<void> logout(Token token) async {
@@ -79,6 +84,11 @@ class LoginAPIService {
         message: 'Failed to refresh token',
       );
     }
-    return Token.fromJson(jsonDecode(response.body));
+
+    final json = jsonDecode(response.body);
+    if (!Token.validateJson(json)) {
+      throw ResponseMismatchException(Token.generateJsonStruct(), json);
+    }
+    return Token.fromJson(json);
   }
 }

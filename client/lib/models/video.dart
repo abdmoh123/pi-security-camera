@@ -26,4 +26,16 @@ class Video implements JsonSerialisable {
       'uploadedAt': uploadedAt,
     };
   }
+
+  static bool validateJson(Map<String, dynamic> json) {
+    return json.containsKey('id') &&
+        json.containsKey('fileName') &&
+        json.containsKey('cameraID') &&
+        json.containsKey('uploadedAt');
+  }
+
+  static Map<String, dynamic> generateJsonStruct() {
+    final keys = Video(1, '', 1, DateTime(0)).toJson().keys;
+    return JsonSerialisable.createFakeJson(keys);
+  }
 }

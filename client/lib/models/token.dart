@@ -28,4 +28,15 @@ class Token implements JsonSerialisable {
       'tokenType': tokenType.name,
     };
   }
+
+  static bool validateJson(Map<String, dynamic> json) {
+    return json.containsKey('accessToken') &&
+        json.containsKey('refreshToken') &&
+        json.containsKey('tokenType');
+  }
+
+  static Map<String, dynamic> generateJsonStruct() {
+    final keys = Token(accessToken: '', refreshToken: '').toJson().keys;
+    return JsonSerialisable.createFakeJson(keys);
+  }
 }

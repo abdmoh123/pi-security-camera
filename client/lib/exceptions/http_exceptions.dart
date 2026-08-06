@@ -14,3 +14,19 @@ class HttpCodedException extends HttpException {
     return "Error $statusCode: ${super.toString()}";
   }
 }
+
+class ResponseMismatchException implements Exception {
+  final Map<String, dynamic> expected;
+  final Map<String, dynamic> actual;
+  final String message;
+
+  ResponseMismatchException(this.expected, this.actual, {this.message = ""});
+
+  @override
+  String toString() {
+    if (message.isNotEmpty) {
+      return message;
+    }
+    return "Expected: $expected\nActual: $actual";
+  }
+}

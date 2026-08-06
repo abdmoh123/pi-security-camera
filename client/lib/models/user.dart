@@ -15,4 +15,13 @@ class User implements JsonSerialisable {
   Map<String, dynamic> toJson() {
     return {'id': id, 'email': email, 'isAdmin': isAdmin};
   }
+
+  static bool validateJson(Map<String, dynamic> json) {
+    return json.containsKey('id') && json.containsKey('email');
+  }
+
+  static Map<String, dynamic> generateJsonStruct() {
+    final keys = User(1, '').toJson().keys;
+    return JsonSerialisable.createFakeJson(keys);
+  }
 }
