@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/models/token.dart';
 import 'package:pisec_client/extensions/http.dart';
 
@@ -28,7 +29,10 @@ class LoginAPIService {
     );
 
     if (response.notOk) {
-      throw Exception('Error ${response.statusCode}: Failed to login');
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: 'Failed to login',
+      );
     }
     return Token.fromJson(jsonDecode(response.body));
   }
@@ -41,7 +45,10 @@ class LoginAPIService {
     );
 
     if (response.statusCode != 204) {
-      throw Exception('Error ${response.statusCode}: Failed to logout');
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: 'Failed to logout',
+      );
     }
   }
 
@@ -52,8 +59,9 @@ class LoginAPIService {
     );
 
     if (response.statusCode != 204) {
-      throw Exception(
-        'Error ${response.statusCode}: Failed to logout from all devices',
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: 'Failed to logout from all devices',
       );
     }
   }
@@ -66,7 +74,10 @@ class LoginAPIService {
     );
 
     if (response.notOk) {
-      throw Exception('Error ${response.statusCode}: Failed to refresh token');
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: 'Failed to refresh token',
+      );
     }
     return Token.fromJson(jsonDecode(response.body));
   }
