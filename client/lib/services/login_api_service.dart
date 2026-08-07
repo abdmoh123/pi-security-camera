@@ -1,10 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:pisec_client/constants/http/content_type_headers.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
+import 'package:pisec_client/models/http/authorization_header.dart';
 import 'package:pisec_client/models/token.dart';
 import 'package:pisec_client/extensions/http.dart';
+import 'package:pisec_client/types/token_type.dart';
 
 class LoginAPIService {
   final http.Client client;
@@ -20,7 +22,7 @@ class LoginAPIService {
   Future<Token> login(String username, String password) async {
     final response = await client.post(
       Uri.parse("$baseUrl/auth/token"),
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      headers: xWwwFormUrlencodedHeader.toDict(),
       body: {
         "username": username,
         "password": password,
@@ -45,7 +47,7 @@ class LoginAPIService {
   Future<void> logout(Token token) async {
     final response = await client.post(
       Uri.parse("$baseUrl/auth/logout"),
-      headers: {HttpHeaders.authorizationHeader: "Bearer ${token.accessToken}"},
+      headers: AuthorizationHeader.fromToken(token).toDict(),
       body: {"refresh_token": token.refreshToken},
     );
 
@@ -60,7 +62,10 @@ class LoginAPIService {
   Future<void> logoutAll(String accessToken) async {
     final response = await client.post(
       Uri.parse("$baseUrl/auth/logout"),
-      headers: {HttpHeaders.authorizationHeader: "Bearer $accessToken"},
+      headers: AuthorizationHeader(
+        accessToken,
+        tokenType: TokenType.bearer,
+      ).toDict(),
     );
 
     if (response.statusCode != 204) {
@@ -74,7 +79,7 @@ class LoginAPIService {
   Future<Token> refreshToken(String refreshTokenValue) async {
     final response = await client.post(
       Uri.parse("$baseUrl/auth/refresh"),
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      headers: xWwwFormUrlencodedHeader.toDict(),
       body: {"refresh_token": refreshTokenValue},
     );
 
