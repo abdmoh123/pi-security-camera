@@ -23,6 +23,7 @@ class VideoCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                IconButton(onPressed: _playVideo, icon: Icon(Icons.play_arrow)),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -51,10 +52,15 @@ class VideoCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                IconButton(
+                  onPressed: _downloadVideo,
+                  icon: Icon(Icons.download),
+                ),
                 PopupMenuButton<MenuAction>(
                   onSelected: (value) {
                     switch (value) {
                       case MenuAction.delete:
+                        _deleteVideo();
                         break;
                     }
                   },
@@ -75,4 +81,10 @@ class VideoCard extends StatelessWidget {
       ),
     );
   }
+
+  void _playVideo() {}
+
+  void _downloadVideo() {}
+
+  void _deleteVideo() {}
 }
