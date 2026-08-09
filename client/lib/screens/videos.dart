@@ -16,7 +16,14 @@ class Videos extends StatelessWidget {
           padding: EdgeInsetsGeometry.all(8.0),
           child: Text("Videos", textAlign: TextAlign.center),
         ),
-        ListView(children: videos.map((v) => VideoCard(video: v)).toList()),
+        Expanded(
+          child: ListView.builder(
+            itemCount: videos.length,
+            itemBuilder: (context, index) {
+              return VideoCard(video: videos[index]);
+            },
+          ),
+        ),
       ],
     );
   }
