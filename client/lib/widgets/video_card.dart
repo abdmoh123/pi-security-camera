@@ -22,6 +22,7 @@ class VideoCard extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
+              spacing: 8.0,
               children: [
                 IconButton(onPressed: _playVideo, icon: Icon(Icons.play_arrow)),
                 Column(
@@ -38,6 +39,7 @@ class VideoCard extends StatelessWidget {
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
+              spacing: 8.0,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
