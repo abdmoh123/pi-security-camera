@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/models/video.dart';
 import 'package:pisec_client/screens/cameras.dart';
 import 'package:pisec_client/screens/settings.dart';
@@ -13,6 +14,7 @@ void main() {
 
   final List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];
 
+  initializeDateFormatting("en_GB");
   runApp(PisecApp(pages: pages));
 }
 
