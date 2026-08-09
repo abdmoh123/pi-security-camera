@@ -5,11 +5,21 @@ import 'package:pisec_client/screens/settings.dart';
 import 'package:pisec_client/screens/videos.dart';
 
 void main() {
-  runApp(const PisecApp());
+  final List<Video> videos = [
+    Video(1, "test1", 1, DateTime(0)),
+    Video(2, "test2", 1, DateTime(1)),
+    Video(3, "test3", 2, DateTime(0)),
+  ];
+
+  final List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];
+
+  runApp(PisecApp(pages: pages));
 }
 
 class PisecApp extends StatelessWidget {
-  const PisecApp({super.key});
+  const PisecApp({super.key, required this.pages});
+
+  final List<Widget> pages;
 
   // This widget is the root of your application.
   @override
@@ -34,13 +44,13 @@ class PisecApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Pisec Home'),
+      home: MyHomePage(title: 'Pisec Home', pages: pages),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.pages});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -52,27 +62,14 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final List<Widget> pages;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-enum PageType { videos, cameras, settings }
-
 class _MyHomePageState extends State<MyHomePage> {
-  PageType pageType = PageType.videos;
-
-  static Map<PageType, Widget> pages = {
-    PageType.videos: Videos(videos: _videos),
-    PageType.cameras: Cameras(),
-    PageType.settings: Settings(),
-  };
-
-  static final _videos = [
-    Video(1, "test1", 1, DateTime(0)),
-    Video(2, "test2", 1, DateTime(1)),
-    Video(3, "test3", 2, DateTime(0)),
-  ];
+  int pageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -81,8 +78,9 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(child: pages[pageType]),
+      body: Center(child: widget.pages[pageIndex]),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: pageIndex,
         items: [
           BottomNavigationBarItem(
             label: "Videos",
@@ -101,12 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onTabTapped(int index) {
     setState(() {
-      pageType = switch (index) {
-        0 => PageType.videos,
-        1 => PageType.cameras,
-        2 => PageType.settings,
-        _ => PageType.videos,
-      };
+      pageIndex = index;
     });
   }
 }
