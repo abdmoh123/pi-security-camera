@@ -22,7 +22,7 @@ class TokenRepository {
       ).wait;
 
       if (tokenTypeStr == null || accessToken == null || refreshToken == null) {
-        throw Exception("Failed to read token from secure storage");
+        return null;
       }
 
       return Token(
@@ -44,7 +44,7 @@ class TokenRepository {
       ]);
     } catch (e) {
       // Ensure the token is not partially saved (either fully or not at all)
-      clear();
+      await clear();
       rethrow;
     }
   }
