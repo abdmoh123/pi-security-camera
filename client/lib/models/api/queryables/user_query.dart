@@ -12,11 +12,11 @@ class UserQuery implements JsonSerialisable, HttpQueryable {
     String query = "";
     if (userIDs != null) {
       for (var i in userIDs!) {
-        query += "user_id=$i&";
+        query += "&user_id=$i";
       }
     }
     if (email != null) query += "&email=$email";
-    return query;
+    return query == "" ? query : query.substring(1);
   }
 
   @override

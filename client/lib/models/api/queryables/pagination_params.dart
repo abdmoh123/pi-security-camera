@@ -8,13 +8,13 @@ class PaginationParams implements JsonSerialisable, HttpQueryable {
   const PaginationParams({this.pageIndex = 0, this.pageSize = 100});
 
   @override
+  String toHttpQueryString() {
+    return "page_index=$pageIndex&page_size=$pageSize";
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'page_index': pageIndex,
     'page_size': pageSize,
   };
-
-  @override
-  String toHttpQueryString() {
-    return "page_index=$pageIndex&page_size=$pageSize";
-  }
 }

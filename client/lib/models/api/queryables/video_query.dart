@@ -19,17 +19,17 @@ class VideoQuery implements JsonSerialisable, HttpQueryable {
     String query = "";
     if (videoIDs != null) {
       for (var i in videoIDs!) {
-        query += "video_id=$i&";
+        query += "&video_id=$i&";
       }
     }
     if (fileName != null) query += "&file_name=$fileName";
     if (cameraIDs != null) {
       for (var i in cameraIDs!) {
-        query += "camera_id=$i&";
+        query += "&camera_id=$i";
       }
     }
     if (uploadedAt != null) query += "&uploaded_at=$uploadedAt";
-    return query;
+    return query == "" ? query : query.substring(1);
   }
 
   @override

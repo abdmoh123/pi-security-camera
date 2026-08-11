@@ -13,12 +13,12 @@ class CameraQuery implements JsonSerialisable, HttpQueryable {
     String query = "";
     if (cameraIDs != null) {
       for (var i in cameraIDs!) {
-        query += "camera_id=$i&";
+        query += "&camera_id=$i";
       }
     }
     if (name != null) query += "&name=$name";
     if (macAddress != null) query += "&mac_address=$macAddress";
-    return query;
+    return query == "" ? query : query.substring(1);
   }
 
   @override
