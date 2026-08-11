@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
-import 'package:pisec_client/models/token.dart';
+import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 

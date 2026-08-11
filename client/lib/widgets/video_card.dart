@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pisec_client/models/video.dart';
+import 'package:pisec_client/models/api/video.dart';
 
 const String locale = "en_GB";
 

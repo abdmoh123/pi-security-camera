@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:pisec_client/constants/http/content_type_headers.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/models/http/authorization_header.dart';
-import 'package:pisec_client/models/token.dart';
+import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/types/token_type.dart';
 

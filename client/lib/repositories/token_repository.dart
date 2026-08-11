@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
-import 'package:pisec_client/models/token.dart';
+import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/types/token_type.dart';
 
 class TokenRepository {

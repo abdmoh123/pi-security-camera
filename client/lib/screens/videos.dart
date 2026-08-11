@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/models/video.dart';
+import 'package:pisec_client/models/api/video.dart';
 import 'package:pisec_client/widgets/video_card.dart';
 
 class Videos extends StatelessWidget {
