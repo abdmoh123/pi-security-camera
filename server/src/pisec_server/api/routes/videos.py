@@ -32,7 +32,7 @@ def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    video_ids: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+    video_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
     file_name: Annotated[str | None, Query(regex=file_name_regex, min_length=5)] = None,
     camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
 ) -> list[VideoSchema]:
@@ -42,7 +42,7 @@ def get_videos(
     """
     videos = video_service.get_video_entries(
         db_session,
-        video_ids,
+        video_id,
         file_name,
         camera_id,
         skip=pagination.page_index * pagination.page_size,

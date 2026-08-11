@@ -36,14 +36,14 @@ def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    user_ids: Annotated[list[int] | None, Query()] = None,
+    user_id: Annotated[list[int] | None, Query()] = None,  # Named in singular form due to how it's queried
 ) -> list[UserSchema]:
     """Gets a list of all users with pagination. Admin only."""
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return user_service.get_users(
-        db_session, user_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+        db_session, user_id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
 
