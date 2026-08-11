@@ -2,18 +2,18 @@ import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
 class CameraQuery implements JsonSerialisable, HttpQueryable {
-  final List<int>? ids;
+  final List<int>? cameraIDs;
   final String? name;
   final String? macAddress;
 
-  const CameraQuery({this.ids, this.name, this.macAddress});
+  const CameraQuery({this.cameraIDs, this.name, this.macAddress});
 
   @override
   String toHttpQueryString() {
     String query = "";
-    if (ids != null) {
-      for (var i in ids!) {
-        query += "id=$i&";
+    if (cameraIDs != null) {
+      for (var i in cameraIDs!) {
+        query += "camera_id=$i&";
       }
     }
     if (name != null) query += "&name=$name";
@@ -23,7 +23,7 @@ class CameraQuery implements JsonSerialisable, HttpQueryable {
 
   @override
   Map<String, dynamic> toJson() => {
-    if (ids != null) 'id': ids,
+    if (cameraIDs != null) 'camera_ids': cameraIDs,
     if (name != null) 'name': name,
     if (macAddress != null) 'mac_address': macAddress,
   };
