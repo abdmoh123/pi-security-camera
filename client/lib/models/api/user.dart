@@ -12,9 +12,11 @@ class User implements JsonSerialisable {
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'email': email, 'isAdmin': isAdmin};
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'email': email,
+    'is_admin': isAdmin,
+  };
 
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('id') && json.containsKey('email');

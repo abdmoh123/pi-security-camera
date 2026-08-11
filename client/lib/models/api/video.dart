@@ -18,14 +18,12 @@ class Video implements JsonSerialisable {
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'fileName': fileName,
-      'cameraID': cameraID,
-      'uploadedAt': uploadedAt,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'file_name': fileName,
+    'camera_id': cameraID,
+    'uploaded_at': uploadedAt,
+  };
 
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('id') &&

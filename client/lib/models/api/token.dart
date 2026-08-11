@@ -21,13 +21,11 @@ class Token implements JsonSerialisable {
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    return {
-      'accessToken': accessToken,
-      'refreshToken': refreshToken,
-      'tokenType': tokenType.name,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'access_token': accessToken,
+    'refresh_token': refreshToken,
+    'token_type': tokenType.name,
+  };
 
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('accessToken') &&

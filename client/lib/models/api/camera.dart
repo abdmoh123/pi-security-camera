@@ -12,9 +12,11 @@ class Camera implements JsonSerialisable {
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'macAddress': macAddress};
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'mac_address': macAddress,
+  };
 
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('id') &&
