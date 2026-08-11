@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
 import 'package:pisec_client/models/token.dart';
 import 'package:pisec_client/types/token_type.dart';
 
@@ -13,9 +14,13 @@ class TokenRepository {
         _storage.delete(key: "access_token"),
         _storage.delete(key: "refresh_token"),
       ]);
-    } on PlatformException {
+    } on PlatformException catch (e, st) {
       if (retryCount == 0) {
-        rethrow;
+        throw FailedClearException(
+          'Failed to clear token!',
+          cause: e,
+          stackTrace: st,
+        );
       }
       await Future.delayed(Duration(milliseconds: 100));
       await clear(retryCount: retryCount - 1);
@@ -39,10 +44,19 @@ class TokenRepository {
         refreshToken: refreshToken,
         tokenType: TokenType.fromName(tokenTypeStr),
       );
-    } on PlatformException {
+    } on PlatformException catch (e, st) {
       if (retryCount == 0) {
         // Token is probably unrecoverable
-        await clear();
+        try {
+          await clear();
+        } on FailedClearException catch (e2) {
+          throw FailedReadException(
+            "Failed to read token! Couldn't clear unrecoverable token!",
+            cause: e,
+            stackTrace: st,
+            clearError: e2,
+          );
+        }
         return null;
       }
       await Future.delayed(Duration(milliseconds: 100));
@@ -57,11 +71,21 @@ class TokenRepository {
         _storage.write(key: "access_token", value: token.accessToken),
         _storage.write(key: "refresh_token", value: token.refreshToken),
       ]);
-    } on PlatformException {
+    } on PlatformException catch (e, st) {
       if (retryCount == 0) {
         // Ensure the token is not partially saved (either fully or not at all)
-        await clear();
-        rethrow;
+        FailedClearException? clearError;
+        try {
+          await clear();
+        } on FailedClearException catch (e2) {
+          clearError = e2;
+        }
+        throw FailedWriteException(
+          "Failed to save token!",
+          cause: e,
+          stackTrace: st,
+          clearError: clearError,
+        );
       }
       await Future.delayed(Duration(milliseconds: 100));
       await saveToken(token, retryCount: retryCount - 1);

@@ -30,12 +30,3 @@ class ResponseMismatchException implements Exception {
     return "Expected: $expected\nActual: $actual";
   }
 }
-
-class SecureStorageException implements Exception {
-  final String message;
-
-  const SecureStorageException(this.message);
-
-  @override
-  String toString() => message;
-}
