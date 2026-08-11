@@ -1,6 +1,7 @@
+import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class PaginationParams implements JsonSerialisable {
+class PaginationParams implements JsonSerialisable, HttpQueryable {
   final int pageIndex;
   final int pageSize;
 
@@ -11,4 +12,9 @@ class PaginationParams implements JsonSerialisable {
     'page_index': pageIndex,
     'page_size': pageSize,
   };
+
+  @override
+  String toHttpQueryString() {
+    return "page_index=$pageIndex&page_size=$pageSize";
+  }
 }
