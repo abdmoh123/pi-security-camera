@@ -43,7 +43,9 @@ class AuthHttpClient extends http.BaseClient {
 
       final newToken = await tokenStorage.getToken();
       if (newToken == null) {
-        throw SecureStorageException("Failed to read token");
+        throw FailedReadException(
+          "Failed to read token after successful refresh",
+        );
       }
 
       final newRequest = _cloneRequest(request, newToken);
@@ -94,7 +96,7 @@ class AuthHttpClient extends http.BaseClient {
     try {
       final token = await tokenStorage.getToken();
       if (token == null) {
-        throw SecureStorageException('Unable to refresh, failed to read token');
+        throw FailedReadException('Failed to read token during refresh');
       }
 
       Token? newToken;

@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-class SecureStorageException implements Exception {
+sealed class SecureStorageException implements Exception {
   final String message;
   final PlatformException? cause;
   final StackTrace? stackTrace;
@@ -11,7 +11,7 @@ class SecureStorageException implements Exception {
   String toString() => message;
 }
 
-class ClearableSecureStorageException extends SecureStorageException {
+sealed class ClearableSecureStorageException extends SecureStorageException {
   final FailedClearException? clearError;
 
   const ClearableSecureStorageException(
@@ -43,3 +43,4 @@ class FailedWriteException extends ClearableSecureStorageException {
     super.clearError,
   });
 }
+
