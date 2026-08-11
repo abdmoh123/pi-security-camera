@@ -2,28 +2,36 @@ import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
 class VideoQuery implements JsonSerialisable, HttpQueryable {
-  final int? id;
+  final List<int>? ids;
   final String? fileName;
-  final int? cameraID;
+  final List<int>? cameraIDs;
   final DateTime? uploadedAt;
 
-  const VideoQuery({this.id, this.fileName, this.cameraID, this.uploadedAt});
+  const VideoQuery({this.ids, this.fileName, this.cameraIDs, this.uploadedAt});
 
   @override
   String toHttpQueryString() {
     String query = "";
-    if (id != null) query += "id=$id";
+    if (ids != null) {
+      for (var i in ids!) {
+        query += "id=$i&";
+      }
+    }
     if (fileName != null) query += "&file_name=$fileName";
-    if (cameraID != null) query += "&camera_id=$cameraID";
+    if (cameraIDs != null) {
+      for (var i in cameraIDs!) {
+        query += "camera_id=$i&";
+      }
+    }
     if (uploadedAt != null) query += "&uploaded_at=$uploadedAt";
     return query;
   }
 
   @override
   Map<String, dynamic> toJson() => {
-    if (id != null) 'id': id,
+    if (ids != null) 'id': ids,
     if (fileName != null) 'file_name': fileName,
-    if (cameraID != null) 'camera_id': cameraID,
+    if (cameraIDs != null) 'camera_id': cameraIDs,
     if (uploadedAt != null) 'uploaded_at': uploadedAt,
   };
 }
