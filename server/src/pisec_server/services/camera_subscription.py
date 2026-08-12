@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
-from pisec_server.core.exceptions import RecordNotFoundError
+from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.db_models import Camera, User
 from pisec_server.services.camera import get_camera, get_cameras
 from pisec_server.services.user import get_user, get_users
@@ -51,6 +51,9 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
         camera for camera in real_cameras if camera.id not in current_subscription_ids
     ]
 
+    if not unsubscribed_cameras:
+        raise RecordAlreadyExistsError(f"User {user_id} is already subscribed to all given cameras!")
+
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()
     for camera in unsubscribed_cameras:
@@ -73,6 +76,9 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     current_subscription_ids: list[int] = [sub.user_id for sub in get_camera_subscriptions_by_camera(db, camera_id)]
     real_users: list[User] = get_users(db, user_ids)
     unsubscribed_users: list[User] = [user for user in real_users if user.id not in current_subscription_ids]
+
+    if not unsubscribed_users:
+        raise RecordAlreadyExistsError(f"Camera {camera_id} is already subscribed to all given users!")
 
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()

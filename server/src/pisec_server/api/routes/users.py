@@ -141,6 +141,8 @@ def create_camera_subscription(
         result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
             db_session, user_id, [camera_id]
         )
+    except RecordAlreadyExistsError as e:
+        raise HTTPException(status_code=409) from e
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404) from e
 
@@ -164,6 +166,8 @@ def create_camera_subscriptions(
 
     try:
         return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, cameras_to_subscribe)
+    except RecordAlreadyExistsError as e:
+        raise HTTPException(status_code=409) from e
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404) from e
 
