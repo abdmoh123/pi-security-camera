@@ -137,11 +137,12 @@ def create_camera_subscription(
     if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
-        db_session, user_id, [camera_id]
-    )
-    if len(result) == 0:
-        raise HTTPException(status_code=404, detail="Failed to subscribe: Camera not found!")
+    try:
+        result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
+            db_session, user_id, [camera_id]
+        )
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404) from e
 
     return result[0]
 
@@ -161,12 +162,10 @@ def create_camera_subscriptions(
     if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
-    for camera in cameras:
-        if camera.id not in camera_id:
-            raise HTTPException(status_code=404, detail=f"Failed to apply subscriptions: Camera {camera.id} not found!")
-
-    return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, camera_id)
+    try:
+        return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, cameras_to_subscribe)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404) from e
 
 
 @router.delete("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
@@ -184,11 +183,12 @@ def unsubscribe_from_camera(
     if not user_service.get_user(db_session, user_id):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    result: list[CameraSubscription] = subscription_service.delete_camera_subscriptions_by_user(
-        db_session, user_id, [camera_id]
-    )
-    if len(result) == 0:
-        raise HTTPException(status_code=404, detail="Failed to unsubscribe: Camera not found!")
+    try:
+        result: list[CameraSubscription] = subscription_service.delete_camera_subscriptions_by_user(
+            db_session, user_id, [camera_id]
+        )
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404) from e
 
     return result[0]
 
@@ -213,7 +213,10 @@ def unsubscribe_from_cameras(
         if camera.id not in camera_id:
             raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
 
-    return subscription_service.delete_camera_subscriptions_by_user(db_session, user_id, camera_id)
+    try:
+        return subscription_service.delete_camera_subscriptions_by_user(db_session, user_id, camera_id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404) from e
 
 
 @router.get("/{user_id}/videos", response_model=list[Video])
