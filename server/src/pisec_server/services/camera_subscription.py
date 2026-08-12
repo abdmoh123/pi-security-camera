@@ -101,6 +101,7 @@ def delete_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
     # Unlink the cameras from the user
     # NOTE: This will silently skip cameras that aren't already linked
     cameras: list[Camera] = [camera for camera in get_cameras(db, camera_ids) if camera not in db_user.cameras]
+
     result: list[CameraSubscription] = list()
     for camera in cameras:
         db_user.cameras.remove(camera)

@@ -13,7 +13,6 @@ from pisec_server.api.models.videos import Video
 from pisec_server.auth.dependencies import get_current_admin_user, get_current_user
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
-from pisec_server.db.db_models import Camera
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
@@ -126,16 +125,18 @@ def delete_user(
 def create_camera_subscription(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     user_id: Annotated[int, Path(ge=1)],
-    camera_id: Annotated[int, Path(ge=1)],  # Named in singular form due to how it's queried
+    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
-    """Subscribes a given user to a given camera."""
-    # Users can only subscribe cameras to themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != user_id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    """Subscribes a given user to a given camera that is owned by the current user."""
+    # Removes camera IDs that don't exist or that aren't owned by the current user silently
+    available_camera_ids: set[int] = {
+        credential.camera_id for credential in current_user.credentials if credential.camera_id is not None
+    }
 
-    if not user_service.get_user(db_session, user_id):
-        raise HTTPException(status_code=404, detail="User not found!")
+    # Users can only subscribe other users to cameras they own, admins can do it for anyone
+    if not current_user.is_admin and camera_id not in available_camera_ids:
+        raise HTTPException(status_code=403, detail=f"Camera {camera_id} is not owned by the current user!")
 
     try:
         result: list[CameraSubscription] = subscription_service.create_camera_subscriptions_by_user(
@@ -156,16 +157,21 @@ def create_camera_subscriptions(
     camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
-    """Subscribes a given user to given cameras."""
-    # Users can only subscribe cameras to themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != user_id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    """Subscribes a given user to given cameras that are owned by the current user."""
+    # Removes camera IDs that aren't owned by the current user silently
+    available_camera_ids: set[int] = {
+        credential.camera_id for credential in current_user.credentials if credential.camera_id is not None
+    }
+    unowned_camera_ids = set(camera_id) - available_camera_ids
 
-    if not user_service.get_user(db_session, user_id):
-        raise HTTPException(status_code=404, detail="User not found!")
+    # Users can only subscribe cameras they own, admins can do it for anyone
+    if not current_user.is_admin and unowned_camera_ids:
+        raise HTTPException(
+            status_code=403, detail=f"Following cameras are not owned by the current user: {unowned_camera_ids}"
+        )
 
     try:
-        return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, cameras_to_subscribe)
+        return subscription_service.create_camera_subscriptions_by_user(db_session, user_id, camera_id)
     except RecordAlreadyExistsError as e:
         raise HTTPException(status_code=409) from e
     except RecordNotFoundError as e:
@@ -180,12 +186,22 @@ def unsubscribe_from_camera(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
-    # Users can only unsubscribe cameras from themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != user_id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    available_camera_ids: set[int] = {
+        credential.camera_id for credential in current_user.credentials if credential.camera_id is not None
+    }
 
-    if not user_service.get_user(db_session, user_id):
-        raise HTTPException(status_code=404, detail="User not found!")
+    # Users can only unsubscribe cameras from themselves, admins can do it for anyone
+    if not current_user.is_admin and current_user.id != user_id and camera_id not in available_camera_ids:
+        raise HTTPException(status_code=403, detail=f"User {current_user.id} doesn't own {camera_id}")
+
+    affected_user = user_service.get_user(db_session, user_id)
+    if not affected_user:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found!")
+
+    if affected_user.id == current_user.id:
+        subscribed_cameras: set[int] = {camera.id for camera in affected_user.cameras}
+        if camera_id not in subscribed_cameras:
+            raise HTTPException(status_code=404, detail=f"User {user_id} is not subscribed to {camera_id}")
 
     try:
         result: list[CameraSubscription] = subscription_service.delete_camera_subscriptions_by_user(
@@ -205,17 +221,35 @@ def unsubscribe_from_cameras(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from given cameras."""
-    # Users can only unsubscribe cameras from themselves, admins can do it for anyone
-    if not current_user.is_admin and current_user.id != user_id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    # Removes camera IDs that aren't owned by the current user silently
+    available_camera_ids: set[int] = {
+        credential.camera_id for credential in current_user.credentials if credential.camera_id is not None
+    }
+    unowned_camera_ids = set(camera_id) - available_camera_ids
 
-    if not user_service.get_user(db_session, user_id):
-        raise HTTPException(status_code=404, detail="User not found!")
+    # Users can only unsubscribe other users from cameras they own, admins can do it for anyone
+    if not current_user.is_admin and current_user.id != user_id and unowned_camera_ids:
+        raise HTTPException(
+            status_code=403, detail=f"Following cameras are not owned by the current user: {unowned_camera_ids}"
+        )
 
-    cameras: list[Camera] = camera_service.get_cameras(db_session, camera_ids=camera_id)
-    for camera in cameras:
-        if camera.id not in camera_id:
-            raise HTTPException(status_code=404, detail=f"Failed to unsubscribe: Camera {camera.id} not found!")
+    # Quick exit if given user doesn't exist
+    affected_user = user_service.get_user(db_session, user_id)
+    if not affected_user:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found!")
+
+    # All users can unsubscribe to cameras they are subscribed to
+    if affected_user.id == current_user.id:
+        subscribed_camera_ids: set[int] = {camera.id for camera in affected_user.cameras}
+        unsubbed_camera_ids = set(camera_id) - subscribed_camera_ids
+        if unsubbed_camera_ids:
+            raise HTTPException(status_code=403, detail=f"You are not subscribed to cameras: {unsubbed_camera_ids}")
+
+    # Check if all cameras exist
+    camera_ids: set[int] = {camera.id for camera in camera_service.get_cameras(db_session, camera_ids=camera_id)}
+    missing_camera_ids = set(camera_id) - camera_ids
+    if missing_camera_ids:
+        raise HTTPException(status_code=404, detail=f"Following cameras were not found: {missing_camera_ids}")
 
     try:
         return subscription_service.delete_camera_subscriptions_by_user(db_session, user_id, camera_id)
