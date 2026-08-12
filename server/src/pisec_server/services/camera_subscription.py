@@ -44,18 +44,18 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
     if not db_user:
         raise RecordNotFoundError(f"User {user_id} does not exist!")
 
-    # separate out the cameras that the user is already subscribed to
-    current_subscriptions: list[CameraSubscription] = get_camera_subscriptions_by_user(db, user_id)
-    subscribed_camera_ids: set[int] = set([sub.camera_id for sub in current_subscriptions])
-    unsubscribed_camera_ids: set[int] = set(camera_ids) - subscribed_camera_ids
+    # Separate out the cameras that the user is already subscribed to
+    current_subscription_ids: list[int] = [sub.camera_id for sub in get_camera_subscriptions_by_user(db, user_id)]
+    real_cameras: list[Camera] = get_cameras(db, camera_ids)
+    unsubscribed_cameras: list[Camera] = [
+        camera for camera in real_cameras if camera.id not in current_subscription_ids
+    ]
 
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()
-    for id in unsubscribed_camera_ids:
-        camera: Camera | None = get_camera(db, id)
-        if camera:
-            db_user.cameras.append(camera)
-            result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
+    for camera in unsubscribed_cameras:
+        db_user.cameras.append(camera)
+        result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
 
     db.commit()
 
@@ -69,18 +69,16 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     if not db_camera:
         raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
 
-    # separate out the cameras that the user is already subscribed to
-    current_subscriptions: list[CameraSubscription] = get_camera_subscriptions_by_camera(db, camera_id)
-    subscribed_user_ids: set[int] = set([sub.user_id for sub in current_subscriptions])
-    unsubscribed_user_ids: set[int] = set(user_ids) - subscribed_user_ids
+    # Separate out the cameras that the user is already subscribed to
+    current_subscription_ids: list[int] = [sub.user_id for sub in get_camera_subscriptions_by_camera(db, camera_id)]
+    real_users: list[User] = get_users(db, user_ids)
+    unsubscribed_users: list[User] = [user for user in real_users if user.id not in current_subscription_ids]
 
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()
-    for id in unsubscribed_user_ids:
-        user: User | None = get_user(db, id)
-        if user:
-            db_camera.users.append(user)
-            result.append(CameraSubscription(user_id=user.id, camera_id=camera_id))
+    for user in unsubscribed_users:
+        db_camera.users.append(user)
+        result.append(CameraSubscription(user_id=user.id, camera_id=camera_id))
 
     db.commit()
 
@@ -94,8 +92,9 @@ def delete_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
     if not db_user:
         raise RecordNotFoundError(f"User {user_id} does not exist!")
 
-    # unlink the cameras from the user
-    cameras: list[Camera] = get_cameras(db, camera_ids)
+    # Unlink the cameras from the user
+    # NOTE: This will silently skip cameras that aren't already linked
+    cameras: list[Camera] = [camera for camera in get_cameras(db, camera_ids) if camera not in db_user.cameras]
     result: list[CameraSubscription] = list()
     for camera in cameras:
         db_user.cameras.remove(camera)
@@ -113,8 +112,9 @@ def delete_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     if not db_camera:
         raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
 
-    # unlink the cameras from the user
-    users: list[User] = get_users(db, user_ids)
+    # Unlink the cameras from the user
+    # NOTE: This will silently skip cameras that aren't already linked
+    users: list[User] = [user for user in get_users(db, user_ids) if user not in db_camera.users]
     result: list[CameraSubscription] = list()
     for user in users:
         db_camera.users.remove(user)
