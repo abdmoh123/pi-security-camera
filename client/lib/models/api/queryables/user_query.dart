@@ -1,27 +1,14 @@
-import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class UserQuery implements JsonSerialisable, PathQueryable {
-  final List<int>? userIDs;
+class UserQuery implements JsonSerialisable {
   final String? email;
+  final String? password;
 
-  const UserQuery({this.userIDs, this.email});
-
-  @override
-  String toPathQueryString() {
-    String query = "";
-    if (userIDs != null) {
-      for (var i in userIDs!) {
-        query += "&user_id=$i";
-      }
-    }
-    if (email != null) query += "&email=$email";
-    return query == "" ? query : query.substring(1);
-  }
+  const UserQuery({this.email, this.password});
 
   @override
   Map<String, dynamic> toJson() => {
-    if (userIDs != null) 'user_ids': userIDs,
     if (email != null) 'email': email,
+    if (password != null) 'password': password,
   };
 }
