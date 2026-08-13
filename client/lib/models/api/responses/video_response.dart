@@ -1,15 +1,15 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class Video implements JsonSerialisable {
+class VideoResponse implements JsonSerialisable {
   final int id;
   final String fileName;
   final int cameraID;
   final DateTime uploadedAt;
 
-  const Video(this.id, this.fileName, this.cameraID, this.uploadedAt);
+  const VideoResponse(this.id, this.fileName, this.cameraID, this.uploadedAt);
 
-  factory Video.fromJson(Map<String, dynamic> json) {
-    return Video(
+  factory VideoResponse.fromJson(Map<String, dynamic> json) {
+    return VideoResponse(
       json['id'],
       json['fileName'],
       json['cameraID'],
@@ -26,7 +26,7 @@ class Video implements JsonSerialisable {
   };
 
   static Map<String, dynamic> generateJsonStruct() {
-    final keys = Video(1, '', 1, DateTime(0)).toJson().keys;
+    final keys = VideoResponse(1, '', 1, DateTime(0)).toJson().keys;
     return JsonSerialisable.createFakeJson(keys);
   }
 

@@ -1,14 +1,18 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class User implements JsonSerialisable {
+class UserResponse implements JsonSerialisable {
   final int id;
   final String email;
   final bool isAdmin;
 
-  const User(this.id, this.email, {this.isAdmin = false});
+  const UserResponse(this.id, this.email, {this.isAdmin = false});
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(json['id'], json['email'], isAdmin: json['isAdmin'] ?? false);
+  factory UserResponse.fromJson(Map<String, dynamic> json) {
+    return UserResponse(
+      json['id'],
+      json['email'],
+      isAdmin: json['isAdmin'] ?? false,
+    );
   }
 
   @override
@@ -19,7 +23,7 @@ class User implements JsonSerialisable {
   };
 
   static Map<String, dynamic> generateJsonStruct() {
-    final keys = User(1, '').toJson().keys;
+    final keys = UserResponse(1, '').toJson().keys;
     return JsonSerialisable.createFakeJson(keys);
   }
 

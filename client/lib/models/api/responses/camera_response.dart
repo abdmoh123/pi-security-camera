@@ -1,14 +1,14 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class Camera implements JsonSerialisable {
+class CameraResponse implements JsonSerialisable {
   final int id;
   final String name;
   final String macAddress;
 
-  const Camera(this.id, this.name, this.macAddress);
+  const CameraResponse(this.id, this.name, this.macAddress);
 
-  factory Camera.fromJson(Map<String, dynamic> json) {
-    return Camera(json['id'], json['name'], json['macAddress']);
+  factory CameraResponse.fromJson(Map<String, dynamic> json) {
+    return CameraResponse(json['id'], json['name'], json['macAddress']);
   }
 
   @override
@@ -19,7 +19,7 @@ class Camera implements JsonSerialisable {
   };
 
   static Map<String, dynamic> generateJsonStruct() {
-    final keys = Camera(1, '', '').toJson().keys;
+    final keys = CameraResponse(1, '', '').toJson().keys;
     return JsonSerialisable.createFakeJson(keys);
   }
 
