@@ -115,7 +115,7 @@ def delete_user(
     # TODO: Delete all cameras and credentials before deleting the user
 
     # Revoke refresh tokens before deleting the user
-    refresh_tokens = auth_service.revoke_all_user_refresh_tokens(db_session, user_id)
+    _ = auth_service.revoke_all_user_refresh_tokens(db_session, user_id)
 
     try:
         deleted_user: UserSchema = user_service.delete_user(db_session, user_id=user_id)
@@ -283,7 +283,7 @@ def get_videos(
     )
 
 
-@router.post("/{user_id}/credential", response_model=CameraCredentialResponse)
+@router.post("/me/credential", response_model=CameraCredentialResponse)
 def create_credential(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     db_session: Annotated[Session, Depends(get_db)],
