@@ -10,6 +10,7 @@ from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.general import PaginationParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.api.models.videos import Video
+from pisec_server.auth import services as auth_service
 from pisec_server.auth.dependencies import get_current_admin_user, get_current_user
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
@@ -111,12 +112,15 @@ def delete_user(
     if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
+    # TODO: Delete all cameras and credentials before deleting the user
+
+    # Revoke refresh tokens before deleting the user
+    refresh_tokens = auth_service.revoke_all_user_refresh_tokens(db_session, user_id)
+
     try:
         deleted_user: UserSchema = user_service.delete_user(db_session, user_id=user_id)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-    # TODO: Revoke all tokens associated with the deleted user
 
     return deleted_user
 
