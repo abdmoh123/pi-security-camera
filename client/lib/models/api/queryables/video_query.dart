@@ -1,7 +1,7 @@
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class VideoQuery implements JsonSerialisable, HttpQueryable {
+class VideoQuery implements JsonSerialisable, PathQueryable {
   final List<int>? videoIDs;
   final String? fileName;
   final List<int>? cameraIDs;
@@ -15,11 +15,11 @@ class VideoQuery implements JsonSerialisable, HttpQueryable {
   });
 
   @override
-  String toHttpQueryString() {
+  String toPathQueryString() {
     String query = "";
     if (videoIDs != null) {
       for (var i in videoIDs!) {
-        query += "&video_id=$i&";
+        query += "&video_id=$i";
       }
     }
     if (fileName != null) query += "&file_name=$fileName";

@@ -1,7 +1,7 @@
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class CameraQuery implements JsonSerialisable, HttpQueryable {
+class CameraQuery implements JsonSerialisable, PathQueryable {
   final List<int>? cameraIDs;
   final String? name;
   final String? macAddress;
@@ -9,7 +9,7 @@ class CameraQuery implements JsonSerialisable, HttpQueryable {
   const CameraQuery({this.cameraIDs, this.name, this.macAddress});
 
   @override
-  String toHttpQueryString() {
+  String toPathQueryString() {
     String query = "";
     if (cameraIDs != null) {
       for (var i in cameraIDs!) {

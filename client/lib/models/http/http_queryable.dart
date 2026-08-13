@@ -1,7 +1,7 @@
-abstract interface class HttpQueryable {
-  String toHttpQueryString();
+abstract interface class PathQueryable {
+  String toPathQueryString();
 
-  static String combineToHttpQueryString(Iterable<HttpQueryable> queries) {
-    return queries.map((q) => q.toHttpQueryString()).join('&');
+  static String combineToPathQueryString(Iterable<PathQueryable> queries) {
+    return queries.map((q) => q.toPathQueryString()).join('&');
   }
 }

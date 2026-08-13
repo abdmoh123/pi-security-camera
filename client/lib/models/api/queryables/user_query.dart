@@ -1,14 +1,14 @@
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class UserQuery implements JsonSerialisable, HttpQueryable {
+class UserQuery implements JsonSerialisable, PathQueryable {
   final List<int>? userIDs;
   final String? email;
 
   const UserQuery({this.userIDs, this.email});
 
   @override
-  String toHttpQueryString() {
+  String toPathQueryString() {
     String query = "";
     if (userIDs != null) {
       for (var i in userIDs!) {
