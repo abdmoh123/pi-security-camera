@@ -8,7 +8,7 @@ class CameraResponse implements JsonSerialisable {
   const CameraResponse(this.id, this.name, this.macAddress);
 
   factory CameraResponse.fromJson(Map<String, dynamic> json) {
-    return CameraResponse(json['id'], json['name'], json['macAddress']);
+    return CameraResponse(json['id'], json['name'], json['mac_address']);
   }
 
   @override
@@ -26,6 +26,6 @@ class CameraResponse implements JsonSerialisable {
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('id') &&
         json.containsKey('name') &&
-        json.containsKey('macAddress');
+        json.containsKey('mac_address');
   }
 }

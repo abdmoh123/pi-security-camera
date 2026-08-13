@@ -11,9 +11,9 @@ class VideoResponse implements JsonSerialisable {
   factory VideoResponse.fromJson(Map<String, dynamic> json) {
     return VideoResponse(
       json['id'],
-      json['fileName'],
-      json['cameraID'],
-      DateTime.parse(json['uploadedAt'] + "Z" as String).toLocal(),
+      json['file_name'],
+      json['camera_id'],
+      DateTime.parse(json['uploaded_at'] + "Z" as String).toLocal(),
     );
   }
 
@@ -32,8 +32,8 @@ class VideoResponse implements JsonSerialisable {
 
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('id') &&
-        json.containsKey('fileName') &&
-        json.containsKey('cameraID') &&
-        json.containsKey('uploadedAt');
+        json.containsKey('file_name') &&
+        json.containsKey('camera_id') &&
+        json.containsKey('uploaded_at');
   }
 }

@@ -11,7 +11,7 @@ class UserResponse implements JsonSerialisable {
     return UserResponse(
       json['id'],
       json['email'],
-      isAdmin: json['isAdmin'] ?? false,
+      isAdmin: json['is_admin'] ?? false,
     );
   }
 
