@@ -1,9 +1,14 @@
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/video_query.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
+import 'package:pisec_client/models/event_task.dart';
 
 abstract class VideoRepository {
+  Future<bool> cancelVideoDownload(EventTask downloadTask);
+
   Future<VideoResponse> deleteVideo(int userId);
+
+  Future<EventTask?> downloadVideo(int videoId);
 
   Future<VideoResponse> getVideo(int videoId);
 
