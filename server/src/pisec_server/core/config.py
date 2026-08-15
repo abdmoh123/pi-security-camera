@@ -57,6 +57,13 @@ def _get_db_url(db_type: DBType) -> str:
             return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
 
+def _get_hmac_secret() -> str:
+    secret: str | None = os.getenv("HMAC_SECRET_KEY")
+    if not secret:
+        raise ValueError("HMAC_SECRET_KEY is not set!")
+    return secret
+
+
 def _get_secret() -> str:
     """Loads secret key from environment variables.
 
@@ -102,6 +109,9 @@ class Settings:
 
     SECRET_KEY: str = _get_secret()  # Generate a random one with `openssl rand -hex 32`
     JWT_ALGORITHM: JWTAlgorithm = _get_jwt_algorithm()  # Default to HS256
+
+    HMAC_SECRET_KEY: str = _get_hmac_secret()
+    VIDEO_TOKEN_EXPIRE_MINUTES: int = 10
 
     # Token expiry times
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
