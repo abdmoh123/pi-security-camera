@@ -3,7 +3,7 @@ import 'package:pisec_client/models/api/queryables/video_query.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/models/event_task.dart';
 
-abstract class VideoRepository {
+abstract interface class VideoRepository {
   Future<bool> cancelVideoDownload(EventTask downloadTask);
 
   Future<VideoResponse> deleteVideo(int userId);

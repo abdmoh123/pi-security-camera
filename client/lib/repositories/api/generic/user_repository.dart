@@ -3,7 +3,7 @@ import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
 
-abstract class UserRepository {
+abstract interface class UserRepository {
   Future<UserResponse> createUser(String email, String password);
 
   Future<UserResponse> deleteUser(int userId);
