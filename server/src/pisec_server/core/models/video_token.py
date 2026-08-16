@@ -9,7 +9,10 @@ import pisec_server.services.hmac_encoder as hmac_encoder
 
 @dataclass(frozen=True)
 class VideoTokenRecord:
-    """A struct containing info about a video token."""
+    """A struct containing info about a video token.
+
+    This also matches the Nonceable protocol.
+    """
 
     nonce: str
     token: str
