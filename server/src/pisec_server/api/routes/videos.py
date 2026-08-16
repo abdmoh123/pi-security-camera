@@ -5,7 +5,7 @@ from pathlib import Path as FilePath
 from typing import Annotated
 
 import aiofiles
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -23,6 +23,7 @@ from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
 from pisec_server.services import video as video_service
+from pisec_server.services import video_url as video_url_service
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
@@ -119,7 +120,27 @@ async def upload_video(
     return result_video
 
 
-@router.get("/{video_id}/file")
+@router.get("/{video_id}/url")
+def generate_video_url(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    video_id: Annotated[int, Path(ge=1)],
+    request: Request,
+    db_session: Annotated[Session, Depends(get_db)],
+) -> str:
+    """Creates a signed URL for downloading a video."""
+    db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found!")
+
+    token_record = video_url_service.generate_signed_download_token(video_id, current_user.id)
+
+    download_url = request.url_for("download_video", video_id=video_id)
+    download_url = download_url.include_query_params(token=token_record.token)
+
+    return str(download_url)
+
+
+@router.get("/{video_id}/file", name="download_video")
 async def download_video(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     video_id: Annotated[int, Path(ge=1)],
