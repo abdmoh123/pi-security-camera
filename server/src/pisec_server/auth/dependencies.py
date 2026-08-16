@@ -42,6 +42,32 @@ def get_current_user(
     return user
 
 
+def get_current_user_optional(
+    db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
+) -> User | None:
+    """Dependency to get the current authenticated user.
+
+    Unlike the other function, this returns none if any step failed instead of an error.
+    This makes this function worse for error handling but there may be cases where we need to use this.
+    """
+    payload: TokenPayload = decode_access_token(token)
+    # Shouldn't need to check expiry due to ExpiredSignatureError, but kept just in case
+    if payload.exp < datetime.now(timezone.utc):
+        return None
+
+    # Check if the token is for a regular user
+    if payload.sub_type != TokenSubjectType.USER:
+        return None
+
+    try:
+        user_id: int = int(payload.sub)
+    except ValueError:
+        return None
+
+    user: User | None = get_user(db_session, user_id)
+    return user
+
+
 def get_current_admin_user(current_user: Annotated[User, Depends(get_current_user)]) -> User:
     """Dependency to get the current authenticated admin user."""
     if not current_user.is_admin:
