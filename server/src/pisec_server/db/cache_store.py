@@ -5,6 +5,7 @@ from asyncio import Lock
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from pisec_server.core.exceptions import RecordAlreadyExistsError
 from pisec_server.core.models.nonceable import Nonceable
 
 
@@ -39,10 +40,16 @@ class InMemoryVideoNonceStore:
         """Marks a given nonce as used so callers can track them.
 
         Additionally purges any expired nonces from the cache.
+
+        Raises:
+            RecordAlreadyExistsError: If the nonce was already marked as used.
         """
         await self.purge_expired()
 
         async with self._lock:
+            if nonceable.nonce in self._nonces:
+                raise RecordAlreadyExistsError("Nonce already exists!")
+
             self._nonces[nonceable.nonce] = NonceEntry(nonceable.expires_at)
 
     async def purge_expired(self) -> None:
