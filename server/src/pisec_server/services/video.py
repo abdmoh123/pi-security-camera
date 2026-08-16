@@ -1,12 +1,30 @@
 """File containing crud functions related to the Video table."""
 
+import mimetypes
+from pathlib import Path
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from pisec_server.api.models.videos import VideoUpdate
+from pisec_server.api.models.videos import VideoFileData, VideoUpdate
 from pisec_server.core.exceptions import RecordNotFoundError
+from pisec_server.core.validation.video_validation import get_video_file_path_safe
 from pisec_server.db.db_models import Camera, Video
 from pisec_server.services.camera import get_camera
+
+
+def get_video_file_data(video: Video) -> VideoFileData:
+    """Gets the path and name for the video file along with the mimetype."""
+    # Get video file path and validate it
+    file_path: Path = get_video_file_path_safe(video.file_name, video.camera_id)
+    if not file_path.exists():
+        raise FileNotFoundError(f"Video file {file_path} does not exist!")
+
+    # Get mime type of the file (will probably always be video/mp4)
+    media_type, _ = mimetypes.guess_type(video.file_name)
+    media_type = media_type or "application/octet-stream"
+
+    return VideoFileData(file_path=file_path, file_name=video.file_name, media_type=media_type)
 
 
 def get_video_entry(db: Session, video_id: int) -> Video | None:

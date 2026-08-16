@@ -1,6 +1,7 @@
 """File containing pydantic models for video data."""
 
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -31,3 +32,11 @@ class VideoUpdate(BaseModel):
     """Pydantic model for modifying the video entry in the database."""
 
     file_name: str | None = Field(default=None, pattern=file_name_regex, min_length=5)
+
+
+class VideoFileData(BaseModel):
+    """Model for data required for FileResponse."""
+
+    file_path: Path
+    file_name: str
+    media_type: str

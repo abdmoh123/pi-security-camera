@@ -1,6 +1,5 @@
 """FastAPI routes related to the Video table."""
 
-import mimetypes
 from pathlib import Path as FilePath
 from typing import Annotated
 
@@ -11,17 +10,19 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.general import PaginationParams
-from pisec_server.api.models.videos import Video, VideoUpdate
-from pisec_server.auth.dependencies import get_current_credential, get_current_user
-from pisec_server.core.exceptions import InvalidFileNameError, RecordNotFoundError
+from pisec_server.api.models.videos import Video, VideoFileData, VideoUpdate
+from pisec_server.auth.dependencies import get_current_credential, get_current_user, get_current_user_optional
+from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.validation.regex import file_name_regex
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
+from pisec_server.db.cache_store import nonce_store
 from pisec_server.db.database import get_db
 from pisec_server.db.db_models import Camera
 from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
+from pisec_server.services import user as user_service
 from pisec_server.services import video as video_service
 from pisec_server.services import video_url as video_url_service
 
@@ -142,32 +143,62 @@ def generate_video_url(
 
 @router.get("/{video_id}/file", name="download_video")
 async def download_video(
-    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    current_user: Annotated[UserSchema | None, Depends(get_current_user_optional)],
+    token: Annotated[str | None, Query()],
     video_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> FileResponse:
     """Endpoint for downloading a video."""
+    user_id: int | None = None
+    # Ignore authourisation if token exists and is valid
+    if token is not None:
+        try:
+            payload = video_url_service.decode_signed_download_token(token)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+        # Check if the token is valid or not (expiry and video ID match)
+        try:
+            video_url_service.assert_token_validity(payload, video_id)
+        except ValueError as e:
+            raise HTTPException(status_code=401, detail=str(e)) from e
+        user_id = payload.user_id
+
+        # Mark token as used and assert that it hasn't been used before
+        try:
+            await nonce_store.consume_nonce(payload)
+        except RecordAlreadyExistsError as e:
+            raise HTTPException(status_code=401, detail="Token already used! Please request a new url.") from e
+    else:
+        if current_user is None:
+            raise HTTPException(status_code=401)
+        user_id = current_user.id
+
+    # WARN: You can't use asyncio.gather here because the db_session is shared and not thread safe
+    db_user: UserSchema | None = await run_in_threadpool(user_service.get_user, db_session, user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found!")
+
     db_video: VideoSchema | None = await run_in_threadpool(video_service.get_video_entry, db_session, video_id)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found!")
 
+    valid_users = await run_in_threadpool(lambda: db_video.camera.users)
     # Only allow access if the user is subscribed to the camera or is an admin
-    if not current_user.is_admin and current_user not in db_video.camera.users:
+    if not db_user.is_admin and db_user not in valid_users:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    # Get video file path and validate it
+    # Get video file data
     try:
-        file_path: FilePath = get_video_file_path_safe(db_video.file_name, db_video.camera_id)
+        video_file_data: VideoFileData = await run_in_threadpool(video_service.get_video_file_data, db_video)
     except InvalidFileNameError as e:
         raise HTTPException(status_code=500, detail="Invalid file path!") from e
-    if not await run_in_threadpool(file_path.exists):
-        raise HTTPException(status_code=500, detail="Video file not found!")
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail="Video file not found!") from e
 
-    # Get mime type of the file (will probably always be video/mp4)
-    media_type, _ = mimetypes.guess_type(db_video.file_name)
-    media_type = media_type or "application/octet-stream"
-
-    return FileResponse(path=file_path, filename=db_video.file_name, media_type=media_type)
+    return FileResponse(
+        path=video_file_data.file_path, filename=video_file_data.file_name, media_type=video_file_data.media_type
+    )
 
 
 @router.get("/{video_id}", response_model=Video)
