@@ -8,7 +8,7 @@ from pisec_server.api.models.users import UserCreate, UserUpdate
 from pisec_server.core.config import settings
 from pisec_server.core.exceptions import InvalidDataError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.security.hashing import generate_hashed_password
-from pisec_server.db.db_models import User
+from pisec_server.db.db_models import Camera, User
 
 
 def get_user(db: Session, user_id_or_email: int | str) -> User | None:
@@ -48,7 +48,7 @@ def get_users(
     if email:
         query = query.where(User.email.ilike(f"%{email}%"))
     if camera_ids:
-        query = query.where(User.id.in_(camera_ids))
+        query = query.where(User.cameras.any(Camera.id.in_(camera_ids)))
 
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 
