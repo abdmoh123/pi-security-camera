@@ -34,6 +34,13 @@ class VideoUpdate(BaseModel):
     file_name: str | None = Field(default=None, pattern=file_name_regex, min_length=5)
 
 
+class VideoUrlResponse(BaseModel):
+    """Pydantic model for video url token."""
+
+    url: str
+    expires_at: datetime
+
+
 class VideoFileData(BaseModel):
     """Model for data required for FileResponse."""
 

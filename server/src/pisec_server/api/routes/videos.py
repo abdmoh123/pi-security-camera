@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.general import PaginationParams
-from pisec_server.api.models.videos import Video, VideoFileData, VideoUpdate
+from pisec_server.api.models.videos import Video, VideoFileData, VideoUpdate, VideoUrlResponse
 from pisec_server.auth.dependencies import get_current_credential, get_current_user, get_current_user_optional
 from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.validation.regex import file_name_regex
@@ -127,7 +127,7 @@ def generate_video_url(
     video_id: Annotated[int, Path(ge=1)],
     request: Request,
     db_session: Annotated[Session, Depends(get_db)],
-) -> str:
+) -> VideoUrlResponse:
     """Creates a signed URL for downloading a video."""
     db_video: VideoSchema | None = video_service.get_video_entry(db_session, video_id)
     if not db_video:
@@ -138,7 +138,7 @@ def generate_video_url(
     download_url = request.url_for("download_video", video_id=video_id)
     download_url = download_url.include_query_params(token=token_record.token)
 
-    return str(download_url)
+    return VideoUrlResponse(url=str(download_url), expires_at=token_record.expires_at)
 
 
 @router.get("/{video_id}/file", name="download_video")
