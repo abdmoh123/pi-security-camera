@@ -40,13 +40,12 @@ def get_self_cameras(
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSchema]:
     """Returns a user's subscribed cameras."""
-    cameras = camera_service.get_cameras(
+    return camera_service.get_cameras(
         db_session,
         user_ids=[current_user.id],
         skip=pagination.page_index * pagination.page_size,
         limit=pagination.page_size,
     )
-    return cameras
 
 
 @router.get("/", response_model=list[UserResponse])
@@ -55,14 +54,29 @@ def get_users(
     pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[list[int] | None, Query()] = None,  # Named in singular form due to how it's queried
+    camera_id: Annotated[list[int] | None, Query()] = None,  # Named in singular form due to how it's queried
+    email: Annotated[str | None, Query()] = None,
 ) -> list[UserSchema]:
-    """Gets a list of all users with pagination. Admin only."""
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-
-    return user_service.get_users(
-        db_session, user_id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+    """Gets a list of users with pagination."""
+    users = user_service.get_users(
+        db_session,
+        user_id,
+        email,
+        camera_id,
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
     )
+
+    if not current_user.is_admin:
+        # Filter to only show users that share camera subscriptions
+        linked_users: list[UserSchema] = []
+        for camera in current_user.cameras:
+            linked_users.extend(camera.users)
+        linked_user_ids = [user.id for user in linked_users]
+
+        users = [user for user in users if user.id in linked_user_ids]
+
+    return users
 
 
 @router.post("/", response_model=UserResponse)
