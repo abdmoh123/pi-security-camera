@@ -6,7 +6,7 @@ import 'package:pisec_client/models/event_task.dart';
 abstract interface class VideoRepository {
   Future<bool> cancelVideoDownload(EventTask downloadTask);
 
-  Future<VideoResponse> deleteVideo(int userId);
+  Future<VideoResponse> deleteVideo(int videoId);
 
   Future<EventTask?> downloadVideo(int videoId);
 
