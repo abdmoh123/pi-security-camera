@@ -48,6 +48,21 @@ def get_self_cameras(
     )
 
 
+@router.put("/{user_id}", response_model=UserResponse)
+def update_self(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    user: Annotated[UserUpdate, Body()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> UserSchema:
+    """Updates a user's details using a given ID or email."""
+    try:
+        updated_user = user_service.update_user(db_session, current_user.id, user)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return updated_user
+
+
 @router.get("/", response_model=list[UserResponse])
 def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
