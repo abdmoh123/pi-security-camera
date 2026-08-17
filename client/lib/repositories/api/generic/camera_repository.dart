@@ -10,7 +10,7 @@ abstract interface class CameraRepository {
   });
 
   Future<List<CameraResponse>> getCamerasByUser(
-    int userID, {
+    int userId, {
     PaginationParams pagination = const PaginationParams(),
   });
 
@@ -19,7 +19,7 @@ abstract interface class CameraRepository {
   });
 
   Future<CameraSubscriptionResponse> subscribeToCamera(
-    int userID,
+    int userId,
     int cameraId,
   );
 }
