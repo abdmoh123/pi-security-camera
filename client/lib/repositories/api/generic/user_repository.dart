@@ -4,7 +4,7 @@ import 'package:pisec_client/models/api/responses/camera_credential_response.dar
 import 'package:pisec_client/models/api/responses/user_response.dart';
 
 abstract interface class UserRepository {
-  Future<UserResponse> createUser(String email, String password);
+  Future<CameraCredentialResponse> createCameraCredential();
 
   Future<UserResponse> deleteUser(int userId);
 
@@ -16,6 +16,4 @@ abstract interface class UserRepository {
   });
 
   Future<UserResponse> updateCurrentUser(UserQuery userQuery);
-
-  Future<CameraCredentialResponse> createCameraCredential();
 }

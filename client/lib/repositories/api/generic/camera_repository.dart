@@ -1,6 +1,6 @@
-import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/queryables/camera_query.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
+import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
 
 abstract interface class CameraRepository {
