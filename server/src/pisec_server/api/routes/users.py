@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_credentials import CameraCredentialResponse
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
+from pisec_server.api.models.cameras import CameraResponse
 from pisec_server.api.models.general import PaginationParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.api.models.videos import Video
@@ -14,6 +15,7 @@ from pisec_server.auth import services as auth_service
 from pisec_server.auth.dependencies import get_current_admin_user, get_current_user
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
+from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
@@ -26,9 +28,25 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me", response_model=UserResponse)
-def get_user_me(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> UserSchema:
+def get_self(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> UserSchema:
     """Returns the currently authenticated user."""
     return current_user
+
+
+@router.get("/me/cameras", response_model=list[CameraResponse])
+def get_self_cameras(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    pagination: Annotated[PaginationParams, Query()],
+    db_session: Annotated[Session, Depends(get_db)],
+) -> list[CameraSchema]:
+    """Returns a user's subscribed cameras."""
+    cameras = camera_service.get_cameras(
+        db_session,
+        user_ids=[current_user.id],
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
+    )
+    return cameras
 
 
 @router.get("/", response_model=list[UserResponse])

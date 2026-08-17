@@ -28,7 +28,7 @@ router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 
 @router.get("/me", response_model=CameraResponse)
-def get_camera_me(
+def get_self(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
 ) -> CameraSchema:
     """Returns a camera's details using a given ID."""
