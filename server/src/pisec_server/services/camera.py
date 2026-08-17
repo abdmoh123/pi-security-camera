@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from pisec_server.api.models.cameras import CameraCreate, CameraUpdate
 from pisec_server.core.exceptions import RecordNotFoundError
-from pisec_server.db.db_models import Camera
+from pisec_server.db.db_models import Camera, User
 
 
 def get_camera(db: Session, camera_id: int) -> Camera | None:
@@ -16,6 +16,7 @@ def get_camera(db: Session, camera_id: int) -> Camera | None:
 def get_cameras(
     db: Session,
     camera_ids: list[int] | None = None,
+    user_ids: list[int] | None = None,
     camera_name: str | None = None,
     mac_address: str | None = None,
     skip: int = 0,
@@ -29,6 +30,8 @@ def get_cameras(
 
     if camera_ids:
         query = query.where(Camera.id.in_(camera_ids))
+    if user_ids:
+        query = query.where(Camera.users.any(User.id.in_(user_ids)))
     if camera_name:
         query = query.where(Camera.name.ilike(f"%{camera_name}%"))
     if mac_address:
