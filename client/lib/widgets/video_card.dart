@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pisec_client/models/api/video.dart';
+import 'package:pisec_client/models/api/responses/video_response.dart';
 
 const String locale = "en_GB";
 
 enum MenuAction { delete }
 
 class VideoCard extends StatelessWidget {
-  final Video video;
+  final VideoResponse video;
   final bool isUnread;
 
   const VideoCard({super.key, required this.video, this.isUnread = true});

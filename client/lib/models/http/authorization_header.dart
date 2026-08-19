@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/models/http/http_header.dart';
-import 'package:pisec_client/models/token.dart';
 import 'package:pisec_client/types/token_type.dart';
 
 class AuthorizationHeader implements HttpHeader {

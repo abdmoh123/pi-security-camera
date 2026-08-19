@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:pisec_client/models/video.dart';
+import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/screens/cameras.dart';
 import 'package:pisec_client/screens/settings.dart';
 import 'package:pisec_client/screens/videos.dart';
 
 void main() {
-  final List<Video> videos = [
-    Video(1, "test1", 1, DateTime(0)),
-    Video(2, "test2", 1, DateTime(1)),
-    Video(3, "test3", 2, DateTime(0)),
+  final List<VideoResponse> videos = [
+    VideoResponse(1, "test1", 1, DateTime(0)),
+    VideoResponse(2, "test2", 1, DateTime(1)),
+    VideoResponse(3, "test3", 2, DateTime(0)),
   ];
 
   final List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];

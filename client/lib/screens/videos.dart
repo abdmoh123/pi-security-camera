@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/models/api/video.dart';
+import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/widgets/video_card.dart';
 
 class Videos extends StatelessWidget {
-  final List<Video> videos;
+  final List<VideoResponse> videos;
 
   const Videos({super.key, required this.videos});
 
