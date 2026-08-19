@@ -6,15 +6,20 @@ A flutter-based project for interacting with the pisec server.
 > This client is not the same as the client application running on the cameras.
 > That is part of the camera module.
 
-## Getting Started
+## Testing
 
-This project is a starting point for a Flutter application.
+Before testing, you will need to generate the mock stubs. You do this with the following command:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+dart run build_runner build
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+These mock stubs have been added to .gitignore, so you should not commit them to version control.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+After building the stubs, you can run the tests with the following command:
+
+```bash
+mise run test
+```
+
+Or use the `flutter test` command.
