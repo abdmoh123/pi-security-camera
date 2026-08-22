@@ -1,3 +1,4 @@
+import 'package:pisec_client/models/const_datetime.dart';
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
@@ -5,7 +6,7 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
   final List<int>? videoIDs;
   final String? fileName;
   final List<int>? cameraIDs;
-  final DateTime? uploadedAt;
+  final ConstDateTime? uploadedAt;
 
   const VideoQuery({
     this.videoIDs,
@@ -28,7 +29,7 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
         query += "&camera_id=$i";
       }
     }
-    if (uploadedAt != null) query += "&uploaded_at=$uploadedAt";
+    if (uploadedAt != null) query += "&uploaded_at=${uploadedAt!.toDateTime()}";
     return query == "" ? query : query.substring(1);
   }
 
@@ -37,6 +38,6 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
     if (videoIDs != null) 'video_ids': videoIDs,
     if (fileName != null) 'file_name': fileName,
     if (cameraIDs != null) 'camera_ids': cameraIDs,
-    if (uploadedAt != null) 'uploaded_at': uploadedAt,
+    if (uploadedAt != null) 'uploaded_at': uploadedAt!.toDateTime(),
   };
 }

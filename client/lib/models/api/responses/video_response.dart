@@ -1,10 +1,11 @@
+import 'package:pisec_client/models/const_datetime.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
 class VideoResponse implements JsonSerialisable {
   final int id;
   final String fileName;
   final int cameraID;
-  final DateTime uploadedAt;
+  final ConstDateTime uploadedAt;
 
   const VideoResponse(this.id, this.fileName, this.cameraID, this.uploadedAt);
 
@@ -13,7 +14,9 @@ class VideoResponse implements JsonSerialisable {
       json['id'],
       json['file_name'],
       json['camera_id'],
-      DateTime.parse(json['uploaded_at'] + "Z" as String).toLocal(),
+      ConstDateTime.fromDateTime(
+        DateTime.parse(json['uploaded_at'] + "Z" as String).toLocal(),
+      ),
     );
   }
 
@@ -22,11 +25,11 @@ class VideoResponse implements JsonSerialisable {
     'id': id,
     'file_name': fileName,
     'camera_id': cameraID,
-    'uploaded_at': uploadedAt,
+    'uploaded_at': uploadedAt.toDateTime(),
   };
 
   static Map<String, dynamic> generateJsonStruct() {
-    final keys = VideoResponse(1, '', 1, DateTime(0)).toJson().keys;
+    final keys = VideoResponse(1, '', 1, ConstDateTime(0)).toJson().keys;
     return JsonSerialisable.createFakeJson(keys);
   }
 

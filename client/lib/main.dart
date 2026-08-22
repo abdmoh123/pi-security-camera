@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
+import 'package:pisec_client/models/const_datetime.dart';
 import 'package:pisec_client/screens/cameras.dart';
 import 'package:pisec_client/screens/settings.dart';
 import 'package:pisec_client/screens/videos.dart';
 
 void main() {
-  final List<VideoResponse> videos = [
-    VideoResponse(1, "test1", 1, DateTime(0)),
-    VideoResponse(2, "test2", 1, DateTime(1)),
-    VideoResponse(3, "test3", 2, DateTime(0)),
+  const List<VideoResponse> videos = [
+    VideoResponse(1, "test1", 1, ConstDateTime(0)),
+    VideoResponse(2, "test2", 1, ConstDateTime(1)),
+    VideoResponse(3, "test3", 2, ConstDateTime(0)),
   ];
 
-  final List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];
+  const List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];
 
   initializeDateFormatting("en_GB");
-  runApp(PisecApp(pages: pages));
+  runApp(const PisecApp(pages: pages));
 }
 
 class PisecApp extends StatelessWidget {
