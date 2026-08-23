@@ -20,4 +20,4 @@ jobs:
       - uses: jdx/mise-action@v4
         with:
             version: 2026.3.10
-      - run: mise run start
+      - run: mise run test
