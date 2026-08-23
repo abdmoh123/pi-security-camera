@@ -106,9 +106,14 @@ $CMD
 description = "Clean the flutter project"
 run = "flutter clean"
 
+[tasks.setup-mocks]
+description = "Setup the mock stubs for the tests"
+depends = "restore"
+run = "dart run build_runner build"
+
 [tasks.test]
 description = "Run the flutter tests"
-depends = "restore"
+depends = "setup-mocks"
 usage = '''
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
 flag "-n --dry-run" help="Output what command would be run"
