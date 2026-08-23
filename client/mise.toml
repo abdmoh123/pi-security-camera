@@ -54,7 +54,6 @@ fi
 
 $CMD
 '''
-quiet = true
 
 [tasks.build]
 description = "Build the flutter app"
@@ -100,12 +99,10 @@ fi
 
 $CMD
 '''
-quiet = true
 
 [tasks.clean]
 description = "Clean the flutter project"
 run = "flutter clean"
-quiet = true
 
 [tasks.test]
 description = "Run the flutter tests"
@@ -135,12 +132,10 @@ fi
 
 $CMD
 '''
-quiet = true
 
 [tasks.restore]
 description = "Install the flutter dependencies"
 run = "flutter pub get"
-quiet = true
 
 [tasks.devcontainer]
 description = "Build, start and enter devcontainer"
