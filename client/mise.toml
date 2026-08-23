@@ -14,7 +14,7 @@ _.path = [
     "{{env.ANDROID_HOME}}/emulator",
 ]
 
-[tasks.run]
+[tasks.start]
 description = "Run the flutter app"
 usage = '''
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
@@ -137,7 +137,7 @@ $CMD
 '''
 quiet = true
 
-[tasks.install]
+[tasks.restore]
 description = "Install the flutter dependencies"
 run = "flutter pub get"
 quiet = true
