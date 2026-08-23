@@ -45,11 +45,15 @@ class VideoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      DateFormat.Hm(locale).format(video.uploadedAt),
+                      DateFormat.Hm(
+                        locale,
+                      ).format(video.uploadedAt.toDateTime()),
                       textAlign: TextAlign.right,
                     ),
                     Text(
-                      DateFormat.yMd(locale).format(video.uploadedAt),
+                      DateFormat.yMd(
+                        locale,
+                      ).format(video.uploadedAt.toDateTime()),
                       textAlign: TextAlign.right,
                     ),
                   ],
