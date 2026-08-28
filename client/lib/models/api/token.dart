@@ -14,9 +14,9 @@ class Token implements JsonSerialisable {
 
   factory Token.fromJson(Map<String, dynamic> json) {
     return Token(
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
-      tokenType: TokenType.values.byName(json['tokenType']),
+      accessToken: json['access_token'],
+      refreshToken: json['refresh_token'],
+      tokenType: TokenType.values.byName(json['token_type']),
     );
   }
 
@@ -28,9 +28,9 @@ class Token implements JsonSerialisable {
   };
 
   static bool validateJson(Map<String, dynamic> json) {
-    return json.containsKey('accessToken') &&
-        json.containsKey('refreshToken') &&
-        json.containsKey('tokenType');
+    return json.containsKey('access_token') &&
+        json.containsKey('refresh_token') &&
+        json.containsKey('token_type');
   }
 
   static Map<String, dynamic> generateJsonStruct() {
