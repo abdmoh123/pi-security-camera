@@ -5,6 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 import typer
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from pisec_server.api.routes import cameras, users, videos
 from pisec_server.auth import routes as auth
@@ -18,6 +19,14 @@ except PackageNotFoundError:
     __version__ = "0.1.0"  # fallback initial version value
 
 app = FastAPI(title="Pi Security Camera", description="API for managing Pi security cameras", version=__version__)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 api_prefix: str = "/api/v0"
 app.include_router(users.router, prefix=api_prefix)
