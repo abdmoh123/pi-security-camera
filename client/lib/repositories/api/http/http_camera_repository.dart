@@ -34,9 +34,11 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get cameras.",
       );
     }
-    return json
-        .decode(response.body)
-        .map((camera) => CameraResponse.fromJson(camera))
+    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map(
+          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -55,9 +57,11 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get cameras.",
       );
     }
-    return json
-        .decode(response.body)
-        .map((camera) => CameraResponse.fromJson(camera))
+    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map(
+          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -76,9 +80,11 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get current user's cameras.",
       );
     }
-    return json
-        .decode(response.body)
-        .map((camera) => CameraResponse.fromJson(camera))
+    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map(
+          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -96,6 +102,8 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to subscribe user $userId to camera $cameraId.",
       );
     }
-    return CameraSubscriptionResponse.fromJson(json.decode(response.body));
+    return CameraSubscriptionResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 }

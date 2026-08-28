@@ -26,7 +26,9 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to create a camera credential",
       );
     }
-    return CameraCredentialResponse.fromJson(json.decode(response.body));
+    return CameraCredentialResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -38,7 +40,9 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to delete user",
       );
     }
-    return UserResponse.fromJson(json.decode(response.body));
+    return UserResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -50,7 +54,9 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to get current user",
       );
     }
-    return UserResponse.fromJson(json.decode(response.body));
+    return UserResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -69,9 +75,9 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to get users",
       );
     }
-    return json
-        .decode(response.body)
-        .map((user) => UserResponse.fromJson(user))
+    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map((user) => UserResponse.fromJson(user as Map<String, dynamic>))
         .toList();
   }
 
@@ -87,6 +93,8 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to update current user",
       );
     }
-    return UserResponse.fromJson(json.decode(response.body));
+    return UserResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 }

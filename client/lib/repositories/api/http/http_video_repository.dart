@@ -32,7 +32,9 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to delete video",
       );
     }
-    return VideoResponse.fromJson(json.decode(response.body));
+    return VideoResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -49,7 +51,7 @@ class HttpVideoRepository implements VideoRepository {
     }
 
     final downloadUrlObj = VideoUrlResponse.fromJson(
-      json.decode(downloadUrlResponse.body),
+      json.decode(downloadUrlResponse.body) as Map<String, dynamic>,
     );
 
     return downloaderService.downloadItem(downloadUrlObj.url, "video.mp4");
@@ -64,7 +66,9 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to get video",
       );
     }
-    return VideoResponse.fromJson(json.decode(response.body));
+    return VideoResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
@@ -85,9 +89,10 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to get videos",
       );
     }
-    return json
-        .decode(response.body)
-        .map((video) => VideoResponse.fromJson(video))
+
+    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map((video) => VideoResponse.fromJson(video as Map<String, dynamic>))
         .toList();
   }
 
@@ -107,9 +112,9 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to get videos",
       );
     }
-    return json
-        .decode(response.body)
-        .map((video) => VideoResponse.fromJson(video))
+    List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
+    return decoded
+        .map((video) => VideoResponse.fromJson(video as Map<String, dynamic>))
         .toList();
   }
 }
