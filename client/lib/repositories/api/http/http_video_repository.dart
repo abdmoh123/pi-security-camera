@@ -25,7 +25,7 @@ class HttpVideoRepository implements VideoRepository {
 
   @override
   Future<VideoResponse> deleteVideo(int videoId) async {
-    final response = await client.delete(Uri(path: "$baseUrl/videos/$videoId"));
+    final response = await client.delete(Uri.parse("$baseUrl/videos/$videoId"));
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -38,7 +38,7 @@ class HttpVideoRepository implements VideoRepository {
   @override
   Future<EventTask?> downloadVideo(int videoId) async {
     final downloadUrlResponse = await client.get(
-      Uri(path: "$baseUrl/$videoId/url"),
+      Uri.parse("$baseUrl/$videoId/url"),
     );
 
     if (downloadUrlResponse.notOk) {
@@ -76,7 +76,7 @@ class HttpVideoRepository implements VideoRepository {
       pagination,
       videoQuery,
     ]);
-    final Uri url = Uri(path: "$baseUrl/videos/?$query");
+    final Uri url = Uri.parse("$baseUrl/videos/?$query");
 
     final response = await client.get(url);
     if (response.notOk) {
@@ -98,7 +98,7 @@ class HttpVideoRepository implements VideoRepository {
   }) async {
     final String query =
         "${pagination.toPathQueryString()}&camera_id=$cameraId";
-    final Uri url = Uri(path: "$baseUrl/videos/?$query");
+    final Uri url = Uri.parse("$baseUrl/videos/?$query");
 
     final response = await client.get(url);
     if (response.notOk) {

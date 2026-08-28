@@ -18,7 +18,7 @@ class HttpUserRepository implements UserRepository {
   @override
   Future<CameraCredentialResponse> createCameraCredential() async {
     final response = await client.post(
-      Uri(path: "$baseUrl/users/me/credential"),
+      Uri.parse("$baseUrl/users/me/credential"),
     );
     if (response.notOk) {
       throw HttpCodedException(
@@ -31,7 +31,7 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<UserResponse> deleteUser(int userId) async {
-    final response = await client.delete(Uri(path: "$baseUrl/users/$userId"));
+    final response = await client.delete(Uri.parse("$baseUrl/users/$userId"));
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -43,7 +43,7 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<UserResponse> getCurrentUser() async {
-    final response = await client.get(Uri(path: "$baseUrl/users/me"));
+    final response = await client.get(Uri.parse("$baseUrl/users/me"));
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -60,7 +60,7 @@ class HttpUserRepository implements UserRepository {
   }) async {
     final String query =
         "${pagination.toPathQueryString()}&camera_id=$cameraId";
-    final Uri url = Uri(path: "$baseUrl/users/?$query");
+    final Uri url = Uri.parse("$baseUrl/users/?$query");
 
     final response = await client.get(url);
     if (response.notOk) {
@@ -78,7 +78,7 @@ class HttpUserRepository implements UserRepository {
   @override
   Future<UserResponse> updateCurrentUser(UserQuery userQuery) async {
     final response = await client.put(
-      Uri(path: "$baseUrl/users/me"),
+      Uri.parse("$baseUrl/users/me"),
       body: userQuery.toJson(),
     );
     if (response.notOk) {

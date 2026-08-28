@@ -25,7 +25,7 @@ class HttpCameraRepository implements CameraRepository {
       pagination,
       cameraQuery,
     ]);
-    final Uri url = Uri(path: "$baseUrl/cameras/?$query");
+    final Uri url = Uri.parse("$baseUrl/cameras/?$query");
 
     final response = await client.get(url);
     if (response.notOk) {
@@ -46,7 +46,7 @@ class HttpCameraRepository implements CameraRepository {
     PaginationParams pagination = const PaginationParams(),
   }) async {
     final String query = "${pagination.toPathQueryString()}&user_id=$userId";
-    final Uri url = Uri(path: "$baseUrl/cameras/?$query");
+    final Uri url = Uri.parse("$baseUrl/cameras/?$query");
 
     final response = await client.get(url);
     if (response.notOk) {
@@ -88,7 +88,7 @@ class HttpCameraRepository implements CameraRepository {
     int cameraId,
   ) async {
     final response = await client.post(
-      Uri(path: "$baseUrl/users/$userId/subscriptions/$cameraId"),
+      Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
     );
     if (response.notOk) {
       throw HttpCodedException(
