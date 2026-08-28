@@ -40,6 +40,9 @@ All environment variables are loaded and accessed from the app.core.config modul
 - SECRET_KEY
     - Generate using `openssl rand -hex 32`
     - Used for encoding JWT tokens
+- HMAC_SECRET_KEY
+    - Generate using `openssl rand -hex 32`
+    - Used for encoding HMAC tokens
 
 #### Optional
 
