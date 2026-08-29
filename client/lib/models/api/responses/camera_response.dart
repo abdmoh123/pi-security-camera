@@ -1,6 +1,6 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class CameraResponse implements JsonSerialisable {
+class CameraResponse with JsonSerialisable {
   final int id;
   final String name;
   final String macAddress;

@@ -1,7 +1,7 @@
 import 'package:pisec_client/models/const_datetime.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class VideoResponse implements JsonSerialisable {
+class VideoResponse with JsonSerialisable {
   final int id;
   final String fileName;
   final int cameraID;

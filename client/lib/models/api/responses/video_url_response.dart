@@ -1,7 +1,7 @@
 import 'package:pisec_client/models/const_datetime.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class VideoUrlResponse implements JsonSerialisable {
+class VideoUrlResponse with JsonSerialisable {
   final String url;
   final ConstDateTime expiresAt;
 

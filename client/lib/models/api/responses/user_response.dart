@@ -1,6 +1,6 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class UserResponse implements JsonSerialisable {
+class UserResponse with JsonSerialisable {
   final int id;
   final String email;
   final bool isAdmin;

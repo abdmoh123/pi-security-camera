@@ -1,6 +1,6 @@
 import 'package:pisec_client/models/json_serialisable.dart';
 
-class UserQuery implements JsonSerialisable {
+class UserQuery with JsonSerialisable {
   final String? email;
   final String? password;
 
