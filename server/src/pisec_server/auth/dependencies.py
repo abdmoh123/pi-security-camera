@@ -8,6 +8,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from pisec_server.auth.exceptions import TokenDecodingError
 from pisec_server.auth.models import TokenPayload, TokenSubjectType
 from pisec_server.auth.services import decode_access_token
 from pisec_server.db.database import get_db
@@ -22,7 +23,11 @@ def get_current_user(
     db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
 ) -> User:
     """Dependency to get the current authenticated user."""
-    payload: TokenPayload = decode_access_token(token)
+    try:
+        payload: TokenPayload = decode_access_token(token)
+    except TokenDecodingError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials") from e
+
     # Shouldn't need to check expiry due to ExpiredSignatureError, but kept just in case
     if payload.exp < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token")
