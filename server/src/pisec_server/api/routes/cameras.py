@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
-from pisec_server.api.models.general import PaginationParams
+from pisec_server.api.models.paginated.camera import CameraGetParams
+from pisec_server.api.models.paginated.generic import Paginated
 from pisec_server.api.models.users import UserResponse
 from pisec_server.api.models.videos import Video
 from pisec_server.auth.dependencies import get_current_credential, get_current_user
 from pisec_server.core.exceptions import RecordNotFoundError
-from pisec_server.core.validation.regex import camera_name_regex, mac_address_regex
 from pisec_server.db.database import get_db
 from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
@@ -42,12 +42,8 @@ def get_self(
 @router.get("/", response_model=list[CameraResponse])
 def get_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
-    user_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
-    name: Annotated[str | None, Query(regex=camera_name_regex)] = None,
-    mac_address: Annotated[str | None, Query(regex=mac_address_regex)] = None,
+    params: Annotated[CameraGetParams, Query()],
 ) -> list[CameraSchema]:
     """Gets a list of all cameras with pagination.
 
@@ -55,12 +51,12 @@ def get_cameras(
     """
     cameras = camera_service.get_cameras(
         db_session,
-        camera_id,
-        user_id,
-        name,
-        mac_address,
-        pagination.page_index * pagination.page_size,
-        pagination.page_size,
+        params.camera_id,
+        params.user_id,
+        params.name,
+        params.mac_address,
+        params.page_index * params.page_size,
+        params.page_size,
     )
 
     if not current_user.is_admin:
@@ -74,8 +70,8 @@ def get_cameras(
 @router.post("/", response_model=CameraResponse)
 def create_camera(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
-    camera: Annotated[CameraCreate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
+    camera: Annotated[CameraCreate, Body()],
 ) -> CameraSchema:
     """Creates a new camera with given details."""
     if current_credential.camera_id is not None:
@@ -105,8 +101,8 @@ def create_camera(
 @router.get("/{camera_id}", response_model=CameraResponse)
 def get_camera(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
+    camera_id: Annotated[int, Path(ge=1)],
 ) -> CameraSchema:
     """Returns a camera's details using a given ID."""
     db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
@@ -124,9 +120,9 @@ def get_camera(
 @router.put("/{camera_id}", response_model=CameraResponse)
 def update_camera(
     current_credential: Annotated[CameraCredentialSchema, Depends(get_current_credential)],
+    db_session: Annotated[Session, Depends(get_db)],
     camera_id: Annotated[int, Path(ge=1)],
     camera: Annotated[CameraUpdate, Body()],
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSchema:
     """Updates a camera's details using a given ID."""
     if current_credential.camera_id is None:
@@ -165,9 +161,9 @@ def delete_camera(
 @router.get("/{camera_id}/videos", response_model=list[Video])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    camera_id: Annotated[int, Path(ge=1)],
-    pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
+    camera_id: Annotated[int, Path(ge=1)],
+    pagination: Annotated[Paginated, Query()],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
     db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
@@ -189,10 +185,10 @@ def get_videos(
 @router.get("/{camera_id}/users", response_model=list[UserResponse])
 def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    camera_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
+    camera_id: Annotated[int, Path(ge=1)],
 ) -> list[UserSchema]:
-    """Gets a list of all of a camera's users with pagination."""
+    """Gets a list of all of a camera's users with hard-coded pagination."""
     db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")

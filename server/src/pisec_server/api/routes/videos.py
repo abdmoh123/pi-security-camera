@@ -9,7 +9,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from pisec_server.api.models.general import PaginationParams
+from pisec_server.api.models.paginated.video import VideoGetParams
 from pisec_server.api.models.videos import Video, VideoFileData, VideoUpdate, VideoUrlResponse
 from pisec_server.auth.dependencies import get_current_credential, get_current_user, get_current_user_optional
 from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
@@ -32,11 +32,8 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 @router.get("/", response_model=list[Video])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    video_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
-    file_name: Annotated[str | None, Query(regex=file_name_regex, min_length=5)] = None,
-    camera_id: Annotated[list[int] | None, Query(ge=1)] = None,  # Named in singular form due to how it's queried
+    params: Annotated[VideoGetParams, Query()],
 ) -> list[VideoSchema]:
     """Gets a list of all videos with pagination.
 
@@ -44,11 +41,11 @@ def get_videos(
     """
     videos = video_service.get_video_entries(
         db_session,
-        video_id,
-        file_name,
-        camera_id,
-        skip=pagination.page_index * pagination.page_size,
-        limit=pagination.page_size,
+        params.video_id,
+        params.file_name,
+        params.camera_id,
+        skip=params.page_index * params.page_size,
+        limit=params.page_size,
     )
 
     if not current_user.is_admin:

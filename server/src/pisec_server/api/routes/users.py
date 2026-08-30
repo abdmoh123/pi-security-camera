@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from pisec_server.api.models.camera_credentials import CameraCredentialResponse
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraResponse
-from pisec_server.api.models.general import PaginationParams
+from pisec_server.api.models.paginated.generic import Paginated
+from pisec_server.api.models.paginated.user import UserGetParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.api.models.videos import Video
 from pisec_server.auth import services as auth_service
@@ -36,7 +37,7 @@ def get_self(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> 
 @router.get("/me/cameras", response_model=list[CameraResponse])
 def get_self_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    pagination: Annotated[PaginationParams, Query()],
+    pagination: Annotated[Paginated, Query()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSchema]:
     """Returns a user's subscribed cameras."""
@@ -51,8 +52,8 @@ def get_self_cameras(
 @router.put("/{user_id}", response_model=UserResponse)
 def update_self(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    user: Annotated[UserUpdate, Body()],
     db_session: Annotated[Session, Depends(get_db)],
+    user: Annotated[UserUpdate, Body()],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
     try:
@@ -66,20 +67,17 @@ def update_self(
 @router.get("/", response_model=list[UserResponse])
 def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
-    pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-    user_id: Annotated[list[int] | None, Query()] = None,  # Named in singular form due to how it's queried
-    camera_id: Annotated[list[int] | None, Query()] = None,  # Named in singular form due to how it's queried
-    email: Annotated[str | None, Query()] = None,
+    params: Annotated[UserGetParams, Query()],
 ) -> list[UserSchema]:
     """Gets a list of users with pagination."""
     users = user_service.get_users(
         db_session,
-        user_id,
-        email,
-        camera_id,
-        skip=pagination.page_index * pagination.page_size,
-        limit=pagination.page_size,
+        params.user_id,
+        params.email,
+        params.camera_id,
+        skip=params.page_index * params.page_size,
+        limit=params.page_size,
     )
 
     if not current_user.is_admin:
@@ -114,8 +112,8 @@ def create_user(
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    user_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
+    user_id: Annotated[int, Path(ge=1)],
 ) -> UserSchema:
     """Returns a user's details using a given ID or email."""
     # Only allow admins to view other users' details
@@ -132,9 +130,9 @@ def get_user(
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     user: Annotated[UserUpdate, Body()],
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> UserSchema:
     """Updates a user's details using a given ID or email."""
     # Only allow admins to update other users' details
@@ -152,8 +150,8 @@ def update_user(
 @router.delete("/{user_id}", response_model=UserResponse)
 def delete_user(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
-    user_id: Annotated[int, Path(ge=1)],
     db_session: Annotated[Session, Depends(get_db)],
+    user_id: Annotated[int, Path(ge=1)],
 ) -> UserSchema:
     """Deletes a given user by ID or email. Only Admin can delete other users."""
     if not current_user.is_admin and current_user.id != user_id:
@@ -175,9 +173,9 @@ def delete_user(
 @router.post("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def create_camera_subscription(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[int, Path(ge=1)],
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Subscribes a given user to a given camera that is owned by the current user."""
     # Removes camera IDs that don't exist or that aren't owned by the current user silently
@@ -204,9 +202,9 @@ def create_camera_subscription(
 @router.post("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
 def create_camera_subscriptions(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Subscribes a given user to given cameras that are owned by the current user."""
     # Removes camera IDs that aren't owned by the current user silently
@@ -232,9 +230,9 @@ def create_camera_subscriptions(
 @router.delete("/{user_id}/subscriptions/{camera_id}", response_model=CameraSubscription)
 def unsubscribe_from_camera(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[int, Path(ge=1)],
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraSubscription:
     """Unsubscribes a user from a given camera."""
     available_camera_ids: set[int] = {
@@ -267,9 +265,9 @@ def unsubscribe_from_camera(
 @router.delete("/{user_id}/subscriptions/", response_model=list[CameraSubscription])
 def unsubscribe_from_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     camera_id: Annotated[list[int], Query(ge=1)],  # Named in singular form due to how it's queried
-    db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSubscription]:
     """Unsubscribes a given user from given cameras."""
     # Removes camera IDs that aren't owned by the current user silently
@@ -311,9 +309,9 @@ def unsubscribe_from_cameras(
 @router.get("/{user_id}/videos", response_model=list[Video])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    user_id: Annotated[int, Path(ge=1)],
-    pagination: Annotated[PaginationParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
+    user_id: Annotated[int, Path(ge=1)],
+    pagination: Annotated[Paginated, Query()],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
     # Users can only view their own videos, admins can view anyone's videos

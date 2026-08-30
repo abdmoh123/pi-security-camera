@@ -1,11 +1,11 @@
-"""This module contains pydantic models for general use cases."""
+"""Paginated model class that query params inherit."""
 
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
 
-class PaginationParams(BaseModel):
+class Paginated(BaseModel):
     """Re-usable model for pagination.
 
     Also includes some validation.
