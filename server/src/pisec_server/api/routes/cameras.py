@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
 from pisec_server.api.models.paginated.camera import CameraGetParams
-from pisec_server.api.models.paginated.generic import Paginated
+from pisec_server.api.models.paginated.generic import PaginatedParams
 from pisec_server.api.models.users import UserResponse
 from pisec_server.api.models.videos import Video
 from pisec_server.auth.dependencies import get_current_credential, get_current_user
@@ -163,7 +163,7 @@ def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     camera_id: Annotated[int, Path(ge=1)],
-    pagination: Annotated[Paginated, Query()],
+    pagination: Annotated[PaginatedParams, Query()],
 ) -> list[VideoSchema]:
     """Gets a list of all of a camera's videos with pagination."""
     db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)

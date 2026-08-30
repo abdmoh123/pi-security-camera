@@ -4,11 +4,11 @@ from typing import Annotated
 
 from fastapi import Query
 
-from pisec_server.api.models.paginated.generic import Paginated
+from pisec_server.api.models.paginated.generic import PaginatedParams
 from pisec_server.core.validation.regex import file_name_regex
 
 
-class VideoGetParams(Paginated):
+class VideoGetParams(PaginatedParams):
     """Video GET query parameters with pagination."""
 
     video_id: Annotated[list[int] | None, Query(ge=1)] = None  # Named in singular form due to how it's queried

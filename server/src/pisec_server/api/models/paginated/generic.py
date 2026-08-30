@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 
-class Paginated(BaseModel):
+class PaginatedParams(BaseModel):
     """Re-usable model for pagination.
 
     Also includes some validation.

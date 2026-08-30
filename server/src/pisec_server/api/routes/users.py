@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from pisec_server.api.models.camera_credentials import CameraCredentialResponse
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraResponse
-from pisec_server.api.models.paginated.generic import Paginated
+from pisec_server.api.models.paginated.generic import PaginatedParams
 from pisec_server.api.models.paginated.user import UserGetParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.api.models.videos import Video
@@ -37,7 +37,7 @@ def get_self(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> 
 @router.get("/me/cameras", response_model=list[CameraResponse])
 def get_self_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    pagination: Annotated[Paginated, Query()],
+    pagination: Annotated[PaginatedParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> list[CameraSchema]:
     """Returns a user's subscribed cameras."""
@@ -49,7 +49,7 @@ def get_self_cameras(
     )
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/self", response_model=UserResponse)
 def update_self(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
@@ -311,7 +311,7 @@ def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
-    pagination: Annotated[Paginated, Query()],
+    pagination: Annotated[PaginatedParams, Query()],
 ) -> list[VideoSchema]:
     """Gets a list of all accessible videos with pagination."""
     # Users can only view their own videos, admins can view anyone's videos
