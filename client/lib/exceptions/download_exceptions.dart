@@ -6,3 +6,12 @@ class DownloadException implements Exception {
   @override
   String toString() => message;
 }
+
+class IdGenerationException implements Exception {
+  final String message;
+
+  const IdGenerationException(this.message);
+
+  @override
+  String toString() => message;
+}
