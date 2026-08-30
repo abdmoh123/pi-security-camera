@@ -41,7 +41,10 @@ def create_refresh_token(db: Session, user_id: int, expires_at: datetime | None 
 
 def get_refresh_token(db: Session, token: str) -> RefreshToken | None:
     """Retrieves a refresh token from the database."""
-    return db.query(RefreshToken).filter(RefreshToken.token == token).first()
+    db_token = db.query(RefreshToken).filter(RefreshToken.token == token).first()
+    if db_token:
+        db_token.expires_at = db_token.expires_at.replace(tzinfo=timezone.utc)
+    return db_token
 
 
 def revoke_refresh_token(db: Session, refresh_token: RefreshToken) -> RefreshToken:
