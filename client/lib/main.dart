@@ -1,22 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:pisec_client/models/api/responses/video_response.dart';
-import 'package:pisec_client/models/const_datetime.dart';
+import 'package:pisec_client/factories/downloader_factory.dart';
+import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
+import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/screens/cameras.dart';
 import 'package:pisec_client/screens/settings.dart';
 import 'package:pisec_client/screens/videos.dart';
+import 'package:pisec_client/services/auth_http_client.dart';
+import 'package:pisec_client/services/login_api_service.dart';
+import 'package:pisec_client/services/task_id_generators.dart';
 
 void main() {
-  const List<VideoResponse> videos = [
-    VideoResponse(1, "test1", 1, ConstDateTime(0)),
-    VideoResponse(2, "test2", 1, ConstDateTime(1)),
-    VideoResponse(3, "test3", 2, ConstDateTime(0)),
+  const String baseUrl = "http://localhost:8000/api/v0";
+  final tokenStorage = TokenRepository();
+  final authService = LoginAPIService(baseUrl, http.Client());
+
+  final client = AuthHttpClient(tokenStorage, authService);
+  const user = UserQuery(
+    email: "abdhawisa@gmail.com",
+    password: "Emmajayne2020!",
+  );
+  // Logs the given user in
+  client.init(user);
+
+  // Automatically chooses between web and native downloader
+  final downloaderService = createDownloaderService(videoIdFromUrl);
+  final videoRepository = HttpVideoRepository(
+    client,
+    baseUrl,
+    downloaderService,
+  );
+
+  final List<Widget> pages = [
+    VideosPage(videoRepository: videoRepository),
+    Cameras(),
+    Settings(),
   ];
 
-  const List<Widget> pages = [Videos(videos: videos), Cameras(), Settings()];
-
+  // Required to display the date in the correct format
   initializeDateFormatting("en_GB");
-  runApp(const PisecApp(pages: pages));
+  runApp(PisecApp(pages: pages));
 }
 
 class PisecApp extends StatelessWidget {
