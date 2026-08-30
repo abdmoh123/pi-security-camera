@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
+import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/services/login_api_service.dart';
@@ -16,6 +17,14 @@ class AuthHttpClient extends http.BaseClient {
   final List<Completer<void>> _pendingRequests = [];
 
   AuthHttpClient(this.tokenStorage, this.authService);
+
+  Future<void> init(UserQuery userQuery) async {
+    try {
+      final token = await authService.login(userQuery);
+      await tokenStorage.saveToken(token);
+    } on HttpCodedException {
+    } on ArgumentError {}
+  }
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
