@@ -7,6 +7,10 @@ from datetime import datetime, timezone
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from pisec_server.api.models.cameras import CameraResponse
+from pisec_server.api.models.users import UserResponse
+from pisec_server.api.models.videos import VideoResponse
+
 
 class Base(DeclarativeBase):
     """Exists to provide type hints to shutup mypy."""
@@ -39,6 +43,10 @@ class User(Base):
     cameras: Mapped[list[Camera]] = relationship("Camera", secondary="camera_subscriptions", back_populates="users")
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user")
 
+    def to_response(self) -> UserResponse:
+        """Convert a User object to a UserResponse object."""
+        return UserResponse.model_validate(self)
+
 
 class Camera(Base):
     """Schema for the camera table."""
@@ -54,6 +62,10 @@ class Camera(Base):
     credential: Mapped[CameraCredential] = relationship("CameraCredential", back_populates="camera", uselist=False)
     videos: Mapped[list[Video]] = relationship("Video", back_populates="camera")
 
+    def to_response(self) -> CameraResponse:
+        """Convert a Camera object to a CameraResponse object."""
+        return CameraResponse.model_validate(self)
+
 
 class Video(Base):
     """Schema for keeping a record of uploaded videos/recordings."""
@@ -66,6 +78,10 @@ class Video(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     camera: Mapped[Camera] = relationship("Camera", back_populates="videos")
+
+    def to_response(self) -> VideoResponse:
+        """Convert a Video object to a VideoResponse object."""
+        return VideoResponse.model_validate(self)
 
 
 class CameraCredential(Base):
