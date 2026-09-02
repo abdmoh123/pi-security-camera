@@ -4,6 +4,7 @@ import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/video_query.dart';
+import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/models/api/responses/video_url_response.dart';
 import 'package:pisec_client/models/event_task.dart';
@@ -32,6 +33,7 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to delete video",
       );
     }
+
     return VideoResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
@@ -66,13 +68,14 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to get video",
       );
     }
+
     return VideoResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
   }
 
   @override
-  Future<List<VideoResponse>> getVideos({
+  Future<PaginatedResponse<VideoResponse>> getVideos({
     PaginationParams pagination = const PaginationParams(),
     VideoQuery videoQuery = const VideoQuery(),
   }) async {
@@ -90,14 +93,14 @@ class HttpVideoRepository implements VideoRepository {
       );
     }
 
-    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map((video) => VideoResponse.fromJson(video as Map<String, dynamic>))
-        .toList();
+    return PaginatedResponse<VideoResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (video) => VideoResponse.fromJson(video),
+    );
   }
 
   @override
-  Future<List<VideoResponse>> getVideosByCamera(
+  Future<PaginatedResponse<VideoResponse>> getVideosByCamera(
     int cameraId, {
     PaginationParams pagination = const PaginationParams(),
   }) async {
@@ -112,9 +115,10 @@ class HttpVideoRepository implements VideoRepository {
         message: "Failed to get videos",
       );
     }
-    List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map((video) => VideoResponse.fromJson(video as Map<String, dynamic>))
-        .toList();
+
+    return PaginatedResponse<VideoResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (video) => VideoResponse.fromJson(video),
+    );
   }
 }

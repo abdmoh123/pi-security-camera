@@ -1,5 +1,6 @@
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/video_query.dart';
+import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/models/event_task.dart';
 
@@ -12,12 +13,12 @@ abstract interface class VideoRepository {
 
   Future<VideoResponse> getVideo(int videoId);
 
-  Future<List<VideoResponse>> getVideos({
+  Future<PaginatedResponse<VideoResponse>> getVideos({
     PaginationParams pagination = const PaginationParams(),
     VideoQuery videoQuery = const VideoQuery(),
   });
 
-  Future<List<VideoResponse>> getVideosByCamera(
+  Future<PaginatedResponse<VideoResponse>> getVideosByCamera(
     int cameraId, {
     PaginationParams pagination = const PaginationParams(),
   });

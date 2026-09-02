@@ -5,6 +5,7 @@ import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
+import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
@@ -26,6 +27,7 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to create a camera credential",
       );
     }
+
     return CameraCredentialResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
@@ -40,6 +42,7 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to delete user",
       );
     }
+
     return UserResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
@@ -54,13 +57,14 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to get current user",
       );
     }
+
     return UserResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
   }
 
   @override
-  Future<List<UserResponse>> getUsersByCamera(
+  Future<PaginatedResponse<UserResponse>> getUsersByCamera(
     int cameraId, {
     PaginationParams pagination = const PaginationParams(),
   }) async {
@@ -75,10 +79,11 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to get users",
       );
     }
-    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map((user) => UserResponse.fromJson(user as Map<String, dynamic>))
-        .toList();
+
+    return PaginatedResponse<UserResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (user) => UserResponse.fromJson(user),
+    );
   }
 
   @override
@@ -93,6 +98,7 @@ class HttpUserRepository implements UserRepository {
         message: "Failed to update current user",
       );
     }
+
     return UserResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );

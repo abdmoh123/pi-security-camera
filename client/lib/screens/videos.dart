@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
+import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/repositories/api/generic/video_repository.dart';
 import 'package:pisec_client/widgets/video_card.dart';
@@ -14,10 +17,12 @@ class VideosPage extends StatefulWidget {
 }
 
 class _VideosPageState extends State<VideosPage> {
-  Future<List<VideoResponse>> futureVideos = Future.value([]);
+  Future<PaginatedResponse<VideoResponse>> futureVideos = Future.value(
+    PaginatedResponse<VideoResponse>.empty(),
+  );
 
   int currentPage = 1;
-  int maxPages = 10; // TODO: Get the actual value from server
+  int maxPages = 1;
 
   @override
   void initState() {
@@ -66,10 +71,10 @@ class _VideosPageState extends State<VideosPage> {
                 return Center(child: Text(snapshot.error.toString()));
               }
               if (snapshot.hasData) {
-                if (snapshot.data!.isEmpty) {
+                if (snapshot.data!.items.isEmpty) {
                   return const Center(child: Text("No videos found"));
                 }
-                return _buildVideoList(snapshot.data!);
+                return _buildVideoList(snapshot.data!.items);
               }
               return const Center(child: Text("Something went wrong"));
             },
@@ -148,7 +153,7 @@ class _VideosPageState extends State<VideosPage> {
     );
   }
 
-  Future<List<VideoResponse>> _getAllVideos({
+  Future<PaginatedResponse<VideoResponse>> _getAllVideos({
     int? page,
     int pageSize = 10,
   }) async {
@@ -165,6 +170,7 @@ class _VideosPageState extends State<VideosPage> {
     setState(() {
       currentPage = page;
       futureVideos = _getAllVideos();
+      futureVideos.then((response) => maxPages = response.totalPages);
     });
   }
 
@@ -185,6 +191,7 @@ class _VideosPageState extends State<VideosPage> {
   void _refreshVideos() {
     setState(() {
       futureVideos = _getAllVideos();
+      futureVideos.then((response) => maxPages = response.totalPages);
     });
   }
 }
