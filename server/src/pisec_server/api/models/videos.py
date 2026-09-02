@@ -22,6 +22,10 @@ class Video(BaseModel):
         from_attributes: bool = True
 
 
+class VideoResponse(Video):
+    """Alias for Video to match other model types pattern."""
+
+
 class VideoCreate(BaseModel):
     """Pydantic model for a video entry."""
 

@@ -9,8 +9,9 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from pisec_server.api.models.paginated.generic import PaginatedResponse
 from pisec_server.api.models.paginated.video import VideoGetParams
-from pisec_server.api.models.videos import Video, VideoFileData, VideoUpdate, VideoUrlResponse
+from pisec_server.api.models.videos import Video, VideoFileData, VideoResponse, VideoUpdate, VideoUrlResponse
 from pisec_server.auth.dependencies import get_current_credential, get_current_user, get_current_user_optional
 from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.validation.regex import file_name_regex
@@ -29,31 +30,34 @@ from pisec_server.services import video_url as video_url_service
 router = APIRouter(prefix="/videos", tags=["videos"])
 
 
-@router.get("/", response_model=list[Video])
+@router.get("/", response_model=PaginatedResponse[VideoResponse])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     params: Annotated[VideoGetParams, Query()],
-) -> list[VideoSchema]:
+) -> PaginatedResponse[VideoResponse]:
     """Gets a list of all videos with pagination.
 
     Non-admin users can only see videos from cameras they are subscribed to.
     """
-    videos = video_service.get_video_entries(
-        db_session,
-        params.video_id,
-        params.file_name,
-        params.camera_id,
-        skip=params.page_index * params.page_size,
-        limit=params.page_size,
-    )
+    videos = [
+        v.to_response()
+        for v in video_service.get_video_entries(
+            db_session,
+            params.video_id,
+            params.file_name,
+            params.camera_id,
+            skip=params.page_index * params.page_size,
+            limit=params.page_size,
+        )
+    ]
 
     if not current_user.is_admin:
         # Filter to only show videos from cameras user is subscribed to
         subscribed_camera_ids = {camera.id for camera in current_user.cameras}
         videos = [video for video in videos if video.camera_id in subscribed_camera_ids]
 
-    return videos
+    return PaginatedResponse[VideoResponse].create(videos, params.page_index, params.page_size, len(videos))
 
 
 @router.post("/", response_model=Video)

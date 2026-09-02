@@ -8,17 +8,15 @@ from sqlalchemy.orm import Session
 from pisec_server.api.models.camera_credentials import CameraCredentialResponse
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraResponse
-from pisec_server.api.models.paginated.generic import PaginatedParams
+from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.paginated.user import UserGetParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
-from pisec_server.api.models.videos import Video
+from pisec_server.api.models.videos import VideoResponse
 from pisec_server.auth import services as auth_service
 from pisec_server.auth.dependencies import get_current_admin_user, get_current_user
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
-from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import User as UserSchema
-from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
 from pisec_server.services import camera_credential as credential_service
 from pisec_server.services import camera_subscription as subscription_service
@@ -34,19 +32,24 @@ def get_self(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> 
     return current_user
 
 
-@router.get("/me/cameras", response_model=list[CameraResponse])
+@router.get("/me/cameras", response_model=PaginatedResponse[CameraResponse])
 def get_self_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     pagination: Annotated[PaginatedParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
-) -> list[CameraSchema]:
+) -> PaginatedResponse[CameraResponse]:
     """Returns a user's subscribed cameras."""
-    return camera_service.get_cameras(
-        db_session,
-        user_ids=[current_user.id],
-        skip=pagination.page_index * pagination.page_size,
-        limit=pagination.page_size,
-    )
+    cameras = [
+        c.to_response()
+        for c in camera_service.get_cameras(
+            db_session,
+            user_ids=[current_user.id],
+            skip=pagination.page_index * pagination.page_size,
+            limit=pagination.page_size,
+        )
+    ]
+
+    return PaginatedResponse[CameraResponse].create(cameras, pagination.page_index, pagination.page_size, len(cameras))
 
 
 @router.put("/self", response_model=UserResponse)
@@ -64,21 +67,24 @@ def update_self(
     return updated_user
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("/", response_model=PaginatedResponse[UserResponse])
 def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     db_session: Annotated[Session, Depends(get_db)],
     params: Annotated[UserGetParams, Query()],
-) -> list[UserSchema]:
+) -> PaginatedResponse[UserResponse]:
     """Gets a list of users with pagination."""
-    users = user_service.get_users(
-        db_session,
-        params.user_id,
-        params.email,
-        params.camera_id,
-        skip=params.page_index * params.page_size,
-        limit=params.page_size,
-    )
+    users = [
+        user.to_response()
+        for user in user_service.get_users(
+            db_session,
+            params.user_id,
+            params.email,
+            params.camera_id,
+            skip=params.page_index * params.page_size,
+            limit=params.page_size,
+        )
+    ]
 
     if not current_user.is_admin:
         # Filter to only show users that share camera subscriptions
@@ -89,7 +95,7 @@ def get_users(
 
         users = [user for user in users if user.id in linked_user_ids]
 
-    return users
+    return PaginatedResponse[UserResponse].create(users, params.page_index, params.page_size, len(users))
 
 
 @router.post("/", response_model=UserResponse)
@@ -306,13 +312,13 @@ def unsubscribe_from_cameras(
         raise HTTPException(status_code=404) from e
 
 
-@router.get("/{user_id}/videos", response_model=list[Video])
+@router.get("/{user_id}/videos", response_model=PaginatedResponse[VideoResponse])
 def get_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     user_id: Annotated[int, Path(ge=1)],
     pagination: Annotated[PaginatedParams, Query()],
-) -> list[VideoSchema]:
+) -> PaginatedResponse[VideoResponse]:
     """Gets a list of all accessible videos with pagination."""
     # Users can only view their own videos, admins can view anyone's videos
     if not current_user.is_admin and current_user.id != user_id:
@@ -323,9 +329,17 @@ def get_videos(
         raise HTTPException(status_code=404, detail="User not found!")
 
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
-    return video_service.get_video_entries(
-        db_session, camera_ids=camera_ids, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
-    )
+    videos = [
+        v.to_response()
+        for v in video_service.get_video_entries(
+            db_session,
+            camera_ids=camera_ids,
+            skip=pagination.page_index * pagination.page_size,
+            limit=pagination.page_size,
+        )
+    ]
+
+    return PaginatedResponse[VideoResponse].create(videos, pagination.page_index, pagination.page_size, len(videos))
 
 
 @router.post("/me/credential", response_model=CameraCredentialResponse)
