@@ -194,8 +194,9 @@ def get_users(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     camera_id: Annotated[int, Path(ge=1)],
+    pagination: Annotated[PaginatedParams, Query()],
 ) -> PaginatedResponse[UserResponse]:
-    """Gets a list of all of a camera's users with hard-coded pagination."""
+    """Gets a list of all of a camera's users with pagination."""
     db_camera: CameraSchema | None = camera_service.get_camera(db_session, camera_id)
     if not db_camera:
         raise HTTPException(status_code=404, detail="Camera not found!")
@@ -204,5 +205,13 @@ def get_users(
     if not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    users = [u.to_response() for u in user_service.get_users(db_session, camera_ids=[camera_id])]
-    return PaginatedResponse[UserResponse].create(users, 0, 10, len(users))
+    users = [
+        u.to_response()
+        for u in user_service.get_users(
+            db_session,
+            camera_ids=[camera_id],
+            skip=pagination.page_index * pagination.page_size,
+            limit=pagination.page_size,
+        )
+    ]
+    return PaginatedResponse[UserResponse].create(users, pagination.page_index, pagination.page_size, len(users))
