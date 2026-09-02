@@ -6,6 +6,7 @@ import 'package:pisec_client/models/api/queryables/camera_query.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
+import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
@@ -17,7 +18,7 @@ class HttpCameraRepository implements CameraRepository {
   const HttpCameraRepository(this.client, this.baseUrl);
 
   @override
-  Future<List<CameraResponse>> getCameras({
+  Future<PaginatedResponse<CameraResponse>> getCameras({
     PaginationParams pagination = const PaginationParams(),
     CameraQuery cameraQuery = const CameraQuery(),
   }) async {
@@ -34,16 +35,15 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get cameras.",
       );
     }
-    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map(
-          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
-        )
-        .toList();
+
+    return PaginatedResponse<CameraResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (camera) => CameraResponse.fromJson(camera),
+    );
   }
 
   @override
-  Future<List<CameraResponse>> getCamerasByUser(
+  Future<PaginatedResponse<CameraResponse>> getCamerasByUser(
     int userId, {
     PaginationParams pagination = const PaginationParams(),
   }) async {
@@ -57,16 +57,15 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get cameras.",
       );
     }
-    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map(
-          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
-        )
-        .toList();
+
+    return PaginatedResponse<CameraResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (camera) => CameraResponse.fromJson(camera),
+    );
   }
 
   @override
-  Future<List<CameraResponse>> getCurrentUserCameras({
+  Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
     PaginationParams pagination = const PaginationParams(),
   }) async {
     final Uri url = Uri(
@@ -80,12 +79,11 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to get current user's cameras.",
       );
     }
-    final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
-    return decoded
-        .map(
-          (camera) => CameraResponse.fromJson(camera as Map<String, dynamic>),
-        )
-        .toList();
+
+    return PaginatedResponse<CameraResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (camera) => CameraResponse.fromJson(camera),
+    );
   }
 
   @override
@@ -102,6 +100,7 @@ class HttpCameraRepository implements CameraRepository {
         message: "Failed to subscribe user $userId to camera $cameraId.",
       );
     }
+
     return CameraSubscriptionResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
     );
