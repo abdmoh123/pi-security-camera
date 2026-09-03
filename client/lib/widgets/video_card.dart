@@ -24,7 +24,10 @@ class VideoCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               spacing: 8.0,
               children: [
-                IconButton(onPressed: _playVideo, icon: Icon(Icons.play_arrow)),
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(Icons.movie),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
