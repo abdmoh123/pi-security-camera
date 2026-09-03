@@ -56,7 +56,8 @@ class HttpVideoRepository implements VideoRepository {
       json.decode(downloadUrlResponse.body) as Map<String, dynamic>,
     );
 
-    return downloaderService.downloadItem(downloadUrlObj.url, "video.mp4");
+    final video = await getVideo(videoId);
+    return downloaderService.downloadItem(downloadUrlObj.url, video.fileName);
   }
 
   @override
