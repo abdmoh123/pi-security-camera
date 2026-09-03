@@ -30,7 +30,7 @@ class DecodedVideoTokenPayload:
 
     @override
     def __str__(self) -> str:
-        return f"{self.user_id}:{self.video_id}:{self.expires_at.isoformat()}:{self.nonce}"
+        return f"{self.user_id}|{self.video_id}|{self.expires_at.isoformat()}|{self.nonce}"
 
     def encode(self) -> str:
         """Encodes itself into a token string.

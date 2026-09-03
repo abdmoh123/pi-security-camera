@@ -42,7 +42,7 @@ def extract_payload(payload_str: str) -> DecodedVideoTokenPayload:
     Raises:
         ValueError: If the payload is malformed (incorrect types).
     """
-    user_id_str, video_id_str, expires_at_str, nonce = payload_str.split(":")
+    user_id_str, video_id_str, expires_at_str, nonce = payload_str.split("|")
     try:
         expires_at = datetime.fromisoformat(expires_at_str)
         return DecodedVideoTokenPayload(int(user_id_str), int(video_id_str), expires_at, nonce)
