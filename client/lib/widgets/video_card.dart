@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
+import 'package:pisec_client/models/event_task.dart';
 
 const String locale = "en_GB";
 
@@ -9,8 +10,17 @@ enum MenuAction { delete }
 class VideoCard extends StatelessWidget {
   final VideoResponse video;
   final bool isUnread;
+  final Future<EventTask?> Function() _downloadVideo;
+  final Future<VideoResponse> Function() _deleteVideo;
 
-  const VideoCard({super.key, required this.video, this.isUnread = true});
+  const VideoCard({
+    super.key,
+    required this.video,
+    required Future<EventTask?> Function() downloadVideo,
+    required Future<VideoResponse> Function() deleteVideo,
+    this.isUnread = true,
+  }) : _downloadVideo = downloadVideo,
+       _deleteVideo = deleteVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -90,10 +100,4 @@ class VideoCard extends StatelessWidget {
       ),
     );
   }
-
-  void _playVideo() {}
-
-  void _downloadVideo() {}
-
-  void _deleteVideo() {}
 }
