@@ -172,7 +172,7 @@ async def download_video(
             raise HTTPException(status_code=401, detail="Token already used! Please request a new url.") from e
     else:
         if current_user is None:
-            raise HTTPException(status_code=401)
+            raise HTTPException(status_code=401, detail="Token missing and user not authenticated!")
         user_id = current_user.id
 
     # WARN: You can't use asyncio.gather here because the db_session is shared and not thread safe
