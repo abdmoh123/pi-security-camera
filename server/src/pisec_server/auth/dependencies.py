@@ -17,6 +17,7 @@ from pisec_server.services.camera_credential import get_credential
 from pisec_server.services.user import get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v0/auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v0/auth/token", auto_error=False)
 
 
 def get_current_user(
@@ -48,14 +49,21 @@ def get_current_user(
 
 
 def get_current_user_optional(
-    db_session: Annotated[Session, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]
+    db_session: Annotated[Session, Depends(get_db)], token: Annotated[str | None, Depends(oauth2_scheme_optional)]
 ) -> User | None:
     """Dependency to get the current authenticated user.
 
     Unlike the other function, this returns none if any step failed instead of an error.
     This makes this function worse for error handling but there may be cases where we need to use this.
     """
-    payload: TokenPayload = decode_access_token(token)
+    if token is None:
+        return None
+
+    try:
+        payload: TokenPayload = decode_access_token(token)
+    except TokenDecodingError:
+        return None
+
     # Shouldn't need to check expiry due to ExpiredSignatureError, but kept just in case
     if payload.exp < datetime.now(timezone.utc):
         return None
