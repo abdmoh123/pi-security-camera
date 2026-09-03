@@ -42,7 +42,7 @@ class HttpVideoRepository implements VideoRepository {
   @override
   Future<EventTask?> downloadVideo(int videoId) async {
     final downloadUrlResponse = await client.get(
-      Uri.parse("$baseUrl/$videoId/url"),
+      Uri.parse("$baseUrl/videos/$videoId/url"),
     );
 
     if (downloadUrlResponse.notOk) {
