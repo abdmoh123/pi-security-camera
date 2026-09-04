@@ -89,8 +89,12 @@ class _VideosPageState extends State<VideosPage> {
 
     final toFirstPage = currentPage == 1 ? null : () => _toPage(1);
     final toPreviousPage = currentPage == 1 ? null : _previousPage;
-    children.add(TextButton(onPressed: toFirstPage, child: Text("<<")));
-    children.add(TextButton(onPressed: toPreviousPage, child: Text("<")));
+    children.add(
+      IconButton(onPressed: toFirstPage, icon: Icon(Icons.first_page)),
+    );
+    children.add(
+      IconButton(onPressed: toPreviousPage, icon: Icon(Icons.chevron_left)),
+    );
 
     if (currentPage > 2) {
       children.add(
@@ -140,8 +144,12 @@ class _VideosPageState extends State<VideosPage> {
 
     final toLastPage = currentPage == maxPages ? null : () => _toPage(maxPages);
     final toNextPage = currentPage == maxPages ? null : _nextPage;
-    children.add(TextButton(onPressed: toNextPage, child: Text(">")));
-    children.add(TextButton(onPressed: toLastPage, child: Text(">>")));
+    children.add(
+      IconButton(onPressed: toNextPage, icon: Icon(Icons.chevron_right)),
+    );
+    children.add(
+      IconButton(onPressed: toLastPage, icon: Icon(Icons.last_page)),
+    );
 
     return Row(children: children);
   }
