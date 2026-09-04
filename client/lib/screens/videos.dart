@@ -87,8 +87,10 @@ class _VideosPageState extends State<VideosPage> {
   Widget _buildPaginationGroup(BuildContext context) {
     List<Widget> children = [];
 
-    children.add(TextButton(onPressed: () => _toPage(1), child: Text("<<")));
-    children.add(TextButton(onPressed: _previousPage, child: Text("<")));
+    final toFirstPage = currentPage == 1 ? null : () => _toPage(1);
+    final toPreviousPage = currentPage == 1 ? null : _previousPage;
+    children.add(TextButton(onPressed: toFirstPage, child: Text("<<")));
+    children.add(TextButton(onPressed: toPreviousPage, child: Text("<")));
 
     if (currentPage > 2) {
       children.add(
@@ -136,10 +138,10 @@ class _VideosPageState extends State<VideosPage> {
       );
     }
 
-    children.add(TextButton(onPressed: _nextPage, child: Text(">")));
-    children.add(
-      TextButton(onPressed: () => _toPage(maxPages), child: Text(">>")),
-    );
+    final toLastPage = currentPage == maxPages ? null : () => _toPage(maxPages);
+    final toNextPage = currentPage == maxPages ? null : _nextPage;
+    children.add(TextButton(onPressed: toNextPage, child: Text(">")));
+    children.add(TextButton(onPressed: toLastPage, child: Text(">>")));
 
     return Row(children: children);
   }
