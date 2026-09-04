@@ -87,12 +87,18 @@ class _MyHomePageState extends State<MyHomePage> {
         items: [
           BottomNavigationBarItem(
             label: "Videos",
-            icon: Icon(Icons.camera_roll),
+            activeIcon: Icon(Icons.camera_roll),
+            icon: Icon(Icons.camera_roll_outlined),
           ),
-          BottomNavigationBarItem(label: "Camera", icon: Icon(Icons.camera)),
+          BottomNavigationBarItem(
+            label: "Camera",
+            activeIcon: Icon(Icons.camera),
+            icon: Icon(Icons.camera_outlined),
+          ),
           BottomNavigationBarItem(
             label: "Settings",
-            icon: Icon(Icons.settings),
+            activeIcon: Icon(Icons.settings),
+            icon: Icon(Icons.settings_outlined),
           ),
         ],
         onTap: _onTabTapped,
