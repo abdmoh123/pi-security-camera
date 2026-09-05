@@ -33,10 +33,6 @@ class _CamerasPageState extends State<CamerasPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: EdgeInsetsGeometry.all(8.0),
-          child: Text("Cameras", textAlign: TextAlign.center),
-        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

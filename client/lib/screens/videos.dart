@@ -35,10 +35,6 @@ class _VideosPageState extends State<VideosPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: EdgeInsetsGeometry.all(8.0),
-          child: Text("Videos", textAlign: TextAlign.center),
-        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
