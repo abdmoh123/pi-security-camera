@@ -153,11 +153,10 @@ class _CamerasPageState extends State<CamerasPage> {
   }
 
   Widget _buildCameraList(List<CameraResponse> cameras) {
-    return ListView.builder(
+    return ListView.separated(
       itemCount: cameras.length,
-      itemBuilder: (context, index) {
-        return CameraTile(camera: cameras[index]);
-      },
+      itemBuilder: (context, index) => CameraTile(camera: cameras[index]),
+      separatorBuilder: (context, index) => Divider(),
     );
   }
 

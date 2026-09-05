@@ -155,7 +155,7 @@ class _VideosPageState extends State<VideosPage> {
   }
 
   Widget _buildVideoList(List<VideoResponse> videos) {
-    return ListView.builder(
+    return ListView.separated(
       itemCount: videos.length,
       itemBuilder: (context, index) {
         return VideoTile(
@@ -169,6 +169,7 @@ class _VideosPageState extends State<VideosPage> {
           },
         );
       },
+      separatorBuilder: (context, index) => Divider(),
     );
   }
 
