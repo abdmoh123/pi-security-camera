@@ -6,9 +6,9 @@ import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
-import 'package:pisec_client/screens/cameras.dart';
-import 'package:pisec_client/screens/settings.dart';
-import 'package:pisec_client/screens/videos.dart';
+import 'package:pisec_client/screens/cameras_page.dart';
+import 'package:pisec_client/screens/settings_page.dart';
+import 'package:pisec_client/screens/videos_page.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 import 'package:pisec_client/services/task_id_generators.dart';
@@ -38,7 +38,7 @@ void main() {
   final List<Widget> pages = [
     VideosPage(videoRepository: videoRepository),
     CamerasPage(cameraRepository: cameraRepository),
-    Settings(),
+    SettingsPage(),
   ];
 
   // Required to display the date in the correct format
