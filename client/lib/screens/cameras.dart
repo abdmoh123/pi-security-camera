@@ -3,7 +3,7 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
-import 'package:pisec_client/widgets/camera_card.dart';
+import 'package:pisec_client/widgets/camera_tile.dart';
 
 class CamerasPage extends StatefulWidget {
   final CameraRepository cameraRepository;
@@ -156,7 +156,7 @@ class _CamerasPageState extends State<CamerasPage> {
     return ListView.builder(
       itemCount: cameras.length,
       itemBuilder: (context, index) {
-        return CameraCard(camera: cameras[index]);
+        return CameraTile(camera: cameras[index]);
       },
     );
   }
