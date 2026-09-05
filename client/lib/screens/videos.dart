@@ -5,7 +5,7 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
 import 'package:pisec_client/repositories/api/generic/video_repository.dart';
-import 'package:pisec_client/widgets/video_card.dart';
+import 'package:pisec_client/widgets/video_tile.dart';
 
 class VideosPage extends StatefulWidget {
   final VideoRepository videoRepository;
@@ -158,7 +158,7 @@ class _VideosPageState extends State<VideosPage> {
     return ListView.builder(
       itemCount: videos.length,
       itemBuilder: (context, index) {
-        return VideoCard(
+        return VideoTile(
           video: videos[index],
           downloadVideo: () =>
               widget.videoRepository.downloadVideo(videos[index].id),
