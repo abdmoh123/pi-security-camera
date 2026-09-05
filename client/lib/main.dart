@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/factories/downloader_factory.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/screens/cameras.dart';
@@ -32,10 +33,11 @@ void main() {
     baseUrl,
     downloaderService,
   );
+  final cameraRepository = HttpCameraRepository(client, baseUrl);
 
   final List<Widget> pages = [
     VideosPage(videoRepository: videoRepository),
-    Cameras(),
+    CamerasPage(cameraRepository: cameraRepository),
     Settings(),
   ];
 
