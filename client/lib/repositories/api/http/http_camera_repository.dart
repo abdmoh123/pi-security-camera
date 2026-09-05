@@ -68,8 +68,8 @@ class HttpCameraRepository implements CameraRepository {
   Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
     PaginationParams pagination = const PaginationParams(),
   }) async {
-    final Uri url = Uri(
-      path: "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}",
+    final Uri url = Uri.parse(
+      "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}",
     );
 
     final response = await client.get(url);

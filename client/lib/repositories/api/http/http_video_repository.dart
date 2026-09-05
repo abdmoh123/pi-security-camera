@@ -62,7 +62,7 @@ class HttpVideoRepository implements VideoRepository {
 
   @override
   Future<VideoResponse> getVideo(int videoId) async {
-    final response = await client.get(Uri(path: "$baseUrl/videos/$videoId"));
+    final response = await client.get(Uri.parse("$baseUrl/videos/$videoId"));
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,

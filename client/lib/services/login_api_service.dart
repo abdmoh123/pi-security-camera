@@ -27,7 +27,7 @@ class LoginAPIService {
     ArgumentError.checkNotNull(userQuery.password, "userQuery.password");
 
     final response = await client.post(
-      Uri(path: "$baseUrl/users/"),
+      Uri.parse("$baseUrl/users/"),
       body: userQuery.toJson(),
     );
     if (response.notOk) {
