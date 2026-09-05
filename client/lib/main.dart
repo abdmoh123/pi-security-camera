@@ -93,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.camera_roll_outlined),
           ),
           BottomNavigationBarItem(
-            label: "Camera",
+            label: "Cameras",
             activeIcon: Icon(Icons.camera),
             icon: Icon(Icons.camera_outlined),
           ),
