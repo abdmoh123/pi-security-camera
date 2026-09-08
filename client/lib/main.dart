@@ -6,6 +6,7 @@ import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
+import 'package:pisec_client/routes/route_generator.dart';
 import 'package:pisec_client/screens/cameras_page.dart';
 import 'package:pisec_client/screens/settings_page.dart';
 import 'package:pisec_client/screens/videos_page.dart';
@@ -14,6 +15,7 @@ import 'package:pisec_client/services/login_api_service.dart';
 import 'package:pisec_client/services/task_id_generators.dart';
 
 void main() {
+  // NOTE: All this hardcoded stuff will be replaced later
   const String baseUrl = "http://localhost:8000/api/v0";
   final tokenStorage = TokenRepository();
   final authService = LoginAPIService(baseUrl, http.Client());
@@ -41,15 +43,17 @@ void main() {
     SettingsPage(),
   ];
 
+  final routeGenerator = RouteGenerator(mainPages: pages);
+
   // Required to display the date in the correct format
   initializeDateFormatting("en_GB");
-  runApp(PisecApp(pages: pages));
+  runApp(PisecApp(routeGenerator: routeGenerator));
 }
 
 class PisecApp extends StatelessWidget {
-  const PisecApp({super.key, required this.pages});
+  const PisecApp({super.key, required this.routeGenerator});
 
-  final List<Widget> pages;
+  final RouteGenerator routeGenerator;
 
   @override
   Widget build(BuildContext context) {
@@ -58,16 +62,23 @@ class PisecApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: MyHomePage(title: 'Pisec Home', pages: pages),
+      initialRoute: '/',
+      onGenerateRoute: routeGenerator.generateRoutes,
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.pages});
+  const MyHomePage({
+    super.key,
+    required this.title,
+    required this.pages,
+    this.initPageIndex = 0,
+  });
 
   final String title;
   final List<Widget> pages;
+  final int initPageIndex;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -75,6 +86,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    pageIndex = widget.initPageIndex;
+  }
 
   @override
   Widget build(BuildContext context) {

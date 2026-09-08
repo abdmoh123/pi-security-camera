@@ -23,7 +23,10 @@ class AuthHttpClient extends http.BaseClient {
       final token = await authService.login(userQuery);
       await tokenStorage.saveToken(token);
     } on HttpCodedException {
-    } on ArgumentError {}
+      // Do nothing as this is temporary code
+    } on ArgumentError {
+      // Do nothing as this is temporary code
+    }
   }
 
   @override
