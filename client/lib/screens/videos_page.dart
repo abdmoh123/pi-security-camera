@@ -38,7 +38,25 @@ class _VideosPageState extends State<VideosPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.start),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/unfinished'),
+                  label: Text("Filter"),
+                  icon: Icon(Icons.filter_list),
+                ),
+                DropdownButton<String>(
+                  value: "date",
+                  items: [
+                    DropdownMenuItem(value: "date", child: Text("By date")),
+                  ],
+                  underline: Container(),
+                  icon: Icon(Icons.sort),
+                  onChanged: (value) {},
+                ),
+              ],
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: 8.0,
