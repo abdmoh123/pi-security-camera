@@ -23,6 +23,8 @@ class RouteGenerator {
         return _homePageRoute(pageIdx: 1);
       case '/settings':
         return _homePageRoute(pageIdx: 2);
+      case '/unfinished':
+        return _unfinishedRoute();
       default:
         return _errorRoute(message: "Invalid page route");
     }
@@ -36,6 +38,15 @@ class RouteGenerator {
           body: Center(child: Text(message)),
         );
       },
+    );
+  }
+
+  Route<dynamic> _unfinishedRoute() {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: Text("Unfinished page")),
+        body: Center(child: Text("This page is unfinished")),
+      ),
     );
   }
 
