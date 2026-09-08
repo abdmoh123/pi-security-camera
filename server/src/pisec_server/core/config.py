@@ -2,7 +2,7 @@
 
 import os
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum, auto
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 _ = load_dotenv()
 
 
-class DBType(str, Enum):
+class DBType(StrEnum):
     """Types of databases that are currently supported."""
 
-    SQLITE = "sqlite"
-    POSTGRES = "postgres"
+    SQLITE = auto()
+    POSTGRES = auto()
 
 
-class JWTAlgorithm(str, Enum):
+class JWTAlgorithm(StrEnum):
     """Supported JWT encoding algorithms."""
 
     HS256 = "HS256"

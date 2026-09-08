@@ -1,16 +1,16 @@
 """File containing pydantic models for authentication-related data."""
 
-import enum
 from datetime import datetime
+from enum import StrEnum, auto
 
 from pydantic import BaseModel
 
 
-class TokenSubjectType(str, enum.Enum):
+class TokenSubjectType(StrEnum):
     """Enum for what type of subject a token is for."""
 
-    USER = "user"
-    CAMERA = "camera"
+    USER = auto()
+    CAMERA = auto()
 
 
 class Token(BaseModel):
