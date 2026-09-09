@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.cameras import CameraCreate, CameraUpdate
+from pisec_server.api.models.types.camera_columns import CameraColumns
 from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.db.db_models import Camera, User
 
@@ -21,6 +22,8 @@ def get_cameras(
     mac_address: str | None = None,
     skip: int = 0,
     limit: int = 100,
+    order_by: CameraColumns = CameraColumns.ID,
+    ascending: bool = True,
 ) -> list[Camera]:
     """Queries and returns a list of cameras with pagination.
 
@@ -36,6 +39,9 @@ def get_cameras(
         query = query.where(Camera.name.ilike(f"%{camera_name}%"))
     if mac_address:
         query = query.where(Camera.mac_address.ilike(f"%{mac_address}%"))
+
+    order_condition = Camera.get_column(order_by).asc() if ascending else Camera.get_column(order_by).desc()
+    query = query.order_by(order_condition)
 
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 

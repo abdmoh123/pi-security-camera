@@ -6,6 +6,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from pisec_server.api.models.types.video_columns import VideoColumns
 from pisec_server.api.models.videos import VideoFileData, VideoUpdate
 from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
@@ -39,6 +40,8 @@ def get_video_entries(
     camera_ids: list[int] | None = None,
     skip: int = 0,
     limit: int = 100,
+    order_by: VideoColumns = VideoColumns.ID,
+    ascending: bool = True,
 ) -> list[Video]:
     """Queries and returns a list of videos with pagination.
 
@@ -52,6 +55,9 @@ def get_video_entries(
         query = query.where(Video.file_name.ilike(f"%{file_name}%"))
     if camera_ids:
         query = query.where(Video.camera_id.in_(camera_ids))
+
+    order_condition = Video.get_column(order_by).asc() if ascending else Video.get_column(order_by).desc()
+    query = query.order_by(order_condition)
 
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 

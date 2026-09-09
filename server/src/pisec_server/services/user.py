@@ -4,6 +4,7 @@ from argon2 import PasswordHasher
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from pisec_server.api.models.types.user_columns import UserColumns
 from pisec_server.api.models.users import UserCreate, UserUpdate
 from pisec_server.core.config import settings
 from pisec_server.core.exceptions import InvalidDataError, RecordAlreadyExistsError, RecordNotFoundError
@@ -36,6 +37,8 @@ def get_users(
     camera_ids: list[int] | None = None,
     skip: int = 0,
     limit: int = 100,
+    order_by: UserColumns = UserColumns.ID,
+    ascending: bool = True,
 ) -> list[User]:
     """Queries and returns a list of all users with pagination.
 
@@ -49,6 +52,9 @@ def get_users(
         query = query.where(User.email.ilike(f"%{email}%"))
     if camera_ids:
         query = query.where(User.cameras.any(Camera.id.in_(camera_ids)))
+
+    order_condition = User.get_column(order_by).asc() if ascending else User.get_column(order_by).desc()
+    query = query.order_by(order_condition)
 
     return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 

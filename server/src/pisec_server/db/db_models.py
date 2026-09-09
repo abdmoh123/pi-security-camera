@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from pisec_server.api.models.cameras import CameraResponse
+from pisec_server.api.models.types.camera_columns import CameraColumns
+from pisec_server.api.models.types.user_columns import UserColumns
+from pisec_server.api.models.types.video_columns import VideoColumns
 from pisec_server.api.models.users import UserResponse
 from pisec_server.api.models.videos import VideoResponse
 
@@ -47,6 +51,17 @@ class User(Base):
         """Convert a User object to a UserResponse object."""
         return UserResponse.model_validate(self)
 
+    @classmethod
+    def get_column(cls, col: UserColumns) -> Mapped[Any]:  # pyright: ignore[reportExplicitAny]
+        """Get a column from the User table."""
+        match col:
+            case UserColumns.ID:
+                return cls.id
+            case UserColumns.EMAIL:
+                return cls.email
+            case UserColumns.REGISTERED_AT:
+                return cls.registered_at
+
 
 class Camera(Base):
     """Schema for the camera table."""
@@ -66,6 +81,19 @@ class Camera(Base):
         """Convert a Camera object to a CameraResponse object."""
         return CameraResponse.model_validate(self)
 
+    @classmethod
+    def get_column(cls, col: CameraColumns) -> Mapped[Any]:  # pyright: ignore[reportExplicitAny]
+        """Get a column from the Camera table."""
+        match col:
+            case CameraColumns.ID:
+                return cls.id
+            case CameraColumns.NAME:
+                return cls.name
+            case CameraColumns.MAC_ADDRESS:
+                return cls.mac_address
+            case CameraColumns.REGISTERED_AT:
+                return cls.registered_at
+
 
 class Video(Base):
     """Schema for keeping a record of uploaded videos/recordings."""
@@ -82,6 +110,19 @@ class Video(Base):
     def to_response(self) -> VideoResponse:
         """Convert a Video object to a VideoResponse object."""
         return VideoResponse.model_validate(self)
+
+    @classmethod
+    def get_column(cls, col: VideoColumns) -> Mapped[Any]:  # pyright: ignore[reportExplicitAny]
+        """Get a column from the Video table."""
+        match col:
+            case VideoColumns.ID:
+                return cls.id
+            case VideoColumns.CAMERA_ID:
+                return cls.camera_id
+            case VideoColumns.FILE_NAME:
+                return cls.file_name
+            case VideoColumns.UPLOADED_AT:
+                return cls.uploaded_at
 
 
 class CameraCredential(Base):
