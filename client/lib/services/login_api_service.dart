@@ -126,4 +126,29 @@ class LoginAPIService {
     }
     return Token.fromJson(json);
   }
+
+  Future<bool> isRefreshTokenValid(String refreshTokenValue) async {
+    final response = await client.post(
+      Uri.parse("$baseUrl/auth/refresh"),
+      headers: xWwwFormUrlencodedHeader.toDict(),
+      body: {"refresh_token": refreshTokenValue},
+    );
+
+    if (response.notOk) {
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: 'Failed to verify refresh token',
+      );
+    }
+
+    final result = DateTime.tryParse("${response.body}Z");
+    if (result == null) {
+      throw ResponseMismatchException(
+        "DateTime iso format ending with Z",
+        response.body,
+      );
+    }
+
+    return result.toLocal().isAfter(DateTime.now());
+  }
 }

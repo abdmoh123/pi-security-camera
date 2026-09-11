@@ -86,6 +86,20 @@ def refresh_access_token(
     return Token(access_token=new_access_token, refresh_token=new_refresh_token.token, token_type="bearer")
 
 
+# Purposely using a post method to keep the refresh token hidden
+@router.post("/refresh/expiry")
+def get_refresh_token_expiry(
+    refresh_token: Annotated[str, Form()], db_session: Annotated[Session, Depends(get_db)]
+) -> datetime:
+    """Allows a client to see if their token is expired or invalid."""
+    refresh_token_db = get_refresh_token(db_session, refresh_token)
+
+    if not refresh_token_db or refresh_token_db.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+    return refresh_token_db.expires_at
+
+
 @router.post("/pat", response_model=Token)
 def generate_personal_access_token(
     current_user: Annotated[User, Depends(get_current_user)],
