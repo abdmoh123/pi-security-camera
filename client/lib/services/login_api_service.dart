@@ -63,7 +63,10 @@ class LoginAPIService {
 
     final json = jsonDecode(response.body);
     if (!Token.validateJson(json)) {
-      throw ResponseMismatchException(Token.generateJsonStruct(), json);
+      throw ResponseMismatchException<Map<String, dynamic>>(
+        Token.generateJsonStruct(),
+        json,
+      );
     }
     return Token.fromJson(json);
   }
@@ -116,7 +119,10 @@ class LoginAPIService {
 
     final json = jsonDecode(response.body);
     if (!Token.validateJson(json)) {
-      throw ResponseMismatchException(Token.generateJsonStruct(), json);
+      throw ResponseMismatchException<Map<String, dynamic>>(
+        Token.generateJsonStruct(),
+        json,
+      );
     }
     return Token.fromJson(json);
   }

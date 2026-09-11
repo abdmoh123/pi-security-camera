@@ -15,9 +15,18 @@ class HttpCodedException extends HttpException {
   }
 }
 
-class ResponseMismatchException implements Exception {
-  final Map<String, dynamic> expected;
-  final Map<String, dynamic> actual;
+class JsonResponseMismatchException
+    extends ResponseMismatchException<Map<String, dynamic>> {
+  JsonResponseMismatchException(
+    super.expected,
+    super.actual, {
+    super.message = "",
+  });
+}
+
+class ResponseMismatchException<T> implements Exception {
+  final T expected;
+  final T actual;
   final String message;
 
   ResponseMismatchException(this.expected, this.actual, {this.message = ""});
