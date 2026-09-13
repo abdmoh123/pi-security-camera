@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/main.dart';
+import 'package:pisec_client/screens/login_page.dart';
 
 class RouteGenerator {
   final List<Widget> mainPages;
@@ -23,6 +24,8 @@ class RouteGenerator {
         return _homePageRoute(pageIdx: 1);
       case '/settings':
         return _homePageRoute(pageIdx: 2);
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginPage());
       case '/unfinished':
         return _unfinishedRoute();
       default:
