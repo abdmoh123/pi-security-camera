@@ -11,13 +11,21 @@ import 'package:pisec_client/models/http/authorization_header.dart';
 import 'package:pisec_client/types/token_type.dart';
 
 class LoginAPIService {
-  final http.Client client;
-  final String baseUrl;
+  final http.Client client = http.Client();
+  String? baseUrl;
 
-  const LoginAPIService(this.baseUrl, this.client);
+  LoginAPIService({this.baseUrl});
+
+  void setBaseUrl(String url) {
+    baseUrl = url;
+  }
 
   Future<bool> isReachable() async {
-    final response = await client.get(Uri.parse(baseUrl));
+    if (baseUrl == null) {
+      return false;
+    }
+
+    final response = await client.get(Uri.parse(baseUrl!));
     return response.ok;
   }
 
@@ -25,6 +33,10 @@ class LoginAPIService {
     // API expects both email and password
     ArgumentError.checkNotNull(userQuery.email, "userQuery.email");
     ArgumentError.checkNotNull(userQuery.password, "userQuery.password");
+
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
 
     final response = await client.post(
       Uri.parse("$baseUrl/users/"),
@@ -43,6 +55,10 @@ class LoginAPIService {
     // API expects both email (username) and password
     ArgumentError.checkNotNull(userQuery.email, "userQuery.email");
     ArgumentError.checkNotNull(userQuery.password, "userQuery.password");
+
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
 
     final response = await client.post(
       Uri.parse("$baseUrl/auth/token"),
@@ -72,6 +88,10 @@ class LoginAPIService {
   }
 
   Future<void> logout(Token token) async {
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
+
     final response = await client.post(
       Uri.parse("$baseUrl/auth/logout"),
       headers: AuthorizationHeader.fromToken(token).toDict(),
@@ -87,6 +107,10 @@ class LoginAPIService {
   }
 
   Future<void> logoutAll(String accessToken) async {
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
+
     final response = await client.post(
       Uri.parse("$baseUrl/auth/logout"),
       headers: AuthorizationHeader(
@@ -104,6 +128,10 @@ class LoginAPIService {
   }
 
   Future<Token> refreshToken(String refreshTokenValue) async {
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
+
     final response = await client.post(
       Uri.parse("$baseUrl/auth/refresh"),
       headers: xWwwFormUrlencodedHeader.toDict(),
@@ -128,6 +156,10 @@ class LoginAPIService {
   }
 
   Future<bool> isRefreshTokenValid(String refreshTokenValue) async {
+    if (baseUrl == null) {
+      throw InvalidUrlException("Server url is not set");
+    }
+
     final response = await client.post(
       Uri.parse("$baseUrl/auth/refresh"),
       headers: xWwwFormUrlencodedHeader.toDict(),

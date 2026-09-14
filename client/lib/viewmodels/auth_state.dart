@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
@@ -8,18 +7,16 @@ import 'package:pisec_client/services/login_api_service.dart';
 
 class AuthState extends ChangeNotifier {
   final TokenRepository _tokenRepository;
-  LoginAPIService _authService;
+  final LoginAPIService _authService;
 
   bool _isAuthenticated = false;
 
-  AuthState(TokenRepository tokenRepository, LoginAPIService authService)
-    : _tokenRepository = tokenRepository,
-      _authService = authService;
+  AuthState(this._tokenRepository, this._authService);
 
   bool get isAuthenticated => _isAuthenticated;
 
   void setServerUrl(String url) {
-    _authService = LoginAPIService(url, http.Client());
+    _authService.setBaseUrl(url);
   }
 
   Future<void> assertAuthenticated() async {

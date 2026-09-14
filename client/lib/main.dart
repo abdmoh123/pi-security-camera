@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/factories/downloader_factory.dart';
-import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/globals/auth_state_scope.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
@@ -13,20 +12,19 @@ import 'package:pisec_client/screens/videos_page.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 import 'package:pisec_client/services/task_id_generators.dart';
+import 'package:pisec_client/viewmodels/auth_state.dart';
 
 void main() {
-  // NOTE: All this hardcoded stuff will be replaced later
   const String baseUrl = "http://localhost:8000/api/v0";
   final tokenStorage = TokenRepository();
-  final authService = LoginAPIService(baseUrl, http.Client());
+  final authService = LoginAPIService(baseUrl: baseUrl);
 
-  final client = AuthHttpClient(tokenStorage, authService);
-  const user = UserQuery(
-    email: "abdhawisa@gmail.com",
-    password: "Emmajayne2020!",
+  final authState = AuthState(tokenStorage, authService);
+  final client = AuthHttpClient(
+    tokenStorage,
+    authService,
+    onAuthGivenUp: authState.assertAuthenticated,
   );
-  // Logs the given user in
-  client.init(user);
 
   // Automatically chooses between web and native downloader
   final downloaderService = createDownloaderService(videoIdFromUrl);
@@ -47,23 +45,31 @@ void main() {
 
   // Required to display the date in the correct format
   initializeDateFormatting("en_GB");
-  runApp(PisecApp(routeGenerator: routeGenerator));
+  runApp(PisecApp(routeGenerator: routeGenerator, authState: authState));
 }
 
 class PisecApp extends StatelessWidget {
-  const PisecApp({super.key, required this.routeGenerator});
-
   final RouteGenerator routeGenerator;
+  final AuthState authState;
+
+  const PisecApp({
+    super.key,
+    required this.routeGenerator,
+    required this.authState,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pisec',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return AuthStateScope(
+      authState: authState,
+      child: MaterialApp(
+        title: 'Pisec',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        initialRoute: '/',
+        onGenerateRoute: routeGenerator.generateRoutes,
       ),
-      initialRoute: '/',
-      onGenerateRoute: routeGenerator.generateRoutes,
     );
   }
 }

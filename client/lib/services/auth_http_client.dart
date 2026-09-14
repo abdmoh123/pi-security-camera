@@ -3,35 +3,29 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
-import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/token.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 
 class AuthHttpClient extends http.BaseClient {
   final http.Client _inner = http.Client();
-  final TokenRepository tokenStorage;
-  final LoginAPIService authService;
+  final TokenRepository _tokenStorage;
+  final LoginAPIService _authService;
+
+  final void Function()? _onAuthGivenUp;
 
   bool _isRefreshing = false;
   final List<Completer<void>> _pendingRequests = [];
 
-  AuthHttpClient(this.tokenStorage, this.authService);
-
-  Future<void> init(UserQuery userQuery) async {
-    try {
-      final token = await authService.login(userQuery);
-      await tokenStorage.saveToken(token);
-    } on HttpCodedException {
-      // Do nothing as this is temporary code
-    } on ArgumentError {
-      // Do nothing as this is temporary code
-    }
-  }
+  AuthHttpClient(
+    this._tokenStorage,
+    this._authService, {
+    void Function()? onAuthGivenUp,
+  }) : _onAuthGivenUp = onAuthGivenUp;
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    final token = await tokenStorage.getToken();
+    final token = await _tokenStorage.getToken();
 
     if (token != null) {
       request.headers['Authorization'] =
@@ -42,7 +36,7 @@ class AuthHttpClient extends http.BaseClient {
 
     if (response.statusCode == 401) {
       // Token might have been refreshed already by another call
-      final currentToken = await tokenStorage.getToken();
+      final currentToken = await _tokenStorage.getToken();
       if (currentToken != null &&
           currentToken.accessToken != token?.accessToken) {
         return _inner.send(_cloneRequest(request, currentToken));
@@ -53,7 +47,7 @@ class AuthHttpClient extends http.BaseClient {
       // cleared automatically
       await _refreshTokenIfNeeded();
 
-      final newToken = await tokenStorage.getToken();
+      final newToken = await _tokenStorage.getToken();
       if (newToken == null) {
         throw FailedReadException(
           "Failed to read token after successful refresh",
@@ -106,27 +100,31 @@ class AuthHttpClient extends http.BaseClient {
     _isRefreshing = true;
 
     try {
-      final token = await tokenStorage.getToken();
+      final token = await _tokenStorage.getToken();
       if (token == null) {
         throw FailedReadException('Failed to read token during refresh');
       }
 
       Token? newToken;
       try {
-        newToken = await authService
+        newToken = await _authService
             .refreshToken(token.refreshToken)
             .timeout(Duration(seconds: 10));
       } on HttpCodedException catch (e) {
         // Refresh token probably expired here, so stored token needs to be
         // cleared
         if (e.statusCode == 401) {
-          await tokenStorage.clear();
+          await _tokenStorage.clear();
         }
+        rethrow;
+      } on InvalidUrlException {
+        // Url for the server is missing, so any token is useless
+        await _tokenStorage.clear();
         rethrow;
       }
 
       // Could potentially fail (token would be cleared anyway)
-      await tokenStorage.saveToken(newToken);
+      await _tokenStorage.saveToken(newToken);
 
       for (final c in _pendingRequests) {
         c.complete();
@@ -138,6 +136,7 @@ class AuthHttpClient extends http.BaseClient {
       }
       _pendingRequests.clear();
 
+      _onAuthGivenUp?.call();
       rethrow;
     } finally {
       _isRefreshing = false;

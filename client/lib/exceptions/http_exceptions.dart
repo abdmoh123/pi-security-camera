@@ -39,3 +39,12 @@ class ResponseMismatchException<T> implements Exception {
     return "Expected: $expected\nActual: $actual";
   }
 }
+
+class InvalidUrlException implements Exception {
+  final String message;
+
+  InvalidUrlException(this.message);
+
+  @override
+  String toString() => message;
+}
