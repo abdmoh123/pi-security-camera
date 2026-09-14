@@ -25,7 +25,23 @@ class RouteGenerator {
       case '/settings':
         return _homePageRoute(pageIdx: 2);
       case '/login':
-        return MaterialPageRoute(builder: (_) => const LoginPage());
+        if (args == null) {
+          return MaterialPageRoute(builder: (_) => const LoginPage());
+        }
+
+        if (args is! Map<String, String>) {
+          return _errorRoute(message: "Invalid login page args");
+        }
+        if (args['server_url'] == null || args['username'] == null) {
+          return _errorRoute(message: "Invalid login page args");
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => LoginPage(
+            initialServerUrl: args['server_url']!,
+            initialEmail: args['username']!,
+          ),
+        );
       case '/unfinished':
         return _unfinishedRoute();
       default:

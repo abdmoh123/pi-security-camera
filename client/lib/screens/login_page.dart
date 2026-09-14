@@ -3,25 +3,34 @@ import 'package:pisec_client/globals/auth_state_scope.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String initialServerUrl;
+  final String initialEmail;
+
+  const LoginPage({
+    super.key,
+    this.initialServerUrl = "",
+    this.initialEmail = "",
+  });
 
   @override
   State<StatefulWidget> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _serverHostController = TextEditingController();
+  final _serverUrlController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   initState() {
     super.initState();
+    _serverUrlController.text = widget.initialServerUrl;
+    _emailController.text = widget.initialEmail;
   }
 
   @override
   dispose() {
-    _serverHostController.dispose();
+    _serverUrlController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -39,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                 labelText: 'Server host',
                 border: OutlineInputBorder(),
               ),
-              controller: _serverHostController,
+              controller: _serverUrlController,
             ),
             TextFormField(
               decoration: InputDecoration(
@@ -73,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     final authState = AuthStateScope.of(context);
-    authState.setServerUrl(_serverHostController.text);
+    authState.setServerUrl(_serverUrlController.text);
 
     await authState.login(userQuery);
 
