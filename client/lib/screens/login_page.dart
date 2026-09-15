@@ -75,16 +75,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _onSubmit(BuildContext context) async {
+  Future<void> _onSubmit(BuildContext context) async {
     final userQuery = UserQuery(
       email: _emailController.text,
       password: _passwordController.text,
     );
 
     final authState = AuthStateScope.of(context);
-    authState.setServerUrl(_serverUrlController.text);
-
-    await authState.login(userQuery);
+    await authState.login(_serverUrlController.text, userQuery);
 
     // Required because we are using context more than once
     if (!context.mounted) {

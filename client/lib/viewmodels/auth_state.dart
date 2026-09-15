@@ -2,22 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/exceptions/secure_storage_exceptions.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/repositories/server_config_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 
 class AuthState extends ChangeNotifier {
+  final ServerConfigRepository _serverConfigRepository;
   final TokenRepository _tokenRepository;
   final LoginAPIService _authService;
 
   bool _isAuthenticated = false;
 
-  AuthState(this._tokenRepository, this._authService);
+  AuthState(
+    this._serverConfigRepository,
+    this._tokenRepository,
+    this._authService,
+  );
 
   bool get isAuthenticated => _isAuthenticated;
-
-  void setServerUrl(String url) {
-    _authService.setBaseUrl(url);
-  }
 
   Future<void> assertAuthenticated() async {
     final oldIsAuthenticated = _isAuthenticated;
@@ -27,6 +29,10 @@ class AuthState extends ChangeNotifier {
         _isAuthenticated = false;
         return;
       }
+
+      // Make sure the auth service has the right baseUrl
+      _authService.setBaseUrl(await _serverConfigRepository.getServerUrl());
+
       _isAuthenticated = await _authService.isRefreshTokenValid(
         token.refreshToken,
       );
@@ -43,13 +49,16 @@ class AuthState extends ChangeNotifier {
     }
   }
 
-  Future<void> login(UserQuery userQuery) async {
+  Future<void> login(String serverUrl, UserQuery userQuery) async {
     if (_isAuthenticated) {
       // Nothing will change so no need to notify or try to login
       return;
     }
 
     try {
+      await _serverConfigRepository.setServerUrl(serverUrl);
+      _authService.setBaseUrl(serverUrl);
+
       final token = await _authService.login(userQuery);
       await _tokenRepository.saveToken(token);
       _isAuthenticated = true;

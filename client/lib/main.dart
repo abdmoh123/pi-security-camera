@@ -4,6 +4,7 @@ import 'package:pisec_client/factories/downloader_factory.dart';
 import 'package:pisec_client/globals/auth_state_scope.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
+import 'package:pisec_client/repositories/server_config_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/routes/route_generator.dart';
 import 'package:pisec_client/screens/cameras_page.dart';
@@ -16,11 +17,14 @@ import 'package:pisec_client/viewmodels/auth_state.dart';
 import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
 Future<void> main() async {
-  const String baseUrl = "http://localhost:8000/api/v0";
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final serverConfig = ServerConfigRepository();
+  String baseUrl = await serverConfig.getServerUrl();
   final tokenStorage = TokenRepository();
   final authService = LoginAPIService(baseUrl: baseUrl);
 
-  final authState = AuthState(tokenStorage, authService);
+  final authState = AuthState(serverConfig, tokenStorage, authService);
   await authState.assertAuthenticated();
   final client = AuthHttpClient(
     tokenStorage,
