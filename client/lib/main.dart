@@ -13,13 +13,15 @@ import 'package:pisec_client/services/auth_http_client.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 import 'package:pisec_client/services/task_id_generators.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
+import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
-void main() {
+Future<void> main() async {
   const String baseUrl = "http://localhost:8000/api/v0";
   final tokenStorage = TokenRepository();
   final authService = LoginAPIService(baseUrl: baseUrl);
 
   final authState = AuthState(tokenStorage, authService);
+  await authState.assertAuthenticated();
   final client = AuthHttpClient(
     tokenStorage,
     authService,
@@ -67,8 +69,10 @@ class PisecApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        initialRoute: '/',
+        initialRoute: authState.isAuthenticated ? '/' : '/login',
         onGenerateRoute: routeGenerator.generateRoutes,
+        builder: (context, child) =>
+            AuthRedirector(authState: authState, child: child!),
       ),
     );
   }
