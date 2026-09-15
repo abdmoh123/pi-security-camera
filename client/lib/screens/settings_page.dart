@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pisec_client/globals/auth_state_scope.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -48,7 +49,7 @@ class SettingsPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextButton(
-                onPressed: () {},
+                onPressed: () => _logout(context),
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll<Color>(
                     Theme.of(context).colorScheme.errorContainer,
@@ -64,5 +65,10 @@ class SettingsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final authState = AuthStateScope.of(context);
+    await authState.logout();
   }
 }
