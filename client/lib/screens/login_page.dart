@@ -21,6 +21,8 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _passwordHidden = true;
+
   @override
   initState() {
     super.initState();
@@ -72,12 +74,24 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                   ),
                   TextFormField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        onPressed: () =>
+                            setState(() => _passwordHidden = !_passwordHidden),
+                        icon: Icon(
+                          _passwordHidden
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        tooltip: _passwordHidden
+                            ? "Show password"
+                            : "Hide password",
+                      ),
                     ),
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _passwordHidden,
                   ),
                   const SizedBox(height: 2 * spacing),
                   FilledButton(
