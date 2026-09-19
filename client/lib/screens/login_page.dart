@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    const spacing = 8.0;
+    const spacing = 12.0;
     return Scaffold(
       appBar: AppBar(title: Text("Pisec - Login")),
       body: Form(
@@ -93,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     obscureText: _passwordHidden,
                   ),
-                  const SizedBox(height: 2 * spacing),
+                  const SizedBox(height: spacing),
                   FilledButton(
                     onPressed: () => _onSubmit(context),
                     child: const Text("Sign in"),
@@ -113,6 +113,7 @@ class _LoginPageState extends State<LoginPage> {
       password: _passwordController.text,
     );
 
+    // TODO: Improve how invalid input is handled
     final authState = AuthStateScope.of(context);
     await authState.login(_serverUrlController.text, userQuery);
 
