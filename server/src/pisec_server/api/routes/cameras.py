@@ -58,6 +58,8 @@ def get_cameras(
             params.mac_address,
             params.page_index * params.page_size,
             params.page_size,
+            params.order_by.field,
+            params.order_by.ascending,
         )
     ]
 
@@ -178,6 +180,7 @@ def get_videos(
 
     videos = [
         v.to_response()
+        # TODO: Add sorting support
         for v in video_service.get_video_entries(
             db_session,
             camera_ids=[db_camera.id],
@@ -207,6 +210,7 @@ def get_users(
 
     users = [
         u.to_response()
+        # TODO: Add sorting support
         for u in user_service.get_users(
             db_session,
             camera_ids=[camera_id],

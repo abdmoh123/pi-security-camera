@@ -41,6 +41,7 @@ def get_self_cameras(
     """Returns a user's subscribed cameras."""
     cameras = [
         c.to_response()
+        # TODO: Add sorting support
         for c in camera_service.get_cameras(
             db_session,
             user_ids=[current_user.id],
@@ -83,6 +84,8 @@ def get_users(
             params.camera_id,
             skip=params.page_index * params.page_size,
             limit=params.page_size,
+            order_by=params.order_by.field,
+            ascending=params.order_by.ascending,
         )
     ]
 
@@ -331,6 +334,7 @@ def get_videos(
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
     videos = [
         v.to_response()
+        # TODO: Add sorting support
         for v in video_service.get_video_entries(
             db_session,
             camera_ids=camera_ids,

@@ -49,6 +49,8 @@ def get_videos(
             params.camera_id,
             skip=params.page_index * params.page_size,
             limit=params.page_size,
+            order_by=params.order_by.field,
+            ascending=params.order_by.ascending,
         )
     ]
 
