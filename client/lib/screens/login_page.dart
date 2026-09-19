@@ -38,38 +38,56 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    const spacing = 8.0;
     return Scaffold(
       appBar: AppBar(title: Text("Pisec - Login")),
       body: Form(
-        child: Column(
-          children: [
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Server host',
-                border: OutlineInputBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(spacing),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: spacing,
+                children: [
+                  Text(
+                    "Sign in to your Pisec server",
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 2 * spacing),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Server host',
+                      border: OutlineInputBorder(),
+                    ),
+                    controller: _serverUrlController,
+                  ),
+                  const SizedBox(height: spacing),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    controller: _emailController,
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    controller: _passwordController,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 2 * spacing),
+                  FilledButton(
+                    onPressed: () => _onSubmit(context),
+                    child: const Text("Sign in"),
+                  ),
+                ],
               ),
-              controller: _serverUrlController,
             ),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-              controller: _emailController,
-            ),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-              controller: _passwordController,
-              obscureText: true,
-            ),
-            ElevatedButton(
-              onPressed: () => _onSubmit(context),
-              child: Text("Login"),
-            ),
-          ],
+          ),
         ),
       ),
     );
