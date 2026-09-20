@@ -20,21 +20,22 @@ _.path = [
 description = "Run the flutter app"
 depends = "restore"
 usage = '''
+arg <platform> default="web" help="Which platform to run on" { choices "android" "linux" "web" }
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
-flag "-d --debug" help="Run in debug mode" default=#true
-flag "-r --release" help="Run in release mode"
+flag "-r --release" help="Run in release mode, will run in debug mode if this isn't defined"
 flag "-n --dry-run" help="Output what command would be run"
 flag "--profile" help="Run in profiling mode"
-flag "--wasm" help="Compile to WebAssembly"
+flag "--wasm" help="Compile to WebAssembly (only for web platform)"
 '''
 run = '''
 #!/usr/bin/env bash
-if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
-    echo "Can't run in both release and debug mode"
-    exit 1
-fi
+case "$usage_platform" in
+    android) device="$ANDROID_DEVICE_NAME" ;;
+    linux) device="linux" ;;
+    web) device="web-server --web-port 8080" ;;
+esac
 
-CMD="flutter run -d web-server --web-port 8080"
+CMD="flutter run -d $device"
 
 # Propagate verbosity level
 VERBOSITY="-"
@@ -45,9 +46,12 @@ if [ -n "${usage_verbose}" ]; then
 fi
 
 [ -n "${usage_release}" ] && CMD="$CMD --release"
-[ -n "${usage_debug}" ] && CMD="$CMD --debug"
+[ -z "${usage_release}" ] && CMD="$CMD --debug"
 [ -n "${usage_profile}" ] && CMD="$CMD --profile"
-[ -n "${usage_wasm}" ] && CMD="$CMD --wasm"
+
+# Web assembly can only work for the web platform
+[ "$usage_platform" = "web" ] && [ -n "${usage_wasm}" ] && CMD="$CMD --wasm"
+
 [ -n "${usage_verbose}" ] && CMD="$CMD $VERBOSITY"
 
 if [ -n "${usage_dry_run}" ]; then
@@ -62,23 +66,21 @@ $CMD
 description = "Build the flutter app"
 depends = "restore"
 usage = '''
-arg <type> default="web" help="What type of build to run" { choices "apk" "web" }
+arg <platform> default="android" help="Which platform to build for" { choices "android" "linux" }
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
-flag "--wasm" help="Compile to WebAssembly"
-flag "-d --debug" help="Build in debug mode"
-flag "-r --release" help="Build in release mode" default=#true
+flag "-d --debug" help="Build in debug mode, will build in release if this isn't defined"
 flag "-n --dry-run" help="Output what command would be run"
 flag "--build-number <buildnumber>" help="Unique identifier to differentiate from previous builds"
 flag "--build-name <buildname>" help="Semantic versioning based build number (major.minor.patch)"
 '''
 run = '''
 #!/usr/bin/env bash
-if [ -n "${usage_release}" ] && [ -n "${usage_debug}" ]; then
-    echo "Can't build in both release and debug mode"
-    exit 1
-fi
+case "$usage_platform" in
+    android) target="apk" ;;
+    linux) target="linux" ;;
+esac
 
-CMD="flutter build ${usage_type?}"
+CMD="flutter build $target"
 
 # Propagate verbosity level
 VERBOSITY="-"
@@ -89,10 +91,9 @@ if [ -n "${usage_verbose}" ]; then
 fi
 
 # Add flags if they're set
-[ -n "${usage_release}" ] && CMD="$CMD --release"
+[ -z "${usage_debug}" ] && CMD="$CMD --release"
 [ -n "${usage_debug}" ] && CMD="$CMD --debug"
 [ -n "${usage_verbose}" ] && CMD="$CMD $VERBOSITY"
-[ -n "${usage_wasm}" ] && [ "${usage_type}" = "web" ] && CMD="$CMD --wasm"
 [ -n "${usage_build_number}" ] && CMD="$CMD --build-number ${usage_build_number}"
 [ -n "${usage_build_name}" ] && CMD="$CMD --build-name ${usage_build_name}"
 
