@@ -19,6 +19,7 @@ class AuthState extends ChangeNotifier {
     this._authService,
   );
 
+  String get serverUrl => _authService.baseUrl ?? "";
   bool get isAuthenticated => _isAuthenticated;
 
   Future<void> assertAuthenticated() async {

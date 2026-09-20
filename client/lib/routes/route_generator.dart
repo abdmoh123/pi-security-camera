@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/main.dart';
+import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/screens/login_page.dart';
 
 class RouteGenerator {
@@ -29,17 +30,14 @@ class RouteGenerator {
           return MaterialPageRoute(builder: (_) => const LoginPage());
         }
 
-        if (args is! Map<String, String>) {
-          return _errorRoute(message: "Invalid login page args");
-        }
-        if (args['server_url'] == null || args['username'] == null) {
+        if (args is! LoginRouteArgs) {
           return _errorRoute(message: "Invalid login page args");
         }
 
         return MaterialPageRoute(
           builder: (_) => LoginPage(
-            initialServerUrl: args['server_url']!,
-            initialEmail: args['username']!,
+            initialServerUrl: args.serverUrl,
+            initialEmail: args.email,
           ),
         );
       case '/unfinished':
