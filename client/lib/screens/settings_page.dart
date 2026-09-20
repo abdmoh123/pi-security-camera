@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/globals/auth_state_scope.dart';
+import 'package:pisec_client/routes/route_args/login_route_args.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -70,5 +71,16 @@ class SettingsPage extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     final authState = AuthStateScope.of(context);
     await authState.logout();
+
+    // Required because we are using context more than once
+    if (!context.mounted) {
+      return;
+    }
+
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      "/login",
+      (route) => false,
+      arguments: LoginRouteArgs(serverUrl: authState.serverUrl),
+    );
   }
 }
