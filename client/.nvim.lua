@@ -6,4 +6,9 @@ require("flutter-tools").setup_project({
 		flutter_mode = "debug",
 		additional_args = { "--wasm" },
 	},
+	{
+		name = "Linux debug",
+		device = "linux",
+		flutter_mode = "debug",
+	},
 })

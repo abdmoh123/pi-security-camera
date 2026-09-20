@@ -14,6 +14,17 @@ Run `mise restore` to install the required dependencies. Or you could use `flutt
 > You will need to run `mise install` to install all the required tooling to run the mise tasks.
 > Alternatively, you can manually install the required tools and dependencies and the run commands yourself.
 
+### Linux
+
+You will need to install extra dependencies using your package manager because mise isn't able to.
+The following steps are for a fedora-based system:
+
+```bash
+sudo dnf install -y clang libsecret-devel pkg-conf-pkg-config gtk3-devel
+```
+
+The rest of the required tools should be installed by mise via `mise install`.
+
 ### Android
 
 You will have to manually install the Android SDK and command line tools. After that, you set the following environment variables:
