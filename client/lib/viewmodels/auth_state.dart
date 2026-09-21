@@ -11,7 +11,8 @@ class AuthState extends ChangeNotifier {
   final TokenRepository _tokenRepository;
   final LoginAPIService _authService;
 
-  bool _isAuthenticated = false;
+  // So initial assert would notify listeners if user wasn't logged in
+  bool _isAuthenticated = true;
 
   AuthState(
     this._serverConfigRepository,
@@ -72,11 +73,6 @@ class AuthState extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    if (!_isAuthenticated) {
-      // Nothing will change so no need to notify or try to logout
-      return;
-    }
-
     // Should never really happen:
     // Unlikely for cleared token and _isAuthenticated to be true
     final token = await _tokenRepository.getToken();

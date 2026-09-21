@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:pisec_client/main.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/screens/login_page.dart';
+import 'package:pisec_client/viewmodels/auth_state.dart';
+import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
 class RouteGenerator {
   final List<Widget> mainPages;
+  final AuthState authState;
 
-  const RouteGenerator({required this.mainPages});
+  const RouteGenerator({required this.mainPages, required this.authState});
 
   Route<dynamic> generateRoutes(RouteSettings settings) {
     final args = settings.arguments;
@@ -27,18 +30,15 @@ class RouteGenerator {
         return _homePageRoute(pageIdx: 2);
       case '/login':
         if (args == null) {
-          return MaterialPageRoute(builder: (_) => const LoginPage());
+          return _protectedRoute(const LoginPage());
         }
 
         if (args is! LoginRouteArgs) {
           return _errorRoute(message: "Invalid login page args");
         }
 
-        return MaterialPageRoute(
-          builder: (_) => LoginPage(
-            initialServerUrl: args.serverUrl,
-            initialEmail: args.email,
-          ),
+        return _protectedRoute(
+          LoginPage(initialServerUrl: args.serverUrl, initialEmail: args.email),
         );
       case '/unfinished':
         return _unfinishedRoute();
@@ -67,13 +67,15 @@ class RouteGenerator {
     );
   }
 
-  Route<dynamic> _homePageRoute({int pageIdx = 0}) {
+  Route<dynamic> _protectedRoute(Widget child) {
     return MaterialPageRoute(
-      builder: (_) => MyHomePage(
-        title: 'Pisec Home',
-        pages: mainPages,
-        initPageIndex: pageIdx,
-      ),
+      builder: (context) => AuthRedirector(authState: authState, child: child),
+    );
+  }
+
+  Route<dynamic> _homePageRoute({int pageIdx = 0}) {
+    return _protectedRoute(
+      MyHomePage(title: 'Pisec Home', pages: mainPages, initPageIndex: pageIdx),
     );
   }
 }

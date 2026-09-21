@@ -14,7 +14,6 @@ import 'package:pisec_client/services/auth_http_client.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 import 'package:pisec_client/services/task_id_generators.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
-import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +46,7 @@ Future<void> main() async {
     SettingsPage(),
   ];
 
-  final routeGenerator = RouteGenerator(mainPages: pages);
+  final routeGenerator = RouteGenerator(mainPages: pages, authState: authState);
 
   // Required to display the date in the correct format
   initializeDateFormatting("en_GB");
@@ -75,8 +74,6 @@ class PisecApp extends StatelessWidget {
         ),
         initialRoute: authState.isAuthenticated ? '/' : '/login',
         onGenerateRoute: routeGenerator.generateRoutes,
-        builder: (context, child) =>
-            AuthRedirector(authState: authState, child: child!),
       ),
     );
   }
