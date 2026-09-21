@@ -161,7 +161,7 @@ class LoginAPIService {
     }
 
     final response = await client.post(
-      Uri.parse("$baseUrl/auth/refresh"),
+      Uri.parse("$baseUrl/auth/refresh/expiry"),
       headers: xWwwFormUrlencodedHeader.toDict(),
       body: {"refresh_token": refreshTokenValue},
     );
