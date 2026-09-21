@@ -192,9 +192,17 @@ class _VideosPageState extends State<VideosPage> {
     int pageSize = 10,
   }) async {
     page = page ?? currentPage;
-    return widget.videoRepository.getVideos(
-      pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
-    );
+    try {
+      final response = await widget.videoRepository.getVideos(
+        pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
+      );
+      if (mounted) {
+        setState(() => maxPages = response.totalPages);
+      }
+      return response;
+    } catch (e, st) {
+      return Future.error(e, st);
+    }
   }
 
   void _toPage(int page) {
@@ -204,7 +212,6 @@ class _VideosPageState extends State<VideosPage> {
     setState(() {
       currentPage = page;
       futureVideos = _getAllVideos();
-      futureVideos.then((response) => maxPages = response.totalPages);
     });
   }
 
@@ -225,7 +232,6 @@ class _VideosPageState extends State<VideosPage> {
   void _refreshVideos() {
     setState(() {
       futureVideos = _getAllVideos();
-      futureVideos.then((response) => maxPages = response.totalPages);
     });
   }
 }

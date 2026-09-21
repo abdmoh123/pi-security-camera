@@ -161,9 +161,17 @@ class _CamerasPageState extends State<CamerasPage> {
     int pageSize = 10,
   }) async {
     page = page ?? currentPage;
-    return widget.cameraRepository.getCurrentUserCameras(
-      pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
-    );
+    try {
+      final response = await widget.cameraRepository.getCurrentUserCameras(
+        pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
+      );
+      if (mounted) {
+        setState(() => maxPages = response.totalPages);
+      }
+      return response;
+    } catch (e, st) {
+      return Future.error(e, st);
+    }
   }
 
   void _toPage(int page) {
@@ -173,7 +181,6 @@ class _CamerasPageState extends State<CamerasPage> {
     setState(() {
       currentPage = page;
       futureCameras = _getAllCameras();
-      futureCameras.then((response) => maxPages = response.totalPages);
     });
   }
 
@@ -194,7 +201,6 @@ class _CamerasPageState extends State<CamerasPage> {
   void _refreshCameras() {
     setState(() {
       futureCameras = _getAllCameras();
-      futureCameras.then((response) => maxPages = response.totalPages);
     });
   }
 }

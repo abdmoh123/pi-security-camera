@@ -66,10 +66,10 @@ class VideoTile extends StatelessWidget {
         onSelected: (value) {
           switch (value) {
             case MenuAction.download:
-              _downloadVideo();
+              _onDownload();
               break;
             case MenuAction.delete:
-              _deleteVideo();
+              _onDelete();
               break;
           }
         },
@@ -88,5 +88,21 @@ class VideoTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _onDownload() async {
+    try {
+      await _downloadVideo();
+    } catch (e) {
+      // TODO: Handle the error properly
+    }
+  }
+
+  Future<void> _onDelete() async {
+    try {
+      await _deleteVideo();
+    } catch (e) {
+      // TODO: Handle the error properly
+    }
   }
 }
