@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
+import 'package:pisec_client/screens/login_page.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
 class AuthRedirector extends StatefulWidget {
@@ -31,7 +32,7 @@ class _AuthRedirectorState extends State<AuthRedirector> {
 
   void _onAuthStateChanged() {
     // Ensures the user is forced to login page if unauthenticated
-    if (!widget.authState.isAuthenticated) {
+    if (!widget.authState.isAuthenticated && widget.child is! LoginPage) {
       Navigator.of(context).pushNamedAndRemoveUntil(
         "/login",
         (route) => false,
