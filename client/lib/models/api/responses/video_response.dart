@@ -15,7 +15,12 @@ class VideoResponse with JsonSerialisable {
       json['file_name'],
       json['camera_id'],
       ConstDateTime.fromDateTime(
-        DateTime.parse(json['uploaded_at'] + "Z" as String).toLocal(),
+        DateTime.parse(
+          (json['uploaded_at'] + "Z" as String).replaceAll(
+            '"',
+            '',
+          ), // Remove quotes
+        ).toLocal(),
       ),
     );
   }

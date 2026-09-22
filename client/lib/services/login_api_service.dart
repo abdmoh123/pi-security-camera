@@ -173,7 +173,8 @@ class LoginAPIService {
       );
     }
 
-    final result = DateTime.tryParse("${response.body}Z");
+    // We must remove any quotes
+    final result = DateTime.tryParse(response.body.replaceAll('"', ''));
     if (result == null) {
       throw ResponseMismatchException(
         "DateTime iso format ending with Z",

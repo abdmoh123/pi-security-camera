@@ -11,7 +11,9 @@ class VideoUrlResponse with JsonSerialisable {
     return VideoUrlResponse(
       json['url'],
       ConstDateTime.fromDateTime(
-        DateTime.parse(json['expires_at'] as String).toLocal(),
+        DateTime.parse(
+          (json['expires_at'] as String).replaceAll('"', ''), // Remove quotes
+        ).toLocal(),
       ),
     );
   }
