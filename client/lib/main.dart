@@ -6,6 +6,7 @@ import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/server_config_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
+import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/routes/route_generator.dart';
 import 'package:pisec_client/screens/cameras_page.dart';
 import 'package:pisec_client/screens/settings_page.dart';
@@ -72,7 +73,19 @@ class PisecApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        initialRoute: authState.isAuthenticated ? '/' : '/login',
+        onGenerateInitialRoutes: ((initialRoute) {
+          if (!authState.isAuthenticated) {
+            return [
+              routeGenerator.generateRoutes(
+                RouteSettings(
+                  name: '/login',
+                  arguments: LoginRouteArgs(serverUrl: authState.serverUrl),
+                ),
+              ),
+            ];
+          }
+          return [routeGenerator.generateRoutes(RouteSettings(name: '/'))];
+        }),
         onGenerateRoute: routeGenerator.generateRoutes,
       ),
     );
