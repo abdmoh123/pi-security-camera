@@ -64,6 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _serverUrlController,
+                    onFieldSubmitted: (_) => _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   TextFormField(
@@ -72,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _emailController,
+                    onFieldSubmitted: (_) => _onSubmit(context),
                   ),
                   TextFormField(
                     decoration: InputDecoration(
@@ -92,6 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     controller: _passwordController,
                     obscureText: _passwordHidden,
+                    onFieldSubmitted: (_) => _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   FilledButton(
