@@ -38,11 +38,7 @@ class AuthState extends ChangeNotifier {
       _isAuthenticated = await _authService.isRefreshTokenValid(
         token.refreshToken,
       );
-    } on FailedReadException {
-      _isAuthenticated = false;
-    } on HttpCodedException {
-      _isAuthenticated = false;
-    } on ResponseMismatchException {
+    } catch (e) {
       _isAuthenticated = false;
     } finally {
       if (oldIsAuthenticated != _isAuthenticated) {
