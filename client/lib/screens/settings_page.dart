@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/globals/auth_state_scope.dart';
+import 'package:pisec_client/globals/notifier_provider.dart';
+import 'package:pisec_client/viewmodels/auth_state.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -68,7 +69,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    final authState = AuthStateScope.of(context);
+    final authState = NotifierProvider.of<AuthState>(context);
     await authState.logout();
   }
 }

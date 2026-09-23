@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/globals/auth_state_scope.dart';
+import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/viewmodels/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   final String initialServerUrl;
@@ -41,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     const spacing = 12.0;
+
     return Scaffold(
       appBar: AppBar(title: Text("Pisec - Login")),
       body: Form(
@@ -117,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     // TODO: Improve how invalid input is handled
-    final authState = AuthStateScope.of(context);
+    final authState = NotifierProvider.of<AuthState>(context);
     await authState.login(_serverUrlController.text, userQuery);
 
     // Required because we are using context more than once

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/factories/downloader_factory.dart';
-import 'package:pisec_client/globals/auth_state_scope.dart';
+import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/server_config_repository.dart';
@@ -66,8 +66,8 @@ class PisecApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AuthStateScope(
-      authState: authState,
+    return NotifierProvider<AuthState>(
+      notifier: authState,
       child: MaterialApp(
         title: 'Pisec',
         theme: ThemeData(
