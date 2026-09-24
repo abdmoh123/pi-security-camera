@@ -21,7 +21,7 @@ class RouteGenerator {
         if (args is int && args >= 0 && args < 3) {
           return _homePageRoute(pageIdx: args);
         }
-        return _errorRoute(message: "Args for home page must be int or empty");
+        return errorRoute(message: "Args for home page must be int or empty");
       case '/videos':
         return _homePageRoute(pageIdx: 0);
       case '/cameras':
@@ -34,7 +34,7 @@ class RouteGenerator {
         }
 
         if (args is! LoginRouteArgs) {
-          return _errorRoute(message: "Invalid login page args");
+          return errorRoute(message: "Invalid login page args");
         }
 
         return _protectedRoute(
@@ -43,11 +43,11 @@ class RouteGenerator {
       case '/unfinished':
         return _unfinishedRoute();
       default:
-        return _errorRoute(message: "Invalid page route");
+        return errorRoute(message: "Invalid page route");
     }
   }
 
-  Route<dynamic> _errorRoute({String message = "Error has occured"}) {
+  Route<dynamic> errorRoute({String message = "Error has occured"}) {
     return MaterialPageRoute(
       builder: (_) {
         return Scaffold(

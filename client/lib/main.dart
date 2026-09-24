@@ -87,6 +87,8 @@ class PisecApp extends StatelessWidget {
           return [routeGenerator.generateRoutes(RouteSettings(name: '/'))];
         }),
         onGenerateRoute: routeGenerator.generateRoutes,
+        onUnknownRoute: (_) =>
+            routeGenerator.errorRoute(message: "Invalid page route"),
       ),
     );
   }
