@@ -37,24 +37,6 @@ class SettingsPage extends StatelessWidget {
           onTap: () => Navigator.pushNamed(context, '/unfinished'),
         ),
         ListTile(
-          leading: Icon(Icons.notifications),
-          title: Text("Notifications"),
-          subtitle: Text("Adjust notification preferences"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
-        ),
-        ListTile(
-          leading: Icon(Icons.settings),
-          title: Text("App settings"),
-          subtitle: Text("Adjust preferences"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
-        ),
-        ListTile(
-          leading: Icon(Icons.help),
-          title: Text("Help"),
-          subtitle: Text("View tutorials and documentation"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
-        ),
-        ListTile(
           leading: Icon(Icons.info),
           title: Text("About"),
           subtitle: Text("View app and server info"),
