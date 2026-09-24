@@ -53,7 +53,7 @@ def get_self_cameras(
     return PaginatedResponse[CameraResponse].create(cameras, pagination.page_index, pagination.page_size, len(cameras))
 
 
-@router.put("/self", response_model=UserResponse)
+@router.put("/me", response_model=UserResponse)
 def update_self(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
