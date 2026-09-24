@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:pisec_client/constants/http/content_type_headers.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
@@ -90,7 +91,8 @@ class HttpUserRepository implements UserRepository {
   Future<UserResponse> updateCurrentUser(UserQuery userQuery) async {
     final response = await client.put(
       Uri.parse("$baseUrl/users/me"),
-      body: userQuery.toJson(),
+      headers: jsonHeader.toDict(),
+      body: jsonEncode(userQuery.toJson()),
     );
     if (response.notOk) {
       throw HttpCodedException(
