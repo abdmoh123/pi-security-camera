@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
+import 'package:pisec_client/repositories/api/generic/user_repository.dart';
+import 'package:pisec_client/routes/route_args/profile_route_args.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  final UserRepository userRepository;
+  const SettingsPage({super.key, required this.userRepository});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +16,19 @@ class SettingsPage extends StatelessWidget {
           leading: Icon(Icons.account_circle),
           title: Text("Profile"),
           subtitle: Text("Change account details"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
+          onTap: () => Navigator.pushNamed(
+            context,
+            '/profile',
+            arguments: ProfileRouteArgs(
+              userRepository: userRepository,
+              initialEmail:
+                  NotifierProvider.of<AuthState>(
+                    context,
+                    listen: false,
+                  ).currentUser?.email ??
+                  "",
+            ),
+          ),
         ),
         ListTile(
           leading: Icon(Icons.key),

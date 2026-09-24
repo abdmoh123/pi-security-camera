@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:pisec_client/factories/downloader_factory.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/repositories/api/http/http_camera_repository.dart';
+import 'package:pisec_client/repositories/api/http/http_user_repository.dart';
 import 'package:pisec_client/repositories/api/http/http_video_repository.dart';
 import 'package:pisec_client/repositories/server_config_repository.dart';
 import 'package:pisec_client/repositories/token_repository.dart';
@@ -40,11 +41,12 @@ Future<void> main() async {
     downloaderService,
   );
   final cameraRepository = HttpCameraRepository(client, baseUrl);
+  final userRepository = HttpUserRepository(client, baseUrl);
 
   final List<Widget> pages = [
     VideosPage(videoRepository: videoRepository),
     CamerasPage(cameraRepository: cameraRepository),
-    SettingsPage(),
+    SettingsPage(userRepository: userRepository),
   ];
 
   final routeGenerator = RouteGenerator(mainPages: pages, authState: authState);

@@ -122,10 +122,8 @@ class _LoginPageState extends State<LoginPage> {
     final authState = NotifierProvider.of<AuthState>(context);
     await authState.login(_serverUrlController.text, userQuery);
 
-    // Required because we are using context more than once
-    if (!context.mounted) {
-      return;
-    }
+    // Required because we are using context more than once in async
+    if (!context.mounted) return;
 
     if (!authState.isAuthenticated) {
       _passwordController.clear();

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/main.dart';
+import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
+import 'package:pisec_client/routes/route_args/profile_route_args.dart';
 import 'package:pisec_client/screens/login_page.dart';
+import 'package:pisec_client/screens/profile_page.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
@@ -28,6 +31,17 @@ class RouteGenerator {
         return _homePageRoute(pageIdx: 1);
       case '/settings':
         return _homePageRoute(pageIdx: 2);
+      case '/profile':
+        if (args == null || args is! ProfileRouteArgs) {
+          return errorRoute(message: "Invalid profile page args");
+        }
+
+        return _protectedRoute(
+          ProfilePage(
+            userRepository: args.userRepository,
+            initialEmail: args.initialEmail,
+          ),
+        );
       case '/login':
         if (args == null) {
           return _protectedRoute(const LoginPage());

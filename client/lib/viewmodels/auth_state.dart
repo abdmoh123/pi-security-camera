@@ -13,6 +13,7 @@ class AuthState extends ChangeNotifier {
 
   // So initial assert would notify listeners if user wasn't logged in
   bool _isAuthenticated = true;
+  UserQuery? _currentUser;
 
   AuthState(
     this._serverConfigRepository,
@@ -22,6 +23,7 @@ class AuthState extends ChangeNotifier {
 
   String get serverUrl => _authService.baseUrl ?? "";
   bool get isAuthenticated => _isAuthenticated;
+  UserQuery? get currentUser => _currentUser;
 
   Future<void> assertAuthenticated() async {
     final oldIsAuthenticated = _isAuthenticated;
@@ -60,6 +62,9 @@ class AuthState extends ChangeNotifier {
       final token = await _authService.login(userQuery);
       await _tokenRepository.saveToken(token);
       _isAuthenticated = true;
+      // Don't keep password in memory
+      _currentUser = UserQuery(email: userQuery.email);
+
       notifyListeners();
     } on HttpCodedException {
       // Do nothing as _isAuthenticated is already false
@@ -74,6 +79,8 @@ class AuthState extends ChangeNotifier {
     final token = await _tokenRepository.getToken();
     if (token == null) {
       _isAuthenticated = false;
+      _currentUser = null;
+
       notifyListeners();
       return;
     }
@@ -82,6 +89,8 @@ class AuthState extends ChangeNotifier {
       await _authService.logout(token);
       await _tokenRepository.clear();
       _isAuthenticated = false;
+      _currentUser = null;
+
       notifyListeners();
     } on HttpCodedException {
       // Failed to logout, not sure what to do here
@@ -89,6 +98,51 @@ class AuthState extends ChangeNotifier {
     } on FailedClearException {
       // Failed to clear token, not sure what to do here
       // If server didn't bug out and logout was cancelled, then nothing has changed
+    }
+  }
+
+  Future<void> reLogin(UserQuery userQuery) async {
+    if (!_isAuthenticated) {
+      // You can't re-login if you're not logged in. Use the login method
+      return;
+    }
+
+    // Should never really happen:
+    // Unlikely for cleared token and _isAuthenticated to be true
+    final oldToken = await _tokenRepository.getToken();
+    if (oldToken == null) {
+      _isAuthenticated = false;
+      _currentUser = null;
+
+      notifyListeners();
+      return;
+    }
+
+    try {
+      try {
+        // Get rid of old tokens and logout
+        await _tokenRepository.clear();
+        await _authService.logout(oldToken);
+        _isAuthenticated = false;
+      } on HttpCodedException {
+        // If logout failed, then the refresh token on server has already been
+        // removed, so we don't need to do anything
+      }
+
+      // Update the token and stored user data
+      final newToken = await _authService.login(userQuery);
+      await _tokenRepository.saveToken(newToken);
+      // Don't keep password in memory
+      _currentUser = UserQuery(email: userQuery.email);
+      _isAuthenticated = true;
+
+      notifyListeners();
+    } on HttpCodedException {
+      // Do nothing as _isAuthenticated is already false if it failed to log
+      // back in
+    } on ArgumentError {
+      // Do nothing as _isAuthenticated is already false if it failed to log
+      // back in
     }
   }
 }
