@@ -4,6 +4,7 @@ import secrets
 import uuid
 
 from argon2 import PasswordHasher
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_credentials import CameraCredentialCreate
@@ -17,6 +18,18 @@ from pisec_server.services.camera import get_camera
 def get_credential(db: Session, client_id: str) -> CameraCredential | None:
     """Queries the database to get a camera credential using the given ID."""
     return db.query(CameraCredential).filter(CameraCredential.client_id == client_id).first()
+
+
+def get_credentials(
+    db: Session, user_id: int, camera_ids: list[int] | None = None, skip: int = 0, limit: int = 100
+) -> list[CameraCredential]:
+    """Queries the database to get all camera credentials with added filtering."""
+    query = select(CameraCredential).where(CameraCredential.user_id == user_id)
+
+    if camera_ids:
+        query = query.where(CameraCredential.camera_id.in_(camera_ids))
+
+    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
 
 
 def generate_credential(user: User) -> CameraCredentialCreate:

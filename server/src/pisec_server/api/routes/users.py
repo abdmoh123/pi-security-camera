@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from pisec_server.api.models.camera_credentials import CameraCredentialResponse
+from pisec_server.api.models.camera_credentials import CameraCredentialRedactedResponse, CameraCredentialResponse
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraResponse
 from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
@@ -344,6 +344,29 @@ def get_videos(
     ]
 
     return PaginatedResponse[VideoResponse].create(videos, pagination.page_index, pagination.page_size, len(videos))
+
+
+@router.get("/me/credentials")
+def get_credentials(
+    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    db_session: Annotated[Session, Depends(get_db)],
+    pagination: Annotated[PaginatedParams, Query()],
+) -> PaginatedResponse[CameraCredentialRedactedResponse]:
+    """Gets a user's credentials."""
+    if not user_service.get_user(db_session, current_user.id):
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    credentials = [
+        c.to_response()
+        for c in credential_service.get_credentials(
+            db_session, current_user.id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
+        )
+    ]
+
+    # TODO: Get the actual total items
+    return PaginatedResponse[CameraCredentialRedactedResponse].create(
+        credentials, pagination.page_index, pagination.page_size, len(credentials)
+    )
 
 
 @router.post("/me/credential", response_model=CameraCredentialResponse)

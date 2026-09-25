@@ -3,6 +3,14 @@
 from pydantic import BaseModel
 
 
+class CameraCredentialRedactedResponse(BaseModel):
+    """Pydantic model for a camera credential without sensitive data."""
+
+    client_id: str
+    user_id: int
+    camera_id: int | None = None  # Not null if credential linked to a camera
+
+
 class CameraCredentialResponse(BaseModel):
     """Pydantic model for returning camera credential data."""
 

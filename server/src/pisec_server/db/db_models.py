@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from pisec_server.api.models.camera_credentials import CameraCredentialRedactedResponse
 from pisec_server.api.models.cameras import CameraResponse
 from pisec_server.api.models.types.camera_columns import CameraColumns
 from pisec_server.api.models.types.user_columns import UserColumns
@@ -138,6 +139,10 @@ class CameraCredential(Base):
 
     user: Mapped[User] = relationship("User", back_populates="credentials")
     camera: Mapped[Camera | None] = relationship("Camera", back_populates="credential")
+
+    def to_response(self) -> CameraCredentialRedactedResponse:
+        """Convert a CameraCredential object to a CameraCredentialRedactedResponse object."""
+        return CameraCredentialRedactedResponse.model_validate(self)
 
 
 class RefreshToken(Base):
