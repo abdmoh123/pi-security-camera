@@ -18,7 +18,6 @@ _.path = [
 
 [tasks.start]
 description = "Run the flutter app"
-depends = "restore"
 usage = '''
 arg <platform> default="web" help="Which platform to run on" { choices "android" "linux" "web" }
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
@@ -64,7 +63,6 @@ $CMD
 
 [tasks.build]
 description = "Build the flutter app"
-depends = "restore"
 usage = '''
 arg <platform> default="android" help="Which platform to build for" { choices "android" "linux" }
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
@@ -111,12 +109,10 @@ run = "flutter clean"
 
 [tasks.setup-mocks]
 description = "Setup the mock stubs for the tests"
-depends = "restore"
 run = "dart run build_runner build"
 
 [tasks.test]
 description = "Run the flutter tests"
-depends = "setup-mocks"
 usage = '''
 flag "-v --verbose" help="Run in verbose mode" global=#true count=#true
 flag "-n --dry-run" help="Output what command would be run"
