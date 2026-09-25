@@ -2,12 +2,16 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
+import 'package:pisec_client/models/api/responses/redacted_camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
 
 abstract interface class UserRepository {
   Future<CameraCredentialResponse> createCameraCredential();
 
   Future<UserResponse> deleteUser(int userId);
+
+  Future<PaginatedResponse<RedactedCameraCredentialResponse>>
+  getCameraCredentials(PaginationParams pagination);
 
   Future<UserResponse> getCurrentUser();
 

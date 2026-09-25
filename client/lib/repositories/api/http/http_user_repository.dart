@@ -7,6 +7,7 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
+import 'package:pisec_client/models/api/responses/redacted_camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
@@ -46,6 +47,27 @@ class HttpUserRepository implements UserRepository {
 
     return UserResponse.fromJson(
       json.decode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<PaginatedResponse<RedactedCameraCredentialResponse>>
+  getCameraCredentials(PaginationParams pagination) async {
+    final String query = pagination.toPathQueryString();
+    final response = await client.get(
+      Uri.parse("$baseUrl/users/me/credentials?$query"),
+    );
+
+    if (response.notOk) {
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: "Failed to get camera credentials",
+      );
+    }
+
+    return PaginatedResponse<RedactedCameraCredentialResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (credential) => RedactedCameraCredentialResponse.fromJson(credential),
     );
   }
 
