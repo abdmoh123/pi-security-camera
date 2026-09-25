@@ -369,7 +369,7 @@ def get_credentials(
     )
 
 
-@router.post("/me/credential", response_model=CameraCredentialResponse)
+@router.post("/me/credentials", response_model=CameraCredentialResponse)
 def create_credential(
     current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
     db_session: Annotated[Session, Depends(get_db)],
