@@ -142,7 +142,9 @@ class CameraCredential(Base):
 
     def to_response(self) -> CameraCredentialRedactedResponse:
         """Convert a CameraCredential object to a CameraCredentialRedactedResponse object."""
-        return CameraCredentialRedactedResponse.model_validate(self)
+        return CameraCredentialRedactedResponse(
+            client_id=self.client_id, user_id=self.user_id, camera_id=self.camera_id, registered_at=self.registered_at
+        )
 
 
 class RefreshToken(Base):
