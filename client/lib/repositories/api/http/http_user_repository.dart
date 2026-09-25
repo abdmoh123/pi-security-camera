@@ -20,7 +20,7 @@ class HttpUserRepository implements UserRepository {
   @override
   Future<CameraCredentialResponse> createCameraCredential() async {
     final response = await client.post(
-      Uri.parse("$baseUrl/users/me/credential"),
+      Uri.parse("$baseUrl/users/me/credentials"),
     );
     if (response.notOk) {
       throw HttpCodedException(
