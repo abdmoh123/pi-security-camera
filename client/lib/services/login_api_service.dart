@@ -11,10 +11,12 @@ import 'package:pisec_client/models/http/authorization_header.dart';
 import 'package:pisec_client/types/token_type.dart';
 
 class LoginAPIService {
-  final http.Client client = http.Client();
+  http.Client _client = http.Client();
   String? baseUrl;
 
   LoginAPIService({this.baseUrl});
+
+  LoginAPIService.withClient(this._client, {this.baseUrl});
 
   void setBaseUrl(String url) {
     baseUrl = url;
@@ -25,7 +27,7 @@ class LoginAPIService {
       return false;
     }
 
-    final response = await client.get(Uri.parse(baseUrl!));
+    final response = await _client.get(Uri.parse(baseUrl!));
     return response.ok;
   }
 
@@ -38,7 +40,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/users/"),
       body: userQuery.toJson(),
     );
@@ -60,7 +62,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/auth/token"),
       headers: xWwwFormUrlencodedHeader.toDict(),
       body: {
@@ -92,7 +94,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/auth/logout"),
       headers: AuthorizationHeader.fromToken(token).toDict(),
       body: {"refresh_token": token.refreshToken},
@@ -111,7 +113,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/auth/logout"),
       headers: AuthorizationHeader(
         accessToken,
@@ -132,7 +134,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/auth/refresh"),
       headers: xWwwFormUrlencodedHeader.toDict(),
       body: {"refresh_token": refreshTokenValue},
@@ -160,7 +162,7 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await client.post(
+    final response = await _client.post(
       Uri.parse("$baseUrl/auth/refresh/expiry"),
       headers: xWwwFormUrlencodedHeader.toDict(),
       body: {"refresh_token": refreshTokenValue},

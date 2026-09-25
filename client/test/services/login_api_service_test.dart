@@ -11,7 +11,10 @@ void main() {
   test('Fake server should be reachable', () async {
     final mockClient = MockHttpClient();
     final baseUrl = 'http://localhost:8080';
-    final loginAPIService = LoginAPIService(baseUrl, mockClient);
+    final loginAPIService = LoginAPIService.withClient(
+      mockClient,
+      baseUrl: baseUrl,
+    );
 
     when(
       mockClient.get(Uri.parse(baseUrl)),
