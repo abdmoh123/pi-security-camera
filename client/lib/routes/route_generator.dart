@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/main.dart';
-import 'package:pisec_client/repositories/api/generic/user_repository.dart';
+import 'package:pisec_client/routes/route_args/credentials_route_args.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/routes/route_args/profile_route_args.dart';
+import 'package:pisec_client/screens/credentials_page.dart';
 import 'package:pisec_client/screens/login_page.dart';
 import 'package:pisec_client/screens/profile_page.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
@@ -41,6 +42,14 @@ class RouteGenerator {
             userRepository: args.userRepository,
             initialEmail: args.initialEmail,
           ),
+        );
+      case '/credentials':
+        if (args == null || args is! CredentialsRouteArgs) {
+          return errorRoute(message: "Invalid credentials page args");
+        }
+
+        return _protectedRoute(
+          CredentialsPage(userRepository: args.userRepository),
         );
       case '/login':
         if (args == null) {

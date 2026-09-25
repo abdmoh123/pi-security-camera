@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
+import 'package:pisec_client/routes/route_args/credentials_route_args.dart';
 import 'package:pisec_client/routes/route_args/profile_route_args.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
@@ -34,7 +35,11 @@ class SettingsPage extends StatelessWidget {
           leading: Icon(Icons.key),
           title: Text("Credentials"),
           subtitle: Text("Manage camera credentials"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
+          onTap: () => Navigator.pushNamed(
+            context,
+            '/credentials',
+            arguments: CredentialsRouteArgs(userRepository: userRepository),
+          ),
         ),
         ListTile(
           leading: Icon(Icons.info),
