@@ -1,5 +1,7 @@
 """File containing pydantic models for camera credential data."""
 
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -9,6 +11,7 @@ class CameraCredentialRedactedResponse(BaseModel):
     client_id: str
     user_id: int
     camera_id: int | None = None  # Not null if credential linked to a camera
+    registered_at: datetime
 
 
 class CameraCredentialResponse(BaseModel):
