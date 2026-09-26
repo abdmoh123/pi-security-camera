@@ -42,7 +42,8 @@ class LoginAPIService {
 
     final response = await _client.post(
       Uri.parse("$baseUrl/users/"),
-      body: userQuery.toJson(),
+      headers: jsonHeader.toDict(),
+      body: json.encode(userQuery.toJson()),
     );
     if (response.notOk) {
       throw HttpCodedException(

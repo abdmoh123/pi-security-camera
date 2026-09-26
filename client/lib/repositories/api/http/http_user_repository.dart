@@ -133,7 +133,7 @@ class HttpUserRepository implements UserRepository {
     final response = await client.put(
       Uri.parse("$baseUrl/users/me"),
       headers: jsonHeader.toDict(),
-      body: jsonEncode(userQuery.toJson()),
+      body: json.encode(userQuery.toJson()),
     );
     if (response.notOk) {
       throw HttpCodedException(
