@@ -8,6 +8,10 @@ import 'package:pisec_client/models/api/responses/user_response.dart';
 abstract interface class UserRepository {
   Future<CameraCredentialResponse> createCameraCredential();
 
+  Future<RedactedCameraCredentialResponse> deleteCameraCredential(
+    String clientId,
+  );
+
   Future<UserResponse> deleteUser(int userId);
 
   Future<PaginatedResponse<RedactedCameraCredentialResponse>>

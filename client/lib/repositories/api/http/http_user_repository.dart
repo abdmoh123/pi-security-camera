@@ -36,6 +36,25 @@ class HttpUserRepository implements UserRepository {
   }
 
   @override
+  Future<RedactedCameraCredentialResponse> deleteCameraCredential(
+    String clientId,
+  ) async {
+    final response = await client.delete(
+      Uri.parse("$baseUrl/users/me/credentials/$clientId"),
+    );
+    if (response.notOk) {
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: "Failed to delete camera credential",
+      );
+    }
+
+    return RedactedCameraCredentialResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  @override
   Future<UserResponse> deleteUser(int userId) async {
     final response = await client.delete(Uri.parse("$baseUrl/users/$userId"));
     if (response.notOk) {

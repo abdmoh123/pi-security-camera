@@ -59,7 +59,11 @@ class _CredetialsPageState extends State<CredentialsPage> {
     return ListView.separated(
       itemCount: credentials.length,
       itemBuilder: (context, index) {
-        return CredentialTile(credential: credentials[index]);
+        return CredentialTile(
+          credential: credentials[index],
+          deleteCredential: () =>
+              _deleteCredential(credentials[index].clientID),
+        );
       },
       separatorBuilder: (context, index) => Divider(),
     );
@@ -86,5 +90,13 @@ class _CredetialsPageState extends State<CredentialsPage> {
   void _newCredential() {
     // TODO: Implement this
     throw UnimplementedError();
+
+  Future<void> _deleteCredential(String clientID) async {
+    try {
+      await widget.userRepository.deleteCameraCredential(clientID);
+      _refreshCredentials();
+    } catch (e, st) {
+      return Future.error(e, st);
+    }
   }
 }
