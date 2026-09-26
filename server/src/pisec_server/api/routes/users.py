@@ -387,3 +387,27 @@ def create_credential(
         )
     except RecordAlreadyExistsError as e:
         raise HTTPException(status_code=409) from e
+
+
+@router.delete("/me/credentials/{client_id}", response_model=CameraCredentialRedactedResponse)
+def delete_credential(
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
+    db_session: Annotated[Session, Depends(get_db)],
+    client_id: Annotated[str, Path()],
+) -> CameraCredentialRedactedResponse:
+    """Deletes a given camera credential by ID.
+
+    A user can only delete their own credentials.
+    Once a credential is deleted, a camera using it will no longer work and may
+    require setting up again.
+    """
+    if client_id not in [c.client_id for c in current_user.credentials]:
+        # Intentionally not telling the user if credential is owned by another user
+        raise HTTPException(status_code=404, detail="Credential not found!")
+
+    try:
+        result = credential_service.delete_credential(db_session, client_id)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=404) from e
+
+    return result.to_response()
