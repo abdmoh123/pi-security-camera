@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
+import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/redacted_camera_credential_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
@@ -87,9 +90,69 @@ class _CredetialsPageState extends State<CredentialsPage> {
     });
   }
 
-  void _newCredential() {
-    // TODO: Implement this
-    throw UnimplementedError();
+  Future<void> _newCredential() async {
+    CameraCredentialResponse response;
+    try {
+      response = await widget.userRepository.createCameraCredential();
+    } on HttpCodedException {
+      // Do nothing for now if we couldn't create a new credential
+      return;
+    }
+
+    _refreshCredentials();
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              ListTile(
+                title: const Text("Credential ID"),
+                subtitle: Text(
+                  response.clientID,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  onPressed: () =>
+                      Clipboard.setData(ClipboardData(text: response.clientID)),
+                  icon: const Icon(Icons.copy),
+                ),
+              ),
+              ListTile(
+                title: const Text("Credential secret"),
+                subtitle: Text(
+                  response.clientSecret,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  onPressed: () =>
+                      Clipboard.setData(ClipboardData(text: response.clientID)),
+                  icon: const Icon(Icons.copy),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      _deleteCredential(response.clientID);
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text("Delete"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _deleteCredential(String clientID) async {
     try {
