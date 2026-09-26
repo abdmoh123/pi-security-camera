@@ -60,8 +60,11 @@ class RouteGenerator {
           return errorRoute(message: "Invalid login page args");
         }
 
-        return _protectedRoute(
-          LoginPage(initialServerUrl: args.serverUrl, initialEmail: args.email),
+        return MaterialPageRoute(
+          builder: (_) => LoginPage(
+            initialServerUrl: args.serverUrl,
+            initialEmail: args.email,
+          ),
         );
       case '/unfinished':
         return _unfinishedRoute();
