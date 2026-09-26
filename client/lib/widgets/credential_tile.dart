@@ -24,7 +24,7 @@ class CredentialTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        credential.cameraID?.toString() ?? "Unassigned",
+        "camera-id: ${credential.cameraID?.toString() ?? "Unassigned"}",
         textAlign: TextAlign.left,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
