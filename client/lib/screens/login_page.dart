@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/routes/route_args/register_route_args.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
@@ -99,9 +100,34 @@ class _LoginPageState extends State<LoginPage> {
                     onFieldSubmitted: (_) => _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
-                  FilledButton(
-                    onPressed: () => _onSubmit(context),
-                    child: const Text("Sign in"),
+                  Row(
+                    spacing: spacing,
+                    children: [
+                      FilledButton(
+                        onPressed: () => _onSubmit(context),
+                        child: const Text("Sign in"),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pushNamed(
+                          '/register',
+                          arguments: RegisterRouteArgs(
+                            authService: NotifierProvider.of<AuthState>(
+                              context,
+                            ).loginService,
+                            serverUrl: _serverUrlController.text,
+                            email: _emailController.text,
+                            onSubmitSuccess: (serverUrl, email) {
+                              // After registering was successful, automatically
+                              // set the server url and email to use the one
+                              // from the register page
+                              _serverUrlController.text = serverUrl;
+                              _emailController.text = email;
+                            },
+                          ),
+                        ),
+                        child: const Text("Register"),
+                      ),
+                    ],
                   ),
                 ],
               ),

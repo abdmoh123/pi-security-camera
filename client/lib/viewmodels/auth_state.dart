@@ -21,7 +21,9 @@ class AuthState extends ChangeNotifier {
     this._authService,
   );
 
+  LoginAPIService get loginService => _authService;
   String get serverUrl => _authService.baseUrl ?? "";
+
   bool get isAuthenticated => _isAuthenticated;
   UserQuery? get currentUser => _currentUser;
 

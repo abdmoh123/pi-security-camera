@@ -3,9 +3,11 @@ import 'package:pisec_client/main.dart';
 import 'package:pisec_client/routes/route_args/credentials_route_args.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/routes/route_args/profile_route_args.dart';
+import 'package:pisec_client/routes/route_args/register_route_args.dart';
 import 'package:pisec_client/screens/credentials_page.dart';
 import 'package:pisec_client/screens/login_page.dart';
 import 'package:pisec_client/screens/profile_page.dart';
+import 'package:pisec_client/screens/register_page.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 import 'package:pisec_client/widgets/helpers/auth_redirector.dart';
 
@@ -64,6 +66,19 @@ class RouteGenerator {
           builder: (_) => LoginPage(
             initialServerUrl: args.serverUrl,
             initialEmail: args.email,
+          ),
+        );
+      case '/register':
+        if (args == null || args is! RegisterRouteArgs) {
+          return errorRoute(message: "Invalid register page args");
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => RegisterPage(
+            authService: args.authService,
+            initialServerUrl: args.serverUrl,
+            initialEmail: args.email,
+            onSubmitSuccess: args.onSubmitSuccess,
           ),
         );
       case '/unfinished':
