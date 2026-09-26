@@ -346,9 +346,9 @@ def get_videos(
     return PaginatedResponse[VideoResponse].create(videos, pagination.page_index, pagination.page_size, len(videos))
 
 
-@router.get("/me/credentials")
+@router.get("/me/credentials", response_model=PaginatedResponse[CameraCredentialRedactedResponse])
 def get_credentials(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
     pagination: Annotated[PaginatedParams, Query()],
 ) -> PaginatedResponse[CameraCredentialRedactedResponse]:
@@ -371,7 +371,7 @@ def get_credentials(
 
 @router.post("/me/credentials", response_model=CameraCredentialResponse)
 def create_credential(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
 ) -> CameraCredentialResponse:
     """Creates a new credential for a given user."""
