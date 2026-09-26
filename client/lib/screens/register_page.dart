@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
-import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -8,12 +7,15 @@ class RegisterPage extends StatefulWidget {
   final String initialServerUrl;
   final String initialEmail;
 
+  final void Function(String serverUrl, String email)? _onSubmitSuccess;
+
   const RegisterPage({
     super.key,
     required this.authService,
     this.initialServerUrl = "",
     this.initialEmail = "",
-  });
+    Function(String serverUrl, String email)? onSubmitSuccess,
+  }) : _onSubmitSuccess = onSubmitSuccess;
 
   @override
   State<StatefulWidget> createState() => _RegisterPageState();
@@ -155,16 +157,13 @@ class _RegisterPageState extends State<RegisterPage> {
       // Required because we are using context more than once in async
       if (!context.mounted) return;
 
-      // Go to the login page with same email and server address filled in
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        "/login",
-        (route) => false,
-        arguments: LoginRouteArgs(
-          serverUrl: _serverUrlController.text,
-          email: response.email,
-        ),
-      );
+      // Run on submit callback, which can be used to update a login page's text
+      // inputs for the server url and user email address
+      widget._onSubmitSuccess?.call(_serverUrlController.text, response.email);
+
+      Navigator.of(context).pop();
     } catch (e, st) {
+      // TODO: Display the error instead of rethrowing
       return Future.error(e, st);
     }
   }
