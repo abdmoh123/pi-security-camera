@@ -115,7 +115,7 @@ class LoginAPIService {
     }
 
     final response = await _client.post(
-      Uri.parse("$baseUrl/auth/logout"),
+      Uri.parse("$baseUrl/auth/logout/all"),
       headers: AuthorizationHeader(
         accessToken,
         tokenType: TokenType.bearer,
