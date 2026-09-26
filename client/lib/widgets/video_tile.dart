@@ -93,16 +93,16 @@ class VideoTile extends StatelessWidget {
   Future<void> _onDownload() async {
     try {
       await _downloadVideo();
-    } catch (e) {
-      // TODO: Handle the error properly
+    } catch (e, st) {
+      return Future.error(e, st);
     }
   }
 
   Future<void> _onDelete() async {
     try {
       await _deleteVideo();
-    } catch (e) {
-      // TODO: Handle the error properly
+    } catch (e, set) {
+      return Future.error(e, set);
     }
   }
 }
