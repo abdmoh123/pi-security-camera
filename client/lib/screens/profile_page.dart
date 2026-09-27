@@ -5,6 +5,7 @@ import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
+import 'package:pisec_client/widgets/dangerous_button.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserRepository userRepository;
@@ -142,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: () => _onSubmit(context),
                         child: const Text("Update profile"),
                       ),
-                      FilledButton(
+                      DangerousButton.outline(
                         onPressed: () => _onDelete(context),
                         child: const Text("Delete account"),
                       ),
@@ -249,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ValueListenableBuilder(
               valueListenable: confirmDeleteController,
               builder: (context, value, child) {
-                return FilledButton(
+                return DangerousButton.filled(
                   onPressed: value.text == email
                       ? () => Navigator.of(context).pop(true)
                       : null,

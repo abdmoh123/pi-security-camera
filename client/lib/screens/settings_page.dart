@@ -4,6 +4,7 @@ import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/routes/route_args/credentials_route_args.dart';
 import 'package:pisec_client/routes/route_args/profile_route_args.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
+import 'package:pisec_client/widgets/dangerous_button.dart';
 
 class SettingsPage extends StatelessWidget {
   final UserRepository userRepository;
@@ -51,16 +52,8 @@ class SettingsPage extends StatelessWidget {
           child: FittedBox(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: TextButton(
+              child: DangerousButton.outline(
                 onPressed: () => _logout(context),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll<Color>(
-                    Theme.of(context).colorScheme.errorContainer,
-                  ),
-                  foregroundColor: WidgetStatePropertyAll<Color>(
-                    Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                ),
                 child: Row(children: [Icon(Icons.logout), Text("Sign out")]),
               ),
             ),
