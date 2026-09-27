@@ -271,13 +271,9 @@ class _ProfilePageState extends State<ProfilePage> {
         if (!context.mounted) return;
 
         // Set the authenticaed status as false (account no longer exists)
+        // This will automatically redirect to the login page
         final authState = NotifierProvider.of<AuthState>(context);
         await authState.assertAuthenticated();
-
-        if (!context.mounted) return;
-
-        // Leave the profile page
-        Navigator.of(context).pop();
       } catch (e) {
         // TODO: Display the error
       }
