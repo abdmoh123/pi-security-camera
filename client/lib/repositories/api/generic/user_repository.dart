@@ -12,7 +12,7 @@ abstract interface class UserRepository {
     String clientId,
   );
 
-  Future<UserResponse> deleteUser(int userId);
+  Future<UserResponse> deleteCurrentUser();
 
   Future<PaginatedResponse<RedactedCameraCredentialResponse>>
   getCameraCredentials(PaginationParams pagination);

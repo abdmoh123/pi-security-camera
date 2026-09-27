@@ -55,8 +55,8 @@ class HttpUserRepository implements UserRepository {
   }
 
   @override
-  Future<UserResponse> deleteUser(int userId) async {
-    final response = await client.delete(Uri.parse("$baseUrl/users/$userId"));
+  Future<UserResponse> deleteCurrentUser() async {
+    final response = await client.delete(Uri.parse("$baseUrl/users/me"));
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,

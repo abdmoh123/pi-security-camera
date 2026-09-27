@@ -108,9 +108,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     onFieldSubmitted: (_) => _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
-                  FilledButton(
-                    onPressed: () => _onSubmit(context),
-                    child: const Text("Update profile"),
+                  Row(
+                    spacing: spacing,
+                    children: [
+                      FilledButton(
+                        onPressed: () => _onSubmit(context),
+                        child: const Text("Update profile"),
+                      ),
+                      FilledButton(
+                        onPressed: () => _onDelete(context),
+                        child: const Text("Delete account"),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -159,5 +168,47 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!context.mounted) return;
 
     Navigator.pop(context);
+  }
+
+  Future<void> _onDelete(BuildContext context) async {
+    final confirmed = await showAdaptiveDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete account"),
+          content: const Text("Are you sure you want to delete your account?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Cancel"),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        await widget.userRepository.deleteCurrentUser();
+
+        if (!context.mounted) return;
+
+        // Set the authenticaed status as false (account no longer exists)
+        final authState = NotifierProvider.of<AuthState>(context);
+        await authState.assertAuthenticated();
+
+        if (!context.mounted) return;
+
+        // Leave the profile page
+        Navigator.of(context).pop();
+      } catch (e) {
+        // TODO: Display the error
+      }
+    }
   }
 }
