@@ -111,7 +111,7 @@ def delete_video_entries(
     camera_ids: list[int] | None = None,
 ) -> list[Video]:
     """Deletes a list of videos."""
-    query = delete(Video)
+    query = delete(Video).returning(Video)
 
     if video_ids:
         query = query.where(Video.id.in_(video_ids))

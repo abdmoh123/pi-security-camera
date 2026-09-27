@@ -111,7 +111,7 @@ def delete_camera_subscriptions(
     db: Session, user_ids: list[int] | None = None, camera_ids: list[int] | None = None
 ) -> list[CameraSubscriptionSchema]:
     """Deletes a list of subscriptions that fit the given parameters."""
-    query = delete(CameraSubscriptionSchema)
+    query = delete(CameraSubscriptionSchema).returning(CameraSubscriptionSchema)
 
     # The given IDs are combined in an AND fashion
     if user_ids:
