@@ -1,10 +1,12 @@
 """File containing crud functions related to handling camera subscriptions."""
 
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.db_models import Camera, User
+from pisec_server.db.db_models import CameraSubscription as CameraSubscriptionSchema
 from pisec_server.services.camera import get_camera, get_cameras
 from pisec_server.services.user import get_user, get_users
 
@@ -35,6 +37,20 @@ def get_camera_subscriptions_by_camera(db: Session, camera_id: int) -> list[Came
         subscriptions.append(CameraSubscription(user_id=user.id, camera_id=camera_id))
 
     return subscriptions
+
+
+def get_camera_subscriptions(
+    db: Session, user_ids: list[int] | None = None, camera_ids: list[int] | None = None
+) -> list[CameraSubscriptionSchema]:
+    """Queries and returns a list of camera subscriptions."""
+    query = select(CameraSubscriptionSchema)
+
+    if user_ids:
+        query = query.where(CameraSubscriptionSchema.user_id.in_(user_ids))
+    if camera_ids:
+        query = query.where(CameraSubscriptionSchema.camera_id.in_(camera_ids))
+
+    return list(db.execute(query).scalars().all())
 
 
 def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: list[int]) -> list[CameraSubscription]:
@@ -91,42 +107,18 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     return result
 
 
-def delete_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: list[int]) -> list[CameraSubscription]:
-    """Unsubscribes the user from a given list of cameras."""
-    db_user: User | None = get_user(db, user_id)
-    # Don't bother subscribing if the user doesn't exist
-    if not db_user:
-        raise RecordNotFoundError(f"User {user_id} does not exist!")
+def delete_camera_subscriptions(
+    db: Session, user_ids: list[int] | None = None, camera_ids: list[int] | None = None
+) -> list[CameraSubscriptionSchema]:
+    """Deletes a list of subscriptions that fit the given parameters."""
+    query = delete(CameraSubscriptionSchema)
 
-    # Unlink the cameras from the user
-    # NOTE: This will silently skip cameras that aren't already linked
-    cameras: list[Camera] = [camera for camera in get_cameras(db, camera_ids, user_ids=[user_id])]
+    # The given IDs are combined in an AND fashion
+    if user_ids:
+        query = query.where(CameraSubscriptionSchema.user_id.in_(user_ids))
+    if camera_ids:
+        query = query.where(CameraSubscriptionSchema.camera_id.in_(camera_ids))
 
-    result: list[CameraSubscription] = list()
-    for camera in cameras:
-        db_user.cameras.remove(camera)
-        result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
-
+    result = list(db.execute(query).scalars().all())
     db.commit()
-
-    return result
-
-
-def delete_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids: list[int]) -> list[CameraSubscription]:
-    """Unsubscribes the given users from the given camera."""
-    db_camera: Camera | None = get_camera(db, camera_id)
-    # Don't bother subscribing if the user doesn't exist
-    if not db_camera:
-        raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
-
-    # Unlink the cameras from the user
-    # NOTE: This will silently skip cameras that aren't already linked
-    users: list[User] = [user for user in get_users(db, user_ids) if user not in db_camera.users]
-    result: list[CameraSubscription] = list()
-    for user in users:
-        db_camera.users.remove(user)
-        result.append(CameraSubscription(user_id=camera_id, camera_id=user.id))
-
-    db.commit()
-
     return result

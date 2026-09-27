@@ -104,6 +104,27 @@ def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) 
     return db_video
 
 
+def delete_video_entries(
+    db: Session,
+    video_ids: list[int] | None = None,
+    file_name: str | None = None,
+    camera_ids: list[int] | None = None,
+) -> list[Video]:
+    """Deletes a list of videos."""
+    query = delete(Video)
+
+    if video_ids:
+        query = query.where(Video.id.in_(video_ids))
+    if file_name:
+        query = query.where(Video.file_name.ilike(f"%{file_name}%"))
+    if camera_ids:
+        query = query.where(Video.camera_id.in_(camera_ids))
+
+    result = list(db.execute(query).scalars().all())
+    db.commit()
+    return result
+
+
 def delete_video_entry(db: Session, video_id: int) -> Video:
     """Deletes a given video entry via ID."""
     db_video = db.query(Video).filter(Video.id == video_id).first()
