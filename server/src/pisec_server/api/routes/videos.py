@@ -79,6 +79,7 @@ async def upload_video(
         db_session,
         file_name=file_name,
         camera_ids=[current_credential.camera_id],
+        skip=0,
         limit=1,
     )
     if db_videos:

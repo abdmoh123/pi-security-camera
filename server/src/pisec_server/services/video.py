@@ -3,7 +3,7 @@
 import mimetypes
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.types.video_columns import VideoColumns
@@ -38,8 +38,8 @@ def get_video_entries(
     video_ids: list[int] | None = None,
     file_name: str | None = None,
     camera_ids: list[int] | None = None,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int | None = None,
+    limit: int | None = None,
     order_by: VideoColumns = VideoColumns.ID,
     ascending: bool = True,
 ) -> list[Video]:
@@ -59,7 +59,12 @@ def get_video_entries(
     order_condition = Video.get_column(order_by).asc() if ascending else Video.get_column(order_by).desc()
     query = query.order_by(order_condition)
 
-    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
+    if skip is not None:
+        query = query.offset(skip)
+    if limit is not None:
+        query = query.limit(limit)
+
+    return list(db.execute(query).scalars().all())
 
 
 def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video:
