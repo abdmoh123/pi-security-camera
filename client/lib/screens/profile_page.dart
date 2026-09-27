@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
+import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
@@ -24,12 +25,15 @@ class _ProfilePageState extends State<ProfilePage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  late final UserResponse? _user;
+
   bool _passwordHidden = true;
 
   @override
   void initState() {
     super.initState();
     _emailController.text = widget.initialEmail;
+    _loadUser();
   }
 
   @override
@@ -38,6 +42,29 @@ class _ProfilePageState extends State<ProfilePage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final response = await widget.userRepository.getCurrentUser();
+
+      // Required because we are using context more than once in async
+      if (!mounted) return;
+
+      setState(() {
+        _user = response;
+        _emailController.text = response.email;
+      });
+    } catch (e) {
+      // TODO: Improve error handling here
+
+      // Required because we are using context more than once in async
+      if (!mounted) return;
+
+      setState(() {
+        _user = null;
+      });
+    }
   }
 
   @override
@@ -171,26 +198,71 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _onDelete(BuildContext context) async {
+    const spacing = 12.0;
+
+    final confirmDeleteController = TextEditingController();
+
+    final email = _user?.email ?? _emailController.text;
+
     final confirmed = await showAdaptiveDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Delete account"),
-          content: const Text("Are you sure you want to delete your account?"),
+          title: const Text("Delete account?"),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Are you sure you want to delete your account?"),
+              const SizedBox(height: spacing),
+              TextField(
+                controller: confirmDeleteController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: email,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: spacing),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: "Type in "),
+                    TextSpan(
+                      text: email,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const TextSpan(text: " to activate the delete button"),
+                  ],
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text("Cancel"),
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text("Delete"),
+            ValueListenableBuilder(
+              valueListenable: confirmDeleteController,
+              builder: (context, value, child) {
+                return FilledButton(
+                  onPressed: value.text == email
+                      ? () => Navigator.of(context).pop(true)
+                      : null,
+                  child: const Text("Delete"),
+                );
+              },
             ),
           ],
         );
       },
     );
+
+    confirmDeleteController.dispose();
 
     if (confirmed == true) {
       try {
