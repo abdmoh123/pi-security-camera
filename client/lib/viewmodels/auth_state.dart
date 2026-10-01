@@ -7,25 +7,22 @@ import 'package:pisec_client/repositories/token_repository.dart';
 import 'package:pisec_client/services/login_api_service.dart';
 
 class AuthState extends ChangeNotifier {
-  final ServerConfigRepository _serverConfigRepository;
+  final LoginMemoryRepository _loginMemory;
   final TokenRepository _tokenRepository;
-  final LoginAPIService _authService;
+
+  final LoginAPIService loginService;
+
+  UserQuery? _currentUser;
 
   // So initial assert would notify listeners if user wasn't logged in
   bool _isAuthenticated = true;
-  UserQuery? _currentUser;
 
-  AuthState(
-    this._serverConfigRepository,
-    this._tokenRepository,
-    this._authService,
-  );
+  AuthState(this._loginMemory, this._tokenRepository, this.loginService);
 
-  LoginAPIService get loginService => _authService;
-  String get serverUrl => _authService.baseUrl ?? "";
+  String get serverUrl => loginService.baseUrl ?? "";
+  UserQuery? get currentUser => _currentUser;
 
   bool get isAuthenticated => _isAuthenticated;
-  UserQuery? get currentUser => _currentUser;
 
   Future<void> assertAuthenticated() async {
     final oldIsAuthenticated = _isAuthenticated;
@@ -37,9 +34,11 @@ class AuthState extends ChangeNotifier {
       }
 
       // Make sure the auth service has the right baseUrl
-      _authService.setBaseUrl(await _serverConfigRepository.getServerUrl());
+      loginService.setBaseUrl(await _loginMemory.getServerUrl());
 
-      _isAuthenticated = await _authService.isRefreshTokenValid(
+      _currentUser ??= UserQuery(email: await _loginMemory.getUsername());
+
+      _isAuthenticated = await loginService.isRefreshTokenValid(
         token.refreshToken,
       );
     } catch (e) {
@@ -58,14 +57,19 @@ class AuthState extends ChangeNotifier {
     }
 
     try {
-      await _serverConfigRepository.setServerUrl(serverUrl);
-      _authService.setBaseUrl(serverUrl);
+      loginService.setBaseUrl(serverUrl);
 
-      final token = await _authService.login(userQuery);
-      await _tokenRepository.saveToken(token);
-      _isAuthenticated = true;
+      final token = await loginService.login(userQuery);
+
       // Don't keep password in memory
       _currentUser = UserQuery(email: userQuery.email);
+
+      await _loginMemory.setServerUrl(serverUrl);
+      await _loginMemory.setUsername(_currentUser?.email ?? "");
+
+      await _tokenRepository.saveToken(token);
+
+      _isAuthenticated = true;
 
       notifyListeners();
     } on HttpCodedException {
@@ -88,10 +92,11 @@ class AuthState extends ChangeNotifier {
     }
 
     try {
-      await _authService.logout(token);
-      await _tokenRepository.clear();
       _isAuthenticated = false;
       _currentUser = null;
+
+      await loginService.logout(token);
+      await _tokenRepository.clear();
 
       notifyListeners();
     } on HttpCodedException {
@@ -123,20 +128,27 @@ class AuthState extends ChangeNotifier {
     try {
       try {
         // Get rid of old tokens and logout
-        await _tokenRepository.clear();
-        await _authService.logout(oldToken);
+        await loginService.logout(oldToken);
+
+        // Authentication state is false only if logout didn't fail
         _isAuthenticated = false;
+
+        await _tokenRepository.clear();
       } on HttpCodedException {
         // If logout failed, then the refresh token on server has already been
         // removed, so we don't need to do anything
       }
 
       // Update the token and stored user data
-      final newToken = await _authService.login(userQuery);
+      final newToken = await loginService.login(userQuery);
       await _tokenRepository.saveToken(newToken);
+
+      // We are considered authenticated if token was saved successfully
+      _isAuthenticated = true;
+
       // Don't keep password in memory
       _currentUser = UserQuery(email: userQuery.email);
-      _isAuthenticated = true;
+      await _loginMemory.setUsername(_currentUser?.email ?? "");
 
       notifyListeners();
     } on HttpCodedException {

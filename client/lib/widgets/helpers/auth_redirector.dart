@@ -36,7 +36,10 @@ class _AuthRedirectorState extends State<AuthRedirector> {
       Navigator.of(context).pushNamedAndRemoveUntil(
         "/login",
         (route) => false,
-        arguments: LoginRouteArgs(serverUrl: widget.authState.serverUrl),
+        arguments: LoginRouteArgs(
+          serverUrl: widget.authState.serverUrl,
+          email: widget.authState.currentUser?.email ?? "",
+        ),
       );
     }
   }

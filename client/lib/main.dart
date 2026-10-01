@@ -20,12 +20,12 @@ import 'package:pisec_client/viewmodels/auth_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final serverConfig = ServerConfigRepository();
-  String baseUrl = await serverConfig.getServerUrl();
+  final loginMemory = LoginMemoryRepository();
+  String baseUrl = await loginMemory.getServerUrl();
   final tokenStorage = TokenRepository();
   final authService = LoginAPIService(baseUrl: baseUrl);
 
-  final authState = AuthState(serverConfig, tokenStorage, authService);
+  final authState = AuthState(loginMemory, tokenStorage, authService);
   await authState.assertAuthenticated();
   final client = AuthHttpClient(
     tokenStorage,
@@ -81,7 +81,10 @@ class PisecApp extends StatelessWidget {
               routeGenerator.generateRoutes(
                 RouteSettings(
                   name: '/login',
-                  arguments: LoginRouteArgs(serverUrl: authState.serverUrl),
+                  arguments: LoginRouteArgs(
+                    serverUrl: authState.serverUrl,
+                    email: authState.currentUser?.email ?? "",
+                  ),
                 ),
               ),
             ];
