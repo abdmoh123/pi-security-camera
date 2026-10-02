@@ -4,6 +4,7 @@ import 'package:pisec_client/routes/route_args/credentials_route_args.dart';
 import 'package:pisec_client/routes/route_args/login_route_args.dart';
 import 'package:pisec_client/routes/route_args/profile_route_args.dart';
 import 'package:pisec_client/routes/route_args/register_route_args.dart';
+import 'package:pisec_client/screens/about_page.dart';
 import 'package:pisec_client/screens/credentials_page.dart';
 import 'package:pisec_client/screens/login_page.dart';
 import 'package:pisec_client/screens/profile_page.dart';
@@ -81,6 +82,8 @@ class RouteGenerator {
             onSubmitSuccess: args.onSubmitSuccess,
           ),
         );
+      case '/about':
+        return MaterialPageRoute(builder: (_) => AboutPage());
       case '/unfinished':
         return _unfinishedRoute();
       default:

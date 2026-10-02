@@ -46,7 +46,7 @@ class SettingsPage extends StatelessWidget {
           leading: Icon(Icons.info),
           title: Text("About"),
           subtitle: Text("View app and server info"),
-          onTap: () => Navigator.pushNamed(context, '/unfinished'),
+          onTap: () => Navigator.pushNamed(context, '/about'),
         ),
         Center(
           child: FittedBox(
