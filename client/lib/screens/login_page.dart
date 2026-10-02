@@ -4,6 +4,8 @@ import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/routes/route_args/register_route_args.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 
+enum _AppBarMenuActions { about }
+
 class LoginPage extends StatefulWidget {
   final String initialServerUrl;
   final String initialEmail;
@@ -45,7 +47,29 @@ class _LoginPageState extends State<LoginPage> {
     const spacing = 12.0;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Pisec - Login")),
+      appBar: AppBar(
+        title: const Text("Pisec - Login"),
+        actions: [
+          PopupMenuButton<_AppBarMenuActions>(
+            onSelected: (value) {
+              switch (value) {
+                case _AppBarMenuActions.about:
+                  Navigator.of(context).pushNamed('/about');
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: _AppBarMenuActions.about,
+                child: ListTile(
+                  leading: Icon(Icons.info),
+                  title: Text("About"),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: Form(
         child: Padding(
           padding: const EdgeInsets.all(spacing),
