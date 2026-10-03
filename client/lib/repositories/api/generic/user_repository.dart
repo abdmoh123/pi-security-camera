@@ -24,5 +24,10 @@ abstract interface class UserRepository {
     PaginationParams pagination = const PaginationParams(),
   });
 
+  Future<PaginatedResponse<UserResponse>> getUsersByName(
+    String username, {
+    PaginationParams pagination = const PaginationParams(),
+  });
+
   Future<UserResponse> updateCurrentUser(UserQuery userQuery);
 }

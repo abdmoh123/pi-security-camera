@@ -146,4 +146,26 @@ class HttpUserRepository implements UserRepository {
       json.decode(response.body) as Map<String, dynamic>,
     );
   }
+
+  @override
+  Future<PaginatedResponse<UserResponse>> getUsersByName(
+    String username, {
+    PaginationParams pagination = const PaginationParams(),
+  }) async {
+    final String query = "${pagination.toPathQueryString()}&email=$username";
+    final Uri url = Uri.parse("$baseUrl/users/?$query");
+
+    final response = await client.get(url);
+    if (response.notOk) {
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: "Failed to find users similar to username: $username",
+      );
+    }
+
+    return PaginatedResponse<UserResponse>.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+      (user) => UserResponse.fromJson(user),
+    );
+  }
 }
