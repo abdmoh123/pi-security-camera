@@ -32,6 +32,32 @@ class ConstDateTime {
     );
   }
 
+  @override
+  int get hashCode => Object.hash(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond,
+    microsecond,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConstDateTime &&
+          runtimeType == other.runtimeType &&
+          year == other.year &&
+          month == other.month &&
+          day == other.day &&
+          hour == other.hour &&
+          minute == other.minute &&
+          second == other.second &&
+          millisecond == other.millisecond &&
+          microsecond == other.microsecond;
+
   DateTime toDateTime() {
     return DateTime(
       year,

@@ -8,8 +8,13 @@ class PaginationParams implements JsonSerialisable, PathQueryable {
   const PaginationParams({this.pageIndex = 0, this.pageSize = 100});
 
   @override
-  String toPathQueryString() {
-    return "page_index=$pageIndex&page_size=$pageSize";
+  int genHashCode() => Object.hash(pageIndex, pageSize);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! PaginationParams) return false;
+
+    return pageIndex == other.pageIndex && pageSize == other.pageSize;
   }
 
   @override
@@ -17,4 +22,9 @@ class PaginationParams implements JsonSerialisable, PathQueryable {
     'page_index': pageIndex,
     'page_size': pageSize,
   };
+
+  @override
+  String toPathQueryString() {
+    return "page_index=$pageIndex&page_size=$pageSize";
+  }
 }

@@ -11,6 +11,16 @@ class CameraSubscriptionResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(userID, cameraID);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! CameraSubscriptionResponse) return false;
+
+    return userID == other.userID && cameraID == other.cameraID;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {'user_id': userID, 'camera_id': cameraID};
 
   static Map<String, dynamic> generateJsonStruct() {

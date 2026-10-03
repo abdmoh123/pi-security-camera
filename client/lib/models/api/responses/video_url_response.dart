@@ -19,6 +19,16 @@ class VideoUrlResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(url, expiresAt);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! VideoUrlResponse) return false;
+
+    return url == other.url && expiresAt == other.expiresAt;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'url': url,
     'expires_at': expiresAt.toDateTime(),

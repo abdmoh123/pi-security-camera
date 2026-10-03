@@ -26,6 +26,19 @@ class VideoResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(id, fileName, cameraID, uploadedAt);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! VideoResponse) return false;
+
+    return id == other.id &&
+        fileName == other.fileName &&
+        cameraID == other.cameraID &&
+        uploadedAt == other.uploadedAt;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'file_name': fileName,

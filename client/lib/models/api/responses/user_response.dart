@@ -16,6 +16,16 @@ class UserResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(id, email, isAdmin);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! UserResponse) return false;
+
+    return id == other.id && email == other.email && isAdmin == other.isAdmin;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'email': email,

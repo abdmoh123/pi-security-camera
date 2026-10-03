@@ -12,6 +12,18 @@ class CameraResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(id, name, macAddress);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! CameraResponse) return false;
+
+    return id == other.id &&
+        name == other.name &&
+        macAddress == other.macAddress;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,

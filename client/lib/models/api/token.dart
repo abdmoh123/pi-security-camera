@@ -21,20 +21,32 @@ class Token implements JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(accessToken, refreshToken, tokenType);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! Token) return false;
+
+    return accessToken == other.accessToken &&
+        refreshToken == other.refreshToken &&
+        tokenType == other.tokenType;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'access_token': accessToken,
     'refresh_token': refreshToken,
     'token_type': tokenType.name,
   };
 
+  static Map<String, dynamic> generateJsonStruct() {
+    final keys = Token(accessToken: '', refreshToken: '').toJson().keys;
+    return JsonSerialisable.createFakeJson(keys);
+  }
+
   static bool validateJson(Map<String, dynamic> json) {
     return json.containsKey('access_token') &&
         json.containsKey('refresh_token') &&
         json.containsKey('token_type');
-  }
-
-  static Map<String, dynamic> generateJsonStruct() {
-    final keys = Token(accessToken: '', refreshToken: '').toJson().keys;
-    return JsonSerialisable.createFakeJson(keys);
   }
 }

@@ -7,6 +7,16 @@ class UserQuery with JsonSerialisable {
   const UserQuery({this.email, this.password});
 
   @override
+  int genHashCode() => Object.hash(email, password);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! UserQuery) return false;
+
+    return email == other.email && password == other.password;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     if (email != null) 'email': email,
     if (password != null) 'password': password,

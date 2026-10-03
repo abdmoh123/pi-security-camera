@@ -31,6 +31,19 @@ class RedactedCameraCredentialResponse with JsonSerialisable {
   }
 
   @override
+  int genHashCode() => Object.hash(clientID, userID, cameraID, registeredAt);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! RedactedCameraCredentialResponse) return false;
+
+    return clientID == other.clientID &&
+        userID == other.userID &&
+        cameraID == other.cameraID &&
+        registeredAt == other.registeredAt;
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'client_id': clientID,
     'user_id': userID,

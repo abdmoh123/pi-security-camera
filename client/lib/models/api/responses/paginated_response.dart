@@ -1,3 +1,4 @@
+import 'package:pisec_client/extensions/list.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
 
 class PaginatedResponse<T extends JsonSerialisable> with JsonSerialisable {
@@ -15,6 +16,14 @@ class PaginatedResponse<T extends JsonSerialisable> with JsonSerialisable {
     required this.totalPages,
   });
 
+  factory PaginatedResponse.empty() => PaginatedResponse(
+    items: List<T>.empty(),
+    pageIndex: 0,
+    pageSize: 1,
+    totalItems: 0,
+    totalPages: 0,
+  );
+
   factory PaginatedResponse.fromJson(
     Map<String, dynamic> json,
     T Function(Map<String, dynamic>) fromJsonT,
@@ -30,13 +39,22 @@ class PaginatedResponse<T extends JsonSerialisable> with JsonSerialisable {
     );
   }
 
-  factory PaginatedResponse.empty() => PaginatedResponse(
-    items: List<T>.empty(),
-    pageIndex: 0,
-    pageSize: 1,
-    totalItems: 0,
-    totalPages: 0,
-  );
+  @override
+  int genHashCode() =>
+      Object.hash(items.hashCode, pageIndex, pageSize, totalItems, totalPages);
+
+  @override
+  bool isEqual(JsonSerialisable other) {
+    if (other is! PaginatedResponse<T>) return false;
+
+    if (items.length != other.items.length) return false;
+    if (!items.deepEquals(other.items)) return false;
+
+    return pageIndex == other.pageIndex &&
+        pageSize == other.pageSize &&
+        totalItems == other.totalItems &&
+        totalPages == other.totalPages;
+  }
 
   @override
   Map<String, dynamic> toJson() => {
