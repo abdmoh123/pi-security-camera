@@ -131,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () => _onSubmit(context),
                         child: const Text("Sign in"),
                       ),
-                      FilledButton(
+                      OutlinedButton(
                         onPressed: () => Navigator.of(context).pushNamed(
                           '/register',
                           arguments: RegisterRouteArgs(
