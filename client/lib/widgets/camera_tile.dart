@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 
+enum _CameraTileActions { subscribe }
+
 class CameraTile extends StatelessWidget {
+  final Future<void> Function(int cameraID) _subscribeToCamera;
+
   final CameraResponse camera;
 
-  const CameraTile({super.key, required this.camera});
+  const CameraTile({
+    super.key,
+    required this.camera,
+    required Future<void> Function(int cameraID) subscribeToCamera,
+  }) : _subscribeToCamera = subscribeToCamera;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +41,20 @@ class CameraTile extends StatelessWidget {
             "mac address: ${camera.macAddress}",
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+      trailing: PopupMenuButton<_CameraTileActions>(
+        onSelected: (value) {
+          switch (value) {
+            case _CameraTileActions.subscribe:
+              _subscribeToCamera(camera.id);
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: _CameraTileActions.subscribe,
+            child: Text("Subscribe"),
           ),
         ],
       ),

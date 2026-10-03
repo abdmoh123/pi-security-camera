@@ -45,7 +45,10 @@ Future<void> main() async {
 
   final List<Widget> pages = [
     VideosPage(videoRepository: videoRepository),
-    CamerasPage(cameraRepository: cameraRepository),
+    CamerasPage(
+      cameraRepository: cameraRepository,
+      userRepository: userRepository,
+    ),
     SettingsPage(userRepository: userRepository),
   ];
 

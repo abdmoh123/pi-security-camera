@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
+import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
+import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
+import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/widgets/camera_tile.dart';
 
 class CamerasPage extends StatefulWidget {
   final CameraRepository cameraRepository;
+  final UserRepository userRepository;
 
-  const CamerasPage({super.key, required this.cameraRepository});
+  const CamerasPage({
+    super.key,
+    required this.cameraRepository,
+    required this.userRepository,
+  });
 
   @override
   State<StatefulWidget> createState() => _CamerasPageState();
@@ -151,7 +160,10 @@ class _CamerasPageState extends State<CamerasPage> {
   Widget _buildCameraList(List<CameraResponse> cameras) {
     return ListView.separated(
       itemCount: cameras.length,
-      itemBuilder: (context, index) => CameraTile(camera: cameras[index]),
+      itemBuilder: (context, index) => CameraTile(
+        camera: cameras[index],
+        subscribeToCamera: (cameraID) => _onCameraSubscribe(cameraID),
+      ),
       separatorBuilder: (context, index) => Divider(),
     );
   }
@@ -202,5 +214,77 @@ class _CamerasPageState extends State<CamerasPage> {
     setState(() {
       futureCameras = _getAllCameras();
     });
+  }
+
+  Future<void> _onCameraSubscribe(int cameraID) async {
+    final newUserController = TextEditingController();
+
+    // TODO: Make use of the result of the function call
+    await showAdaptiveDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Subscribe a user to this camera"),
+          content: Column(
+            children: [
+              TextField(
+                controller: newUserController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: "User email",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () {
+                try {
+                  _subscribeCameraToUser(newUserController.text, cameraID);
+                  Navigator.of(context).pop(true);
+                } catch (e) {
+                  Navigator.of(context).pop(false);
+                }
+              },
+              child: const Text("Subscribe"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+
+    newUserController.dispose();
+  }
+
+  Future<CameraSubscriptionResponse> _subscribeCameraToUser(
+    String username,
+    int cameraID,
+  ) async {
+    final users = await widget.userRepository.getUsersByName(username);
+
+    late final UserResponse? userToSubscribe;
+    for (var user in users.items) {
+      if (user.email == username) {
+        userToSubscribe = user;
+        break;
+      }
+    }
+
+    // Throw error if no user was found with matching email/username
+    if (userToSubscribe == null) {
+      // TODO: Use or create a more relevant exception type
+      throw HttpCodedException(statusCode: 404, message: "User not found");
+    }
+
+    return await widget.cameraRepository.subscribeToCamera(
+      userToSubscribe.id,
+      cameraID,
+    );
   }
 }
