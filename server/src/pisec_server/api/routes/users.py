@@ -82,7 +82,7 @@ def delete_self(
 
 @router.get("/", response_model=PaginatedResponse[UserResponse])
 def get_users(
-    current_user: Annotated[UserSchema, Depends(get_current_admin_user)],
+    current_user: Annotated[UserSchema, Depends(get_current_user)],  # pyright: ignore[reportUnusedParameter]
     db_session: Annotated[Session, Depends(get_db)],
     params: Annotated[UserGetParams, Query()],
 ) -> PaginatedResponse[UserResponse]:
@@ -100,15 +100,6 @@ def get_users(
             ascending=params.order_by.ascending,
         )
     ]
-
-    if not current_user.is_admin:
-        # Filter to only show users that share camera subscriptions
-        linked_users: list[UserSchema] = []
-        for camera in current_user.cameras:
-            linked_users.extend(camera.users)
-        linked_user_ids = [user.id for user in linked_users]
-
-        users = [user for user in users if user.id in linked_user_ids]
 
     return PaginatedResponse[UserResponse].create(users, params.page_index, params.page_size, len(users))
 
