@@ -16,3 +16,9 @@ class UserGetParams(PaginatedParams):
     camera_id: Annotated[list[int] | None, Query()] = None  # Named in singular form due to how it's queried
     email: Annotated[str | None, Query()] = None
     order_by: Annotated[Sortable[UserColumns], Query()] = Sortable(UserColumns.ID, ascending=True)
+
+
+class SelfGetCamerasParams(PaginatedParams):
+    """Self user camera GET query parameters with pagination."""
+
+    only_owned: Annotated[bool, Query()] = False

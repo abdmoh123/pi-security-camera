@@ -9,7 +9,7 @@ from pisec_server.api.models.camera_credentials import CameraCredentialRedactedR
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
 from pisec_server.api.models.cameras import CameraResponse
 from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
-from pisec_server.api.models.paginated.user import UserGetParams
+from pisec_server.api.models.paginated.user import SelfGetCamerasParams, UserGetParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.api.models.videos import VideoResponse
 from pisec_server.auth import services as auth_service
@@ -38,22 +38,24 @@ def get_self(current_user: Annotated[UserSchema, Depends(get_current_user)]) -> 
 @router.get("/me/cameras", response_model=PaginatedResponse[CameraResponse])
 def get_self_cameras(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
-    pagination: Annotated[PaginatedParams, Query()],
     db_session: Annotated[Session, Depends(get_db)],
+    params: Annotated[SelfGetCamerasParams, Query()],
 ) -> PaginatedResponse[CameraResponse]:
     """Returns a user's subscribed cameras."""
-    cameras = [
-        c.to_response()
-        # TODO: Add sorting support
-        for c in camera_service.get_cameras(
-            db_session,
-            user_ids=[current_user.id],
-            skip=pagination.page_index * pagination.page_size,
-            limit=pagination.page_size,
-        )
-    ]
+    # TODO: Add sorting support
+    cameras = camera_service.get_cameras(
+        db_session,
+        user_ids=[current_user.id],
+        skip=params.page_index * params.page_size,
+        limit=params.page_size,
+    )
 
-    return PaginatedResponse[CameraResponse].create(cameras, pagination.page_index, pagination.page_size, len(cameras))
+    # Filter only owned cameras
+    if params.only_owned:
+        cameras = [c for c in cameras if c.credential in current_user.credentials]
+
+    camera_responses = [c.to_response() for c in cameras]
+    return PaginatedResponse[CameraResponse].create(camera_responses, params.page_index, params.page_size, len(cameras))
 
 
 @router.put("/me", response_model=UserResponse)
