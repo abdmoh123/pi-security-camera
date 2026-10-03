@@ -106,4 +106,24 @@ class HttpCameraRepository implements CameraRepository {
       json.decode(response.body) as Map<String, dynamic>,
     );
   }
+
+  @override
+  Future<CameraSubscriptionResponse> unsubscribeFromCamera(
+    int userId,
+    int cameraId,
+  ) async {
+    final response = await client.delete(
+      Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
+    );
+    if (response.notOk) {
+      throw HttpCodedException(
+        statusCode: response.statusCode,
+        message: "Failed to unsubscribe user $userId from camera $cameraId.",
+      );
+    }
+
+    return CameraSubscriptionResponse.fromJson(
+      json.decode(response.body) as Map<String, dynamic>,
+    );
+  }
 }

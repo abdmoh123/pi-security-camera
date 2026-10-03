@@ -8,6 +8,7 @@ import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/widgets/camera_tile.dart';
+import 'package:pisec_client/widgets/dangerous_button.dart';
 
 class CamerasPage extends StatefulWidget {
   final CameraRepository cameraRepository;
@@ -165,8 +166,11 @@ class _CamerasPageState extends State<CamerasPage> {
       itemBuilder: (context, index) => CameraTile(
         camera: cameras[index],
         subscribeToCamera: (ownedCameras.contains(cameras[index]))
-            ? (cameraID) => _onCameraSubscribe(cameraID)
+            ? (camera) => _onCameraSubscribe(camera)
             : null,
+        unSubscribeToCamera: (ownedCameras.contains(cameras[index]))
+            ? null
+            : (cameraID) => _onCameraUnsubscribe(cameraID),
       ),
       separatorBuilder: (context, index) => Divider(),
     );
@@ -216,7 +220,7 @@ class _CamerasPageState extends State<CamerasPage> {
     _toPage(currentPage - 1);
   }
 
-  void _refreshCameras() async {
+  Future<void> _refreshCameras() async {
     final ownedCamerasResponse = await _getAllCameras(
       onlyOwned: true,
       pageSize: 1000,
@@ -227,7 +231,7 @@ class _CamerasPageState extends State<CamerasPage> {
     });
   }
 
-  Future<void> _onCameraSubscribe(int cameraID) async {
+  Future<void> _onCameraSubscribe(CameraResponse camera) async {
     final newUserController = TextEditingController();
 
     // TODO: Make use of the result of the function call
@@ -253,7 +257,7 @@ class _CamerasPageState extends State<CamerasPage> {
             FilledButton(
               onPressed: () {
                 try {
-                  _subscribeCameraToUser(newUserController.text, cameraID);
+                  _subscribeCameraToUser(newUserController.text, camera.id);
                   Navigator.of(context).pop(true);
                 } catch (e) {
                   Navigator.of(context).pop(false);
@@ -271,6 +275,84 @@ class _CamerasPageState extends State<CamerasPage> {
     );
 
     newUserController.dispose();
+  }
+
+  Future<void> _onCameraUnsubscribe(CameraResponse camera) async {
+    const spacing = 12.0;
+
+    final confirmUnsubController = TextEditingController();
+
+    final String cameraName = camera.name;
+
+    final confirmed = await showAdaptiveDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Unsubscribe from camera?"),
+          content: Column(
+            children: [
+              Text("Are you sure you want to unsubscribe from $cameraName?"),
+              const SizedBox(height: spacing),
+              TextField(
+                controller: confirmUnsubController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: cameraName,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: spacing),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: "Type in "),
+                    TextSpan(
+                      text: cameraName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const TextSpan(text: " to activate the delete button"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Cancel"),
+            ),
+            ValueListenableBuilder(
+              valueListenable: confirmUnsubController,
+              builder: (context, value, child) {
+                return DangerousButton.filled(
+                  onPressed: value.text == cameraName
+                      ? () {
+                          try {
+                            _unsubscribeCamera(camera.id);
+                            Navigator.of(context).pop(true);
+                          } catch (e) {
+                            Navigator.of(context).pop(false);
+                          }
+                        }
+                      : null,
+                  child: const Text("Unsubscribe"),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    confirmUnsubController.dispose();
+
+    if (confirmed == true) {
+      await _refreshCameras();
+    }
   }
 
   Future<CameraSubscriptionResponse> _subscribeCameraToUser(
@@ -295,6 +377,15 @@ class _CamerasPageState extends State<CamerasPage> {
 
     return await widget.cameraRepository.subscribeToCamera(
       userToSubscribe.id,
+      cameraID,
+    );
+  }
+
+  Future<CameraSubscriptionResponse> _unsubscribeCamera(int cameraID) async {
+    final user = await widget.userRepository.getCurrentUser();
+
+    return await widget.cameraRepository.unsubscribeFromCamera(
+      user.id,
       cameraID,
     );
   }

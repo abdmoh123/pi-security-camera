@@ -24,4 +24,9 @@ abstract interface class CameraRepository {
     int userId,
     int cameraId,
   );
+
+  Future<CameraSubscriptionResponse> unsubscribeFromCamera(
+    int userId,
+    int cameraId,
+  );
 }

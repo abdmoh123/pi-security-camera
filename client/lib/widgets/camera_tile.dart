@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 
-enum _CameraTileActions { subscribe }
+enum _CameraTileActions { subscribe, unsubscribe }
 
 class CameraTile extends StatelessWidget {
-  final Future<void> Function(int cameraID)? _subscribeToCamera;
+  final Future<void> Function(CameraResponse camera)? _subscribeToCamera;
+  final Future<void> Function(CameraResponse camera)? _unsubscribeFromCamera;
 
   final CameraResponse camera;
 
   const CameraTile({
     super.key,
     required this.camera,
-    Future<void> Function(int cameraID)? subscribeToCamera,
-  }) : _subscribeToCamera = subscribeToCamera;
+    Future<void> Function(CameraResponse camera)? subscribeToCamera,
+    Future<void> Function(CameraResponse camera)? unSubscribeToCamera,
+  }) : _subscribeToCamera = subscribeToCamera,
+       _unsubscribeFromCamera = unSubscribeToCamera;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +51,9 @@ class CameraTile extends StatelessWidget {
         onSelected: (value) {
           switch (value) {
             case _CameraTileActions.subscribe:
-              _subscribeToCamera!(camera.id);
+              _subscribeToCamera!(camera);
+            case _CameraTileActions.unsubscribe:
+              _unsubscribeFromCamera!(camera);
           }
         },
         itemBuilder: (context) => [
@@ -56,6 +61,11 @@ class CameraTile extends StatelessWidget {
             enabled: _subscribeToCamera != null,
             value: _CameraTileActions.subscribe,
             child: Text("Subscribe"),
+          ),
+          PopupMenuItem(
+            enabled: _unsubscribeFromCamera != null,
+            value: _CameraTileActions.unsubscribe,
+            child: Text("Unsubscribe"),
           ),
         ],
       ),
