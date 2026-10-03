@@ -120,9 +120,12 @@ def delete_video_entries(
     if camera_ids:
         query = query.where(Video.camera_id.in_(camera_ids))
 
-    result = list(db.execute(query).scalars().all())
+    result = db.execute(query).scalars().all()
+    for row in result:
+        db.expunge(row)
+
     db.commit()
-    return result
+    return list(result)
 
 
 def delete_video_entry(db: Session, video_id: int) -> Video:

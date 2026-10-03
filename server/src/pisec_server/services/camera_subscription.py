@@ -119,6 +119,10 @@ def delete_camera_subscriptions(
     if camera_ids:
         query = query.where(CameraSubscriptionSchema.camera_id.in_(camera_ids))
 
-    result = list(db.execute(query).scalars().all())
+    result = db.execute(query).scalars().all()
+    # Prevent error with fastapi accessing data that no longer exists
+    for row in result:
+        db.expunge(row)
+
     db.commit()
-    return result
+    return list(result)
