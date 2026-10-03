@@ -4,14 +4,14 @@ import 'package:pisec_client/models/api/responses/camera_response.dart';
 enum _CameraTileActions { subscribe }
 
 class CameraTile extends StatelessWidget {
-  final Future<void> Function(int cameraID) _subscribeToCamera;
+  final Future<void> Function(int cameraID)? _subscribeToCamera;
 
   final CameraResponse camera;
 
   const CameraTile({
     super.key,
     required this.camera,
-    required Future<void> Function(int cameraID) subscribeToCamera,
+    Future<void> Function(int cameraID)? subscribeToCamera,
   }) : _subscribeToCamera = subscribeToCamera;
 
   @override
@@ -48,11 +48,12 @@ class CameraTile extends StatelessWidget {
         onSelected: (value) {
           switch (value) {
             case _CameraTileActions.subscribe:
-              _subscribeToCamera(camera.id);
+              _subscribeToCamera!(camera.id);
           }
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
+            enabled: _subscribeToCamera != null,
             value: _CameraTileActions.subscribe,
             child: Text("Subscribe"),
           ),

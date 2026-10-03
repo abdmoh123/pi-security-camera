@@ -66,10 +66,11 @@ class HttpCameraRepository implements CameraRepository {
 
   @override
   Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
+    bool onlyOwned = false,
     PaginationParams pagination = const PaginationParams(),
   }) async {
     final Uri url = Uri.parse(
-      "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}",
+      "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}&only_owned=$onlyOwned",
     );
 
     final response = await client.get(url);

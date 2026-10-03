@@ -28,6 +28,8 @@ class _CamerasPageState extends State<CamerasPage> {
     PaginatedResponse<CameraResponse>.empty(),
   );
 
+  List<CameraResponse> ownedCameras = [];
+
   int currentPage = 1;
   int maxPages = 1;
 
@@ -162,7 +164,9 @@ class _CamerasPageState extends State<CamerasPage> {
       itemCount: cameras.length,
       itemBuilder: (context, index) => CameraTile(
         camera: cameras[index],
-        subscribeToCamera: (cameraID) => _onCameraSubscribe(cameraID),
+        subscribeToCamera: (ownedCameras.contains(cameras[index]))
+            ? (cameraID) => _onCameraSubscribe(cameraID)
+            : null,
       ),
       separatorBuilder: (context, index) => Divider(),
     );
@@ -171,10 +175,12 @@ class _CamerasPageState extends State<CamerasPage> {
   Future<PaginatedResponse<CameraResponse>> _getAllCameras({
     int? page,
     int pageSize = 10,
+    bool onlyOwned = false,
   }) async {
     page = page ?? currentPage;
     try {
       final response = await widget.cameraRepository.getCurrentUserCameras(
+        onlyOwned: onlyOwned,
         pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
       );
       if (mounted) {
@@ -210,9 +216,14 @@ class _CamerasPageState extends State<CamerasPage> {
     _toPage(currentPage - 1);
   }
 
-  void _refreshCameras() {
+  void _refreshCameras() async {
+    final ownedCamerasResponse = await _getAllCameras(
+      onlyOwned: true,
+      pageSize: 1000,
+    );
     setState(() {
       futureCameras = _getAllCameras();
+      ownedCameras = ownedCamerasResponse.items;
     });
   }
 

@@ -16,6 +16,7 @@ abstract interface class CameraRepository {
   });
 
   Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
+    bool onlyOwned = false,
     PaginationParams pagination = const PaginationParams(),
   });
 
