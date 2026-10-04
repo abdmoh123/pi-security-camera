@@ -9,6 +9,7 @@ import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/widgets/camera_tile.dart';
 import 'package:pisec_client/widgets/dangerous_button.dart';
+import 'package:pisec_client/widgets/delete_submit_dialog.dart';
 
 class CamerasPage extends StatefulWidget {
   final CameraRepository cameraRepository;
@@ -278,79 +279,18 @@ class _CamerasPageState extends State<CamerasPage> {
   }
 
   Future<void> _onCameraUnsubscribe(CameraResponse camera) async {
-    const spacing = 12.0;
-
-    final confirmUnsubController = TextEditingController();
-
-    final String cameraName = camera.name;
-
-    final confirmed = await showAdaptiveDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Unsubscribe from camera?"),
-          content: Column(
-            children: [
-              Text("Are you sure you want to unsubscribe from $cameraName?"),
-              const SizedBox(height: spacing),
-              TextField(
-                controller: confirmUnsubController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: cameraName,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: spacing),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    const TextSpan(text: "Type in "),
-                    TextSpan(
-                      text: cameraName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const TextSpan(text: " to activate the delete button"),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Cancel"),
-            ),
-            ValueListenableBuilder(
-              valueListenable: confirmUnsubController,
-              builder: (context, value, child) {
-                return DangerousButton.filled(
-                  onPressed: value.text == cameraName
-                      ? () {
-                          try {
-                            _unsubscribeCamera(camera.id);
-                            Navigator.of(context).pop(true);
-                          } catch (e) {
-                            Navigator.of(context).pop(false);
-                          }
-                        }
-                      : null,
-                  child: const Text("Unsubscribe"),
-                );
-              },
-            ),
-          ],
-        );
-      },
+    final confirmed = await showDeleteDialog(
+      context,
+      title: const Text("Unsubscribe from camera?"),
+      subtitle: Text(
+        "Are you sure you want to unsubscribe from ${camera.name}?",
+      ),
+      textToDelete: camera.name,
+      deleteButtonText: "Unsubscribe",
+      onSubmit: () => _unsubscribeCamera(camera.id),
     );
 
-    confirmUnsubController.dispose();
-
-    if (confirmed == true) {
+    if (confirmed) {
       await _refreshCameras();
     }
   }

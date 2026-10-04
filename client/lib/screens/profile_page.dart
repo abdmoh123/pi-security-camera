@@ -6,6 +6,7 @@ import 'package:pisec_client/models/api/responses/user_response.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
 import 'package:pisec_client/viewmodels/auth_state.dart';
 import 'package:pisec_client/widgets/dangerous_button.dart';
+import 'package:pisec_client/widgets/delete_submit_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserRepository userRepository;
@@ -144,7 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: const Text("Update profile"),
                       ),
                       DangerousButton.outline(
-                        onPressed: () => _onDelete(context),
+                        onPressed: () async => await _onDelete(context),
                         child: const Text("Delete account"),
                       ),
                     ],
@@ -199,85 +200,24 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _onDelete(BuildContext context) async {
-    const spacing = 12.0;
-
-    final confirmDeleteController = TextEditingController();
-
     final email = _user?.email ?? _emailController.text;
 
-    final confirmed = await showAdaptiveDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Delete account?"),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Are you sure you want to delete your account?"),
-              const SizedBox(height: spacing),
-              TextField(
-                controller: confirmDeleteController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: email,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: spacing),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    const TextSpan(text: "Type in "),
-                    TextSpan(
-                      text: email,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const TextSpan(text: " to activate the delete button"),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Cancel"),
-            ),
-            ValueListenableBuilder(
-              valueListenable: confirmDeleteController,
-              builder: (context, value, child) {
-                return DangerousButton.filled(
-                  onPressed: value.text == email
-                      ? () => Navigator.of(context).pop(true)
-                      : null,
-                  child: const Text("Delete"),
-                );
-              },
-            ),
-          ],
-        );
-      },
+    final confirmed = await showDeleteDialog(
+      context,
+      title: const Text("Delete account?"),
+      subtitle: const Text("Are you sure you want to delete your account?"),
+      textToDelete: email,
+      deleteButtonText: "Delete",
+      onSubmit: () => widget.userRepository.deleteCurrentUser(),
     );
 
-    confirmDeleteController.dispose();
+    if (confirmed) {
+      if (!context.mounted) return;
 
-    if (confirmed == true) {
-      try {
-        await widget.userRepository.deleteCurrentUser();
-
-        if (!context.mounted) return;
-
-        // Set the authenticaed status as false (account no longer exists)
-        // This will automatically redirect to the login page
-        final authState = NotifierProvider.of<AuthState>(context);
-        await authState.assertAuthenticated();
-      } catch (e) {
-        // TODO: Display the error
-      }
+      // Set the authenticaed status as false (account no longer exists)
+      // This will automatically redirect to the login page
+      final authState = NotifierProvider.of<AuthState>(context);
+      await authState.assertAuthenticated();
     }
   }
 }
