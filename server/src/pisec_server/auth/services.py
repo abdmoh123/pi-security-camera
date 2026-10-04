@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 
 from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from pisec_server.auth.exceptions import TokenDecodingError, TokenEncodingError
@@ -61,6 +62,15 @@ def revoke_all_user_refresh_tokens(db: Session, user_id: int) -> list[RefreshTok
         db.delete(token)
 
     return refresh_tokens
+
+
+def clear_expired_refresh_tokens(db: Session, user_id: int) -> None:
+    """Clears all expired tokens a user has."""
+    query = delete(RefreshToken).where(
+        RefreshToken.user_id == user_id, RefreshToken.expires_at < datetime.now(timezone.utc)
+    )
+
+    _ = db.execute(query)
 
 
 def create_personal_access_token(

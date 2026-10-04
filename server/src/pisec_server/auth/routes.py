@@ -14,6 +14,7 @@ from pisec_server.auth.dependencies import (
 from pisec_server.auth.exceptions import TokenEncodingError
 from pisec_server.auth.models import Token, TokenPayloadCreate, TokenSubjectType
 from pisec_server.auth.services import (
+    clear_expired_refresh_tokens,
     create_access_token,
     create_personal_access_token,
     create_refresh_token,
@@ -45,6 +46,9 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Clear any expired refresh tokens to prevent table from infinite growth
+    clear_expired_refresh_tokens(db_session, user.id)
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     try:
         access_token = create_access_token(
@@ -66,6 +70,9 @@ def refresh_access_token(
 
     if not refresh_token_db or refresh_token_db.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+
+    # Clear any expired refresh tokens to prevent table from infinite growth
+    clear_expired_refresh_tokens(db_session, refresh_token_db.user_id)
 
     user = get_user_by_id(db_session, refresh_token_db.user_id)  # Use get_user_by_id here
     if not user:
