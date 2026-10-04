@@ -396,15 +396,20 @@ def delete_videos(
     allowed_video_ids = {v.id for v in allowed_videos}
     filtered_video_ids = {v_id for v_id in video_id if v_id in allowed_video_ids}
 
-    # Delete the video entries
-    deleted_videos = video_service.delete_video_entries(db_session, video_ids=list(filtered_video_ids))
-
-    # Delete the video files
-    # TODO: Undo the video entry deletion if something went wrong with deleting the file
+    # Delete the video entries and files one by one
+    # Doing it one at a time means that we can safely rollback if any file
+    # wasn't deleted without leaving any ghost entries that don't point to files
+    deleted_videos: list[VideoSchema] = []
     try:
-        for deleted_video in deleted_videos:
+        for v_id in filtered_video_ids:
+            deleted_video = video_service.delete_video_entry(db_session, v_id)
             file_path = get_video_file_path_safe(deleted_video.file_name, deleted_video.camera_id)
             file_path.unlink()
+
+            # Make sure that the entry can't be rolled back if file was deleted
+            db_session.commit()
+
+            deleted_videos.append(deleted_video)
     except InvalidFileNameError as e:
         raise HTTPException(status_code=500, detail="Invalid file path!") from e
     except FileNotFoundError as e:
