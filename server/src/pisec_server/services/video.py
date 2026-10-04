@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.types.video_columns import VideoColumns
-from pisec_server.api.models.videos import VideoFileData, VideoResponse, VideoUpdate
+from pisec_server.api.models.videos import VideoDeleteResult, VideoFileData, VideoResponse, VideoUpdate
 from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
 from pisec_server.db.db_models import Camera, Video
@@ -138,3 +138,45 @@ def delete_video_entry(db: Session, video_id: int) -> Video:
     db.delete(db_video)
 
     return db_video
+
+
+def delete_videos(
+    db: Session,
+    video_ids: list[int] | None = None,
+    file_name: str | None = None,
+    camera_ids: list[int] | None = None,
+    with_filter: Callable[[Select[tuple[Video]]], Select[tuple[Video]]] | None = None,
+) -> VideoDeleteResult:
+    """Deletes video entries and files."""
+    # Get videos without pagination
+    query = select(Video)
+    if video_ids:
+        query = query.where(Video.id.in_(video_ids))
+    if file_name:
+        query = query.where(Video.file_name.ilike(f"%{file_name}%"))
+    if camera_ids:
+        query = query.where(Video.camera_id.in_(camera_ids))
+
+    if with_filter is not None:
+        query = with_filter(query)
+
+    result = db.execute(query).scalars().all()
+    for row in result:
+        db.expunge(row)
+    videos_to_delete = list(result)
+
+    successful_deletes: list[int] = []
+    failed_deletes: list[int] = []
+    for video in videos_to_delete:
+        try:
+            db.delete(video)
+            file_path = get_video_file_path_safe(video.file_name, video.camera_id)
+            file_path.unlink(missing_ok=True)
+
+            db.commit()
+            successful_deletes.append(video.id)
+        except Exception:
+            db.rollback()
+            failed_deletes.append(video.id)
+
+    return VideoDeleteResult(deleted=successful_deletes, failed=failed_deletes)

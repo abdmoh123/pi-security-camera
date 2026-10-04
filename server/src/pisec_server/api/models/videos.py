@@ -51,3 +51,22 @@ class VideoFileData(BaseModel):
     file_path: Path
     file_name: str
     media_type: str
+
+
+class VideoDeleteResult(BaseModel):
+    """Response when deleting a list of videos."""
+
+    deleted: list[int]
+    failed: list[int]
+
+    def is_successful(self) -> bool:
+        """Returns whether all deletes were successful."""
+        return len(self.failed) == 0
+
+    def any_failed(self) -> bool:
+        """Returns whether any deletes failed."""
+        return len(self.failed) > 0
+
+    def all_failed(self) -> bool:
+        """Returns whether all deletes failed."""
+        return len(self.deleted) == 0

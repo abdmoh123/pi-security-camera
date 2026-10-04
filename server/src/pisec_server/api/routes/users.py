@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
@@ -12,16 +12,14 @@ from pisec_server.api.models.cameras import CameraResponse
 from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.paginated.user import SelfGetCamerasParams, UserGetParams
 from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
-from pisec_server.api.models.videos import VideoResponse
+from pisec_server.api.models.videos import VideoDeleteResult, VideoResponse
 from pisec_server.auth import services as auth_service
 from pisec_server.auth.dependencies import get_current_admin_user, get_current_user
-from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
-from pisec_server.core.validation.video_validation import get_video_file_path_safe
+from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
 from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import CameraSubscription as CameraSubscriptionSchema
 from pisec_server.db.db_models import User as UserSchema
-from pisec_server.db.db_models import Video as VideoSchema
 from pisec_server.services import camera as camera_service
 from pisec_server.services import camera_credential as credential_service
 from pisec_server.services import camera_subscription as subscription_service
@@ -174,23 +172,35 @@ def delete_user(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found!")
 
-    # Delete a user's camera subscriptions
-    _ = subscription_service.delete_camera_subscriptions(db_session, user_ids=[user_id])
-    # Delete a user's owned cameras and credentials
-    for credential in db_user.credentials:
-        # Credential has the camera ID as a foreign key so it needs to be deleted first
-        deleted_credential = credential_service.delete_credential(db_session, credential.client_id)
-        if deleted_credential.camera_id is not None:
-            # Unsubscribe all other users from the camera
-            _ = subscription_service.delete_camera_subscriptions(db_session, camera_ids=[deleted_credential.camera_id])
-            # Delete the camera and its videos
-            _ = delete_videos(current_user, db_session, user_id=user_id, camera_id=[deleted_credential.camera_id])
-            _ = camera_service.delete_camera(db_session, deleted_credential.camera_id)
+    # Get owned cameras to delete their videos first due to irreversibility
+    owned_camera_ids = [credential.camera_id for credential in db_user.credentials if credential.camera_id is not None]
 
-    # Revoke refresh tokens before deleting the user
-    _ = auth_service.revoke_all_user_refresh_tokens(db_session, user_id)
+    # Delete the camera's videos
+    # Any changes here are not reversible due to committing
+    result = video_service.delete_videos(db_session, camera_ids=owned_camera_ids)
+    if result.any_failed():
+        # Erroring out here will prevent any other changes from being made,
+        # which is ok for now. We still have partial atomicity.
+        raise HTTPException(status_code=500, detail="Failed to delete videos")
 
+    # All changes from here on will be rolled back on any error
     try:
+        # Unsubscribe all other users from the user's owned cameras
+        _ = subscription_service.delete_camera_subscriptions(db_session, camera_ids=owned_camera_ids)
+
+        # Unsubscribe the user from all cameras they are subscribed to
+        _ = subscription_service.delete_camera_subscriptions(db_session, user_ids=[user_id])
+
+        # Delete the user's owned cameras and credentials
+        for credential in db_user.credentials:
+            # Credential has the camera ID as a foreign key so it needs to be deleted first
+            deleted_credential = credential_service.delete_credential(db_session, credential.client_id)
+            if deleted_credential.camera_id is not None:
+                _ = camera_service.delete_camera(db_session, deleted_credential.camera_id)
+
+        # Revoke refresh tokens before deleting the user
+        _ = auth_service.revoke_all_user_refresh_tokens(db_session, user_id)
+
         deleted_user: UserSchema = user_service.delete_user(db_session, user_id=user_id)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -354,14 +364,21 @@ def get_videos(
     )
 
 
-@router.delete("/{user_id}/videos", response_model=VideoResponse)
+@router.delete(
+    "/{user_id}/videos",
+    responses={
+        207: {"model": VideoDeleteResult, "description": "Some deletes failed but not all"},
+        409: {"model": VideoDeleteResult, "description": "All deletes failed"},
+    },
+)
 def delete_videos(
     current_user: Annotated[UserSchema, Depends(get_current_user)],
     db_session: Annotated[Session, Depends(get_db)],
+    response: Response,
     user_id: Annotated[int, Path(ge=1)],
     video_id: Annotated[list[int] | None, Query()] = None,
     camera_id: Annotated[list[int] | None, Query()] = None,
-) -> list[VideoSchema]:
+) -> VideoDeleteResult:
     """Deletes a list of videos based on the user ID."""
     if not current_user.is_admin and current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
@@ -399,23 +416,16 @@ def delete_videos(
     # Delete the video entries and files one by one
     # Doing it one at a time means that we can safely rollback if any file
     # wasn't deleted without leaving any ghost entries that don't point to files
-    deleted_videos: list[VideoSchema] = []
-    try:
-        for v_id in filtered_video_ids:
-            deleted_video = video_service.delete_video_entry(db_session, v_id)
-            file_path = get_video_file_path_safe(deleted_video.file_name, deleted_video.camera_id)
-            file_path.unlink()
+    delete_result = video_service.delete_videos(db_session, video_ids=list(filtered_video_ids))
 
-            # Make sure that the entry can't be rolled back if file was deleted
-            db_session.commit()
+    # Complete failure case
+    if delete_result.all_failed():
+        response.status_code = 409
+    # Parital delete case
+    elif delete_result.any_failed():
+        response.status_code = 207
 
-            deleted_videos.append(deleted_video)
-    except InvalidFileNameError as e:
-        raise HTTPException(status_code=500, detail="Invalid file path!") from e
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
-
-    return deleted_videos
+    return delete_result
 
 
 @router.get("/me/credentials", response_model=PaginatedResponse[CameraCredentialRedactedResponse])
