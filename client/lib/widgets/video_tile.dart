@@ -63,13 +63,13 @@ class VideoTile extends StatelessWidget {
       // It looks better this way
       isThreeLine: false,
       trailing: PopupMenuButton<MenuAction>(
-        onSelected: (value) {
+        onSelected: (value) async {
           switch (value) {
             case MenuAction.download:
-              _onDownload();
+              await _onDownload();
               break;
             case MenuAction.delete:
-              _onDelete();
+              await _onDelete();
               break;
           }
         },

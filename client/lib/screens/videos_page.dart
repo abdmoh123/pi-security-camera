@@ -174,11 +174,13 @@ class _VideosPageState extends State<VideosPage> {
       itemBuilder: (context, index) {
         return VideoTile(
           video: videos[index],
-          downloadVideo: () =>
-              widget.videoRepository.downloadVideo(videos[index].id),
-          deleteVideo: () {
-            final result = widget.videoRepository.deleteVideo(videos[index].id);
-            result.then((response) => _refreshVideos());
+          downloadVideo: () async =>
+              await widget.videoRepository.downloadVideo(videos[index].id),
+          deleteVideo: () async {
+            final result = await widget.videoRepository.deleteVideo(
+              videos[index].id,
+            );
+            _refreshVideos();
             return result;
           },
         );

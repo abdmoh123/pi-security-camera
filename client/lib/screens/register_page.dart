@@ -96,7 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _serverUrlController,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   TextFormField(
@@ -105,7 +105,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _emailController,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   TextFormField(
                     decoration: InputDecoration(
@@ -126,7 +126,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     controller: _passwordController,
                     obscureText: _passwordHidden,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   TextFormField(
                     decoration: InputDecoration(
@@ -147,11 +147,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     controller: _confirmPasswordController,
                     obscureText: _passwordHidden,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   FilledButton(
-                    onPressed: () => _onSubmit(context),
+                    onPressed: () async => await _onSubmit(context),
                     child: const Text("Register"),
                   ),
                 ],

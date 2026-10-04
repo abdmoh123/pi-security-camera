@@ -60,7 +60,7 @@ class _CamerasPageState extends State<CamerasPage> {
               spacing: 8.0,
               children: [
                 IconButton(
-                  onPressed: _refreshCameras,
+                  onPressed: () async => _refreshCameras(),
                   icon: Icon(Icons.refresh),
                 ),
               ],
@@ -256,9 +256,15 @@ class _CamerasPageState extends State<CamerasPage> {
           ),
           actions: [
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 try {
-                  _subscribeCameraToUser(newUserController.text, camera.id);
+                  await _subscribeCameraToUser(
+                    newUserController.text,
+                    camera.id,
+                  );
+
+                  if (!context.mounted) return;
+
                   Navigator.of(context).pop(true);
                 } catch (e) {
                   Navigator.of(context).pop(false);
@@ -287,7 +293,7 @@ class _CamerasPageState extends State<CamerasPage> {
       ),
       textToDelete: camera.name,
       deleteButtonText: "Unsubscribe",
-      onSubmit: () => _unsubscribeCamera(camera.id),
+      onSubmit: () async => await _unsubscribeCamera(camera.id),
     );
 
     if (confirmed) {

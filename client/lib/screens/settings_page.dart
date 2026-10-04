@@ -53,7 +53,7 @@ class SettingsPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: DangerousButton.outline(
-                onPressed: () => _logout(context),
+                onPressed: () async => await _logout(context),
                 child: Row(children: [Icon(Icons.logout), Text("Sign out")]),
               ),
             ),

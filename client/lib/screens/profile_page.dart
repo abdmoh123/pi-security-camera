@@ -90,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       border: OutlineInputBorder(),
                     ),
                     controller: _emailController,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   TextFormField(
@@ -112,7 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     controller: _passwordController,
                     obscureText: _passwordHidden,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   TextFormField(
@@ -134,14 +134,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     controller: _confirmPasswordController,
                     obscureText: _passwordHidden,
-                    onFieldSubmitted: (_) => _onSubmit(context),
+                    onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
                   const SizedBox(height: spacing),
                   Row(
                     spacing: spacing,
                     children: [
                       FilledButton(
-                        onPressed: () => _onSubmit(context),
+                        onPressed: () async => await _onSubmit(context),
                         child: const Text("Update profile"),
                       ),
                       DangerousButton.outline(
@@ -208,7 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
       subtitle: const Text("Are you sure you want to delete your account?"),
       textToDelete: email,
       deleteButtonText: "Delete",
-      onSubmit: () => widget.userRepository.deleteCurrentUser(),
+      onSubmit: () async => await widget.userRepository.deleteCurrentUser(),
     );
 
     if (confirmed) {

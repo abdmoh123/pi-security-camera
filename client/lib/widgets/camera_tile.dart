@@ -48,12 +48,12 @@ class CameraTile extends StatelessWidget {
         ],
       ),
       trailing: PopupMenuButton<_CameraTileActions>(
-        onSelected: (value) {
+        onSelected: (value) async {
           switch (value) {
             case _CameraTileActions.subscribe:
-              _subscribeToCamera!(camera);
+              await _subscribeToCamera!(camera);
             case _CameraTileActions.unsubscribe:
-              _unsubscribeFromCamera!(camera);
+              await _unsubscribeFromCamera!(camera);
           }
         },
         itemBuilder: (context) => [

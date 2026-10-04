@@ -33,7 +33,7 @@ class _CredetialsPageState extends State<CredentialsPage> {
       appBar: AppBar(title: Text("Credentials")),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () => _newCredential(),
+        onPressed: () async => await _newCredential(),
       ),
       body: FutureBuilder(
         future: future,
@@ -64,8 +64,8 @@ class _CredetialsPageState extends State<CredentialsPage> {
       itemBuilder: (context, index) {
         return CredentialTile(
           credential: credentials[index],
-          deleteCredential: () =>
-              _deleteCredential(credentials[index].clientID),
+          deleteCredential: () async =>
+              await _deleteCredential(credentials[index].clientID),
         );
       },
       separatorBuilder: (context, index) => Divider(),
@@ -138,9 +138,13 @@ class _CredetialsPageState extends State<CredentialsPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () {
-                      _deleteCredential(response.clientID);
-                      Navigator.pop(context);
+                    onPressed: () async {
+                      try {
+                        await _deleteCredential(response.clientID);
+                        if (!context.mounted) return;
+                      } finally {
+                        Navigator.pop(context);
+                      }
                     },
                     icon: const Icon(Icons.delete),
                     label: const Text("Delete"),

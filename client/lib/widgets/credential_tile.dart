@@ -33,7 +33,7 @@ class CredentialTile extends StatelessWidget {
       trailing: _deleteCredential == null
           ? null
           : IconButton(
-              onPressed: () => _onDelete(),
+              onPressed: () async => await _onDelete(),
               icon: const Icon(Icons.delete),
             ),
     );
