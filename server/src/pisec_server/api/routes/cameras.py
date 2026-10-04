@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
@@ -48,27 +49,28 @@ def get_cameras(
 
     Non-admin users can only see cameras they are subscribed to.
     """
-    cameras = [
-        c.to_response()
-        for c in camera_service.get_cameras(
-            db_session,
-            params.camera_id,
-            params.user_id,
-            params.name,
-            params.mac_address,
-            params.page_index * params.page_size,
-            params.page_size,
-            params.order_by.field,
-            params.order_by.ascending,
-        )
-    ]
 
-    if not current_user.is_admin:
+    def admin_filter(q: Select[tuple[CameraSchema]]) -> Select[tuple[CameraSchema]]:
+        if current_user.is_admin:
+            return q
+
         # Filter to only show cameras the user is subscribed to
-        subscribed_camera_ids = {camera.id for camera in current_user.cameras}
-        cameras = [camera for camera in cameras if camera.id in subscribed_camera_ids]
+        return q.where(CameraSchema.id.in_({camera.id for camera in current_user.cameras}))
 
-    return PaginatedResponse[CameraResponse].create(cameras, params.page_index, params.page_size, len(cameras))
+    cameras = camera_service.get_cameras(
+        db_session,
+        params.camera_id,
+        params.user_id,
+        params.name,
+        params.mac_address,
+        params.page_index * params.page_size,
+        params.page_size,
+        params.order_by.field,
+        params.order_by.ascending,
+        with_filter=admin_filter,
+    )
+
+    return cameras
 
 
 @router.post("/", response_model=CameraResponse)
@@ -178,18 +180,13 @@ def get_videos(
     if not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    videos = [
-        v.to_response()
-        # TODO: Add sorting support
-        for v in video_service.get_video_entries(
-            db_session,
-            camera_ids=[db_camera.id],
-            skip=pagination.page_index * pagination.page_size,
-            limit=pagination.page_size,
-        )
-    ]
-
-    return PaginatedResponse[VideoResponse].create(videos, pagination.page_index, pagination.page_size, len(videos))
+    # TODO: Add sorting support
+    return video_service.get_video_entries(
+        db_session,
+        camera_ids=[db_camera.id],
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
+    )
 
 
 @router.get("/{camera_id}/users", response_model=PaginatedResponse[UserResponse])
@@ -208,14 +205,10 @@ def get_users(
     if not current_user.is_admin and db_camera not in current_user.cameras:
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
-    users = [
-        u.to_response()
-        # TODO: Add sorting support
-        for u in user_service.get_users(
-            db_session,
-            camera_ids=[camera_id],
-            skip=pagination.page_index * pagination.page_size,
-            limit=pagination.page_size,
-        )
-    ]
-    return PaginatedResponse[UserResponse].create(users, pagination.page_index, pagination.page_size, len(users))
+    # TODO: Add sorting support
+    return user_service.get_users(
+        db_session,
+        camera_ids=[camera_id],
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
+    )

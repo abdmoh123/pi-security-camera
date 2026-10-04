@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Protocol, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -16,11 +17,21 @@ from pisec_server.api.models.types.video_columns import VideoColumns
 from pisec_server.api.models.users import UserResponse
 from pisec_server.api.models.videos import VideoResponse
 
+T = TypeVar("T", bound=BaseModel, covariant=True)
+
 
 class Base(DeclarativeBase):
     """Exists to provide type hints to shutup mypy."""
 
     pass
+
+
+class Responseable(Protocol[T]):
+    """Protocol for objects that can be converted to a pydantic response object."""
+
+    def to_response(self) -> T:
+        """Convert an SQL record to a pydantic response object."""
+        ...
 
 
 class CameraSubscription(Base):

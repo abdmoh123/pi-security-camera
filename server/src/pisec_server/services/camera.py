@@ -1,12 +1,16 @@
 """File containing crud functions related to the Camera table."""
 
-from sqlalchemy import select
+from typing import Callable
+
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from pisec_server.api.models.cameras import CameraCreate, CameraUpdate
+from pisec_server.api.models.cameras import CameraCreate, CameraResponse, CameraUpdate
+from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.types.camera_columns import CameraColumns
 from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.db.db_models import Camera, User
+from pisec_server.services.pagination import paginate
 
 
 def get_camera(db: Session, camera_id: int) -> Camera | None:
@@ -24,7 +28,8 @@ def get_cameras(
     limit: int = 100,
     order_by: CameraColumns = CameraColumns.ID,
     ascending: bool = True,
-) -> list[Camera]:
+    with_filter: Callable[[Select[tuple[Camera]]], Select[tuple[Camera]]] | None = None,
+) -> PaginatedResponse[CameraResponse]:
     """Queries and returns a list of cameras with pagination.
 
     It allows filtering by likeness as well as limiting the results to specifc cameras by IDs.
@@ -40,10 +45,15 @@ def get_cameras(
     if mac_address:
         query = query.where(Camera.mac_address.ilike(f"%{mac_address}%"))
 
+    # Apply custom filter
+    if with_filter is not None:
+        query = with_filter(query)
+
     order_condition = Camera.get_column(order_by).asc() if ascending else Camera.get_column(order_by).desc()
     query = query.order_by(order_condition)
 
-    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
+    params = PaginatedParams(page_index=skip // limit, page_size=limit)
+    return paginate(db, query, params, Camera.to_response)
 
 
 def create_camera(db: Session, camera: CameraCreate) -> Camera:

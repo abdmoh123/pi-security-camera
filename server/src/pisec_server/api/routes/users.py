@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_credentials import CameraCredentialRedactedResponse, CameraCredentialResponse
@@ -17,6 +18,7 @@ from pisec_server.auth.dependencies import get_current_admin_user, get_current_u
 from pisec_server.core.exceptions import InvalidFileNameError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
 from pisec_server.db.database import get_db
+from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import CameraSubscription as CameraSubscriptionSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
@@ -42,20 +44,22 @@ def get_self_cameras(
     params: Annotated[SelfGetCamerasParams, Query()],
 ) -> PaginatedResponse[CameraResponse]:
     """Returns a user's subscribed cameras."""
+
+    def owned_camera_filter(q: Select[tuple[CameraSchema]]) -> Select[tuple[CameraSchema]]:
+        if not params.only_owned:
+            return q
+
+        # Filter only owned cameras
+        return q.where(CameraSchema.credential.in_(current_user.credentials))
+
     # TODO: Add sorting support
-    cameras = camera_service.get_cameras(
+    return camera_service.get_cameras(
         db_session,
         user_ids=[current_user.id],
         skip=params.page_index * params.page_size,
         limit=params.page_size,
+        with_filter=owned_camera_filter,
     )
-
-    # Filter only owned cameras
-    if params.only_owned:
-        cameras = [c for c in cameras if c.credential in current_user.credentials]
-
-    camera_responses = [c.to_response() for c in cameras]
-    return PaginatedResponse[CameraResponse].create(camera_responses, params.page_index, params.page_size, len(cameras))
 
 
 @router.put("/me", response_model=UserResponse)
@@ -89,21 +93,16 @@ def get_users(
     params: Annotated[UserGetParams, Query()],
 ) -> PaginatedResponse[UserResponse]:
     """Gets a list of users with pagination."""
-    users = [
-        user.to_response()
-        for user in user_service.get_users(
-            db_session,
-            params.user_id,
-            params.email,
-            params.camera_id,
-            skip=params.page_index * params.page_size,
-            limit=params.page_size,
-            order_by=params.order_by.field,
-            ascending=params.order_by.ascending,
-        )
-    ]
-
-    return PaginatedResponse[UserResponse].create(users, params.page_index, params.page_size, len(users))
+    return user_service.get_users(
+        db_session,
+        params.user_id,
+        params.email,
+        params.camera_id,
+        skip=params.page_index * params.page_size,
+        limit=params.page_size,
+        order_by=params.order_by.field,
+        ascending=params.order_by.ascending,
+    )
 
 
 @router.post("/", response_model=UserResponse)
@@ -346,18 +345,13 @@ def get_videos(
         raise HTTPException(status_code=404, detail="User not found!")
 
     camera_ids: list[int] = [camera.id for camera in db_user.cameras]
-    videos = [
-        v.to_response()
-        # TODO: Add sorting support
-        for v in video_service.get_video_entries(
-            db_session,
-            camera_ids=camera_ids,
-            skip=pagination.page_index * pagination.page_size,
-            limit=pagination.page_size,
-        )
-    ]
-
-    return PaginatedResponse[VideoResponse].create(videos, pagination.page_index, pagination.page_size, len(videos))
+    # TODO: Add sorting support
+    return video_service.get_video_entries(
+        db_session,
+        camera_ids=camera_ids,
+        skip=pagination.page_index * pagination.page_size,
+        limit=pagination.page_size,
+    )
 
 
 @router.delete("/{user_id}/videos", response_model=VideoResponse)
@@ -381,10 +375,24 @@ def delete_videos(
     if camera_id is None:
         camera_id = []
 
-    # Filter out videos the user doesn't have access to
+    # Filter out cameras that user doesn't have access to
     available_camera_ids = {camera.id for camera in db_user.cameras}
     filtered_camera_ids = {c_id for c_id in camera_id if c_id in available_camera_ids}
-    allowed_videos = video_service.get_video_entries(db_session, camera_ids=list(filtered_camera_ids))
+
+    allowed_videos: list[VideoResponse] = []
+    stop_search = False
+    search_index = 0
+    # Get all of the videos user can delete
+    while not stop_search:
+        result = video_service.get_video_entries(
+            db_session, camera_ids=list(filtered_camera_ids), skip=search_index * 100, limit=100
+        )
+        allowed_videos.extend(result.items)
+        if result.page_index == result.total_pages - 1:
+            stop_search = True
+        search_index += 1
+
+    # Filter out videos user can't delete
     allowed_video_ids = {v.id for v in allowed_videos}
     filtered_video_ids = {v_id for v_id in video_id if v_id in allowed_video_ids}
 
@@ -415,16 +423,8 @@ def get_credentials(
     if not user_service.get_user(db_session, current_user.id):
         raise HTTPException(status_code=404, detail="User not found!")
 
-    credentials = [
-        c.to_response()
-        for c in credential_service.get_credentials(
-            db_session, current_user.id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
-        )
-    ]
-
-    # TODO: Get the actual total items
-    return PaginatedResponse[CameraCredentialRedactedResponse].create(
-        credentials, pagination.page_index, pagination.page_size, len(credentials)
+    return credential_service.get_credentials(
+        db_session, current_user.id, skip=pagination.page_index * pagination.page_size, limit=pagination.page_size
     )
 
 

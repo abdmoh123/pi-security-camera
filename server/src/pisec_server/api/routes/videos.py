@@ -7,6 +7,7 @@ import aiofiles
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
+from sqlalchemy import Select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.paginated.generic import PaginatedResponse
@@ -40,26 +41,26 @@ def get_videos(
 
     Non-admin users can only see videos from cameras they are subscribed to.
     """
-    videos = [
-        v.to_response()
-        for v in video_service.get_video_entries(
-            db_session,
-            params.video_id,
-            params.file_name,
-            params.camera_id,
-            skip=params.page_index * params.page_size,
-            limit=params.page_size,
-            order_by=params.order_by.field,
-            ascending=params.order_by.ascending,
-        )
-    ]
 
-    if not current_user.is_admin:
+    def admin_filter(q: Select[tuple[VideoSchema]]) -> Select[tuple[VideoSchema]]:
+        if current_user.is_admin:
+            return q
+
         # Filter to only show videos from cameras user is subscribed to
         subscribed_camera_ids = {camera.id for camera in current_user.cameras}
-        videos = [video for video in videos if video.camera_id in subscribed_camera_ids]
+        return q.where(VideoSchema.camera_id.in_(subscribed_camera_ids))
 
-    return PaginatedResponse[VideoResponse].create(videos, params.page_index, params.page_size, len(videos))
+    return video_service.get_video_entries(
+        db_session,
+        params.video_id,
+        params.file_name,
+        params.camera_id,
+        skip=params.page_index * params.page_size,
+        limit=params.page_size,
+        order_by=params.order_by.field,
+        ascending=params.order_by.ascending,
+        with_filter=admin_filter,
+    )
 
 
 @router.post("/", response_model=Video)
@@ -74,7 +75,7 @@ async def upload_video(
         raise HTTPException(status_code=403, detail="No camera registered with this credential!")
 
     # Check if video entry already exists in the database (file name and camera ID must be the same)
-    db_videos: list[VideoSchema] = await run_in_threadpool(
+    db_videos: PaginatedResponse[VideoResponse] = await run_in_threadpool(
         video_service.get_video_entries,
         db_session,
         file_name=file_name,
@@ -82,7 +83,7 @@ async def upload_video(
         skip=0,
         limit=1,
     )
-    if db_videos:
+    if db_videos.items:
         raise HTTPException(status_code=400, detail="Video already exists!")
 
     # Check if the uploaded file is a video
@@ -273,17 +274,19 @@ def delete_video(
         raise HTTPException(status_code=403, detail="Not subscribed to this camera")
 
     # Delete the video entry
+    # NOTE: This will rollback if any later step failed
     try:
         deleted_video: VideoSchema = video_service.delete_video_entry(db_session, video_id)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail="Failed to delete: Video not found!") from e
 
-    # Delete the video file
+    # Get file path
     try:
         file_path: FilePath = get_video_file_path_safe(deleted_video.file_name, deleted_video.camera_id)
     except InvalidFileNameError as e:
         raise HTTPException(status_code=500, detail="Invalid file path!") from e
 
+    # Delete the video file
     try:
         file_path.unlink()
     except FileNotFoundError as e:

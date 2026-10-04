@@ -2,16 +2,19 @@
 
 import mimetypes
 from pathlib import Path
+from typing import Callable
 
-from sqlalchemy import delete, select
+from sqlalchemy import Select, delete, select
 from sqlalchemy.orm import Session
 
+from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.types.video_columns import VideoColumns
-from pisec_server.api.models.videos import VideoFileData, VideoUpdate
+from pisec_server.api.models.videos import VideoFileData, VideoResponse, VideoUpdate
 from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
 from pisec_server.db.db_models import Camera, Video
 from pisec_server.services.camera import get_camera
+from pisec_server.services.pagination import paginate
 
 
 def get_video_file_data(video: Video) -> VideoFileData:
@@ -38,11 +41,12 @@ def get_video_entries(
     video_ids: list[int] | None = None,
     file_name: str | None = None,
     camera_ids: list[int] | None = None,
-    skip: int | None = None,
-    limit: int | None = None,
+    skip: int = 0,
+    limit: int = 100,
     order_by: VideoColumns = VideoColumns.ID,
     ascending: bool = True,
-) -> list[Video]:
+    with_filter: Callable[[Select[tuple[Video]]], Select[tuple[Video]]] | None = None,
+) -> PaginatedResponse[VideoResponse]:
     """Queries and returns a list of videos with pagination.
 
     Allows filtering by likeness and also limiting results to chosen list of IDs.
@@ -56,15 +60,15 @@ def get_video_entries(
     if camera_ids:
         query = query.where(Video.camera_id.in_(camera_ids))
 
+    # Apply any custom filter
+    if with_filter is not None:
+        query = with_filter(query)
+
     order_condition = Video.get_column(order_by).asc() if ascending else Video.get_column(order_by).desc()
     query = query.order_by(order_condition)
 
-    if skip is not None:
-        query = query.offset(skip)
-    if limit is not None:
-        query = query.limit(limit)
-
-    return list(db.execute(query).scalars().all())
+    params = PaginatedParams(page_index=skip // limit, page_size=limit)
+    return paginate(db, query, params, Video.to_response)
 
 
 def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video:

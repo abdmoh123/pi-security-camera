@@ -1,15 +1,19 @@
 """File containing crud functions related to the User table."""
 
+from typing import Callable
+
 from argon2 import PasswordHasher
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
+from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.api.models.types.user_columns import UserColumns
-from pisec_server.api.models.users import UserCreate, UserUpdate
+from pisec_server.api.models.users import UserCreate, UserResponse, UserUpdate
 from pisec_server.core.config import settings
 from pisec_server.core.exceptions import InvalidDataError, RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.security.hashing import generate_hashed_password
 from pisec_server.db.db_models import Camera, User
+from pisec_server.services.pagination import paginate
 
 
 def get_user(db: Session, user_id_or_email: int | str) -> User | None:
@@ -39,7 +43,8 @@ def get_users(
     limit: int = 100,
     order_by: UserColumns = UserColumns.ID,
     ascending: bool = True,
-) -> list[User]:
+    with_filter: Callable[[Select[tuple[User]]], Select[tuple[User]]] | None = None,
+) -> PaginatedResponse[UserResponse]:
     """Queries and returns a list of all users with pagination.
 
     If a list of IDs/emails were given, it will only return the given users (if they were found).
@@ -53,10 +58,14 @@ def get_users(
     if camera_ids:
         query = query.where(User.cameras.any(Camera.id.in_(camera_ids)))
 
+    if with_filter is not None:
+        query = with_filter(query)
+
     order_condition = User.get_column(order_by).asc() if ascending else User.get_column(order_by).desc()
     query = query.order_by(order_condition)
 
-    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
+    params = PaginatedParams(page_index=skip // limit, page_size=limit)
+    return paginate(db, query, params, User.to_response)
 
 
 def create_user(db: Session, user: UserCreate) -> User:

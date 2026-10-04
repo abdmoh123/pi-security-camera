@@ -2,16 +2,19 @@
 
 import secrets
 import uuid
+from typing import Callable
 
 from argon2 import PasswordHasher
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from pisec_server.api.models.camera_credentials import CameraCredentialCreate
+from pisec_server.api.models.camera_credentials import CameraCredentialCreate, CameraCredentialRedactedResponse
+from pisec_server.api.models.paginated.generic import PaginatedParams, PaginatedResponse
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.core.security.hashing import generate_hashed_password
 from pisec_server.db.db_models import Camera, CameraCredential, User
 from pisec_server.services.camera import get_camera
+from pisec_server.services.pagination import paginate
 
 
 # TODO: Use sqlalchemy select instead of query
@@ -21,15 +24,24 @@ def get_credential(db: Session, client_id: str) -> CameraCredential | None:
 
 
 def get_credentials(
-    db: Session, user_id: int, camera_ids: list[int] | None = None, skip: int = 0, limit: int = 100
-) -> list[CameraCredential]:
+    db: Session,
+    user_id: int,
+    camera_ids: list[int] | None = None,
+    skip: int = 0,
+    limit: int = 100,
+    with_filter: Callable[[Select[tuple[CameraCredential]]], Select[tuple[CameraCredential]]] | None = None,
+) -> PaginatedResponse[CameraCredentialRedactedResponse]:
     """Queries the database to get all camera credentials with added filtering."""
     query = select(CameraCredential).where(CameraCredential.user_id == user_id)
 
     if camera_ids:
         query = query.where(CameraCredential.camera_id.in_(camera_ids))
 
-    return list(db.execute(query.offset(skip).limit(limit)).scalars().all())
+    if with_filter is not None:
+        query = with_filter(query)
+
+    params = PaginatedParams(page_index=skip // limit, page_size=limit)
+    return paginate(db, query, params, CameraCredential.to_response)
 
 
 def generate_credential(user: User) -> CameraCredentialCreate:

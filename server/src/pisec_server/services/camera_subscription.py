@@ -62,10 +62,8 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
 
     # Separate out the cameras that the user is already subscribed to
     current_subscription_ids: list[int] = [sub.camera_id for sub in get_camera_subscriptions_by_user(db, user_id)]
-    real_cameras: list[Camera] = get_cameras(db, camera_ids)
-    unsubscribed_cameras: list[Camera] = [
-        camera for camera in real_cameras if camera.id not in current_subscription_ids
-    ]
+    real_cameras = get_cameras(db, camera_ids, limit=len(camera_ids)).items
+    unsubscribed_cameras = [camera for camera in real_cameras if camera.id not in current_subscription_ids]
 
     if not unsubscribed_cameras:
         raise RecordAlreadyExistsError(f"User {user_id} is already subscribed to all given cameras!")
@@ -73,8 +71,10 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()
     for camera in unsubscribed_cameras:
-        db_user.cameras.append(camera)
         result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
+
+    db.add_all(result)
+    db.flush()
 
     return result
 
@@ -88,8 +88,8 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
 
     # Separate out the cameras that the user is already subscribed to
     current_subscription_ids: list[int] = [sub.user_id for sub in get_camera_subscriptions_by_camera(db, camera_id)]
-    real_users: list[User] = get_users(db, user_ids)
-    unsubscribed_users: list[User] = [user for user in real_users if user.id not in current_subscription_ids]
+    real_users = get_users(db, user_ids, limit=len(user_ids)).items
+    unsubscribed_users = [user for user in real_users if user.id not in current_subscription_ids]
 
     if not unsubscribed_users:
         raise RecordAlreadyExistsError(f"Camera {camera_id} is already subscribed to all given users!")
@@ -97,8 +97,10 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
     # Add the new camera subscriptions
     result: list[CameraSubscription] = list()
     for user in unsubscribed_users:
-        db_camera.users.append(user)
         result.append(CameraSubscription(user_id=user.id, camera_id=camera_id))
+
+    db.add_all(result)
+    db.flush()
 
     return result
 
