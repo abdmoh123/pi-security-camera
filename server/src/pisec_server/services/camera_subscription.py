@@ -107,6 +107,14 @@ def delete_camera_subscriptions(
     db: Session, user_ids: list[int] | None = None, camera_ids: list[int] | None = None
 ) -> list[CameraSubscriptionSchema]:
     """Deletes a list of subscriptions that fit the given parameters."""
+    if camera_ids is not None:
+        # Check if all cameras exist
+        search_query = select(Camera.id).where(Camera.id.in_(camera_ids))
+        real_camera_ids: set[int] = set(db.execute(search_query).scalars().all())
+        missing_camera_ids = set(camera_ids) - real_camera_ids
+        if missing_camera_ids:
+            raise RecordNotFoundError(f"Following cameras were not found: {missing_camera_ids}")
+
     query = delete(CameraSubscriptionSchema).returning(CameraSubscriptionSchema)
 
     # The given IDs are combined in an AND fashion

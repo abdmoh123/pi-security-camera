@@ -323,12 +323,6 @@ def unsubscribe_from_cameras(
         if unsubbed_camera_ids:
             raise HTTPException(status_code=403, detail=f"You are not subscribed to cameras: {unsubbed_camera_ids}")
 
-    # Check if all cameras exist
-    camera_ids: set[int] = {camera.id for camera in camera_service.get_cameras(db_session, camera_ids=camera_id)}
-    missing_camera_ids = set(camera_id) - camera_ids
-    if missing_camera_ids:
-        raise HTTPException(status_code=404, detail=f"Following cameras were not found: {missing_camera_ids}")
-
     try:
         return subscription_service.delete_camera_subscriptions(db_session, [user_id], camera_id)
     except RecordNotFoundError as e:
