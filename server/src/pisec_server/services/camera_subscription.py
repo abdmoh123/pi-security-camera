@@ -76,8 +76,6 @@ def create_camera_subscriptions_by_user(db: Session, user_id: int, camera_ids: l
         db_user.cameras.append(camera)
         result.append(CameraSubscription(user_id=db_user.id, camera_id=camera.id))
 
-    db.commit()
-
     return result
 
 
@@ -102,8 +100,6 @@ def create_camera_subscriptions_by_camera(db: Session, camera_id: int, user_ids:
         db_camera.users.append(user)
         result.append(CameraSubscription(user_id=user.id, camera_id=camera_id))
 
-    db.commit()
-
     return result
 
 
@@ -124,5 +120,4 @@ def delete_camera_subscriptions(
     for row in result:
         db.expunge(row)
 
-    db.commit()
     return list(result)

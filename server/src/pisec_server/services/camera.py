@@ -51,7 +51,7 @@ def create_camera(db: Session, camera: CameraCreate) -> Camera:
     db_camera = Camera(name=camera.name, mac_address=camera.mac_address)
 
     db.add(db_camera)
-    db.commit()
+    db.flush()
     db.refresh(db_camera)
 
     return db_camera
@@ -73,7 +73,7 @@ def update_camera(db: Session, camera_id: int, camera: CameraUpdate) -> Camera:
 
     for key, value in camera_as_dict.items():  # pyright: ignore[reportAny]
         setattr(db_camera, key, value)
-    db.commit()
+    db.flush()
     db.refresh(db_camera)
 
     return db_camera
@@ -87,6 +87,5 @@ def delete_camera(db: Session, camera_id: int) -> Camera:
         raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
 
     db.delete(db_camera)
-    db.commit()
 
     return db_camera

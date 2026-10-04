@@ -53,7 +53,8 @@ def create_credential(db: Session, user_id: int, credential: CameraCredentialCre
         client_secret_hash=generate_hashed_password(credential.client_secret, PasswordHasher()),
     )
     db.add(db_credential)
-    db.commit()
+
+    db.flush()
     db.refresh(db_credential)
 
     return db_credential
@@ -74,7 +75,8 @@ def assign_camera(db: Session, client_id: str, camera_id: int) -> CameraCredenti
         raise RecordNotFoundError(f"Camera {camera_id} does not exist!")
 
     db_credential.camera_id = camera_id
-    db.commit()
+
+    db.flush()
     db.refresh(db_credential)
 
     return db_credential
@@ -88,6 +90,5 @@ def delete_credential(db: Session, client_id: str) -> CameraCredential:
         raise RecordNotFoundError(f"Camera credential {client_id} does not exist!")
 
     db.delete(db_credential)
-    db.commit()
 
     return db_credential

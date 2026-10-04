@@ -77,7 +77,7 @@ def create_user(db: Session, user: UserCreate) -> User:
     )
 
     db.add(db_user)
-    db.commit()
+    db.flush()
     db.refresh(db_user)
 
     return db_user
@@ -102,7 +102,8 @@ def update_user(db: Session, user_id: int, user: UserUpdate) -> User:
         if key == "password":  # skip password key as it doesn't exist in User table (uses password_hash instead)
             continue
         setattr(db_user, key, value)
-    db.commit()
+
+    db.flush()
     db.refresh(db_user)
 
     return db_user
@@ -116,6 +117,5 @@ def delete_user(db: Session, user_id: int) -> User:
         raise RecordNotFoundError(f"User {user_id} does not exist!")
 
     db.delete(db_user)
-    db.commit()
 
     return db_user

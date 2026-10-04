@@ -77,7 +77,6 @@ def create_video_entry(db: Session, file_name: str, camera_id: int) -> Video:
     db_video = Video(file_name=file_name, camera_id=db_camera.id)
 
     db.add(db_video)
-    db.commit()
 
     return db_video
 
@@ -98,8 +97,6 @@ def update_video_entry(db: Session, video_id: int, new_video_data: VideoUpdate) 
 
     if new_video_data.file_name:
         db_video.file_name = new_video_data.file_name
-
-    db.commit()
 
     return db_video
 
@@ -124,7 +121,6 @@ def delete_video_entries(
     for row in result:
         db.expunge(row)
 
-    db.commit()
     return list(result)
 
 
@@ -136,6 +132,5 @@ def delete_video_entry(db: Session, video_id: int) -> Video:
         raise RecordNotFoundError(f"Video {video_id} does not exist!")
 
     db.delete(db_video)
-    db.commit()
 
     return db_video
