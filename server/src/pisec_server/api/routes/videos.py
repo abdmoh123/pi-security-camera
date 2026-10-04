@@ -97,14 +97,6 @@ async def upload_video(
     # Make sure the directory exists
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write the uploaded video to the server's storage (async part)
-    try:
-        video_contents: bytes = await video_file.read()
-        async with aiofiles.open(file_path, "wb") as file:
-            _ = await file.write(video_contents)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload video file: {str(e)}")
-
     # Create the video entry
     try:
         result_video: VideoSchema = await run_in_threadpool(
@@ -114,13 +106,19 @@ async def upload_video(
             current_credential.camera_id,
         )
     except RecordNotFoundError as e:
-        # Make sure the file is deleted if any unexpected error occurred
-        file_path.unlink(missing_ok=True)
         raise HTTPException(status_code=404, detail="Camera not found!") from e
-    except Exception:
-        # Make sure the file is deleted if any unexpected error occurred
+
+    # Write the uploaded video to the server's storage (async part)
+    # The file writing is done last as it can be the slowest
+    try:
+        video_contents: bytes = await video_file.read()
+        async with aiofiles.open(file_path, "wb") as file:
+            _ = await file.write(video_contents)
+    except Exception as e:
         file_path.unlink(missing_ok=True)
-        raise
+        # Any changes to the database will be rolled back if any error is raised
+        # See get_db() in pisec_server.db.databse
+        raise HTTPException(status_code=500, detail=f"Failed to upload video file: {str(e)}")
 
     return result_video
 
