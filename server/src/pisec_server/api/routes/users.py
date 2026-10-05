@@ -54,12 +54,13 @@ def get_self_cameras(
         )
         return q.where(CameraSchema.id.in_(owned_camera_ids))
 
-    # TODO: Add sorting support
     return camera_service.get_cameras(
         db_session,
         user_ids=[current_user.id],
         skip=params.page_index * params.page_size,
         limit=params.page_size,
+        order_by=params.order_by.field,
+        ascending=params.order_by.ascending,
         with_filter=owned_camera_filter,
     )
 

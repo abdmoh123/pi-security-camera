@@ -6,6 +6,7 @@ from fastapi import Query
 
 from pisec_server.api.models.paginated.generic import PaginatedParams
 from pisec_server.api.models.sortable import Sortable, SortableParser
+from pisec_server.api.models.types.camera_columns import CameraColumns
 from pisec_server.api.models.types.user_columns import UserColumns
 
 
@@ -24,3 +25,6 @@ class SelfGetCamerasParams(PaginatedParams):
     """Self user camera GET query parameters with pagination."""
 
     only_owned: Annotated[bool, Query()] = False
+    order_by: Annotated[Sortable[CameraColumns], SortableParser(CameraColumns), Query()] = Sortable(
+        CameraColumns.ID, ascending=True
+    )
