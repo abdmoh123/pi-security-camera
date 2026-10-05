@@ -1,23 +1,24 @@
 import 'package:pisec_client/extensions/list.dart';
-import 'package:pisec_client/models/const_datetime.dart';
+import 'package:pisec_client/models/api/sortables/video_fields.dart';
 import 'package:pisec_client/models/http/http_queryable.dart';
 import 'package:pisec_client/models/json_serialisable.dart';
+import 'package:pisec_client/models/sortable.dart';
 
 class VideoQuery implements JsonSerialisable, PathQueryable {
   final List<int>? videoIDs;
   final String? fileName;
   final List<int>? cameraIDs;
-  final ConstDateTime? uploadedAt;
+  final Sortable<VideoFields>? orderBy;
 
   const VideoQuery({
     this.videoIDs,
     this.fileName,
     this.cameraIDs,
-    this.uploadedAt,
+    this.orderBy,
   });
 
   @override
-  int genHashCode() => Object.hash(videoIDs, fileName, cameraIDs, uploadedAt);
+  int genHashCode() => Object.hash(videoIDs, fileName, cameraIDs, orderBy);
 
   @override
   bool isEqual(JsonSerialisable other) {
@@ -39,7 +40,8 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
       return false;
     }
 
-    return fileName == other.fileName && uploadedAt == other.uploadedAt;
+    return fileName == other.fileName &&
+        orderBy.toString() == other.orderBy.toString();
   }
 
   @override
@@ -47,7 +49,7 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
     if (videoIDs != null) 'video_ids': videoIDs,
     if (fileName != null) 'file_name': fileName,
     if (cameraIDs != null) 'camera_ids': cameraIDs,
-    if (uploadedAt != null) 'uploaded_at': uploadedAt!.toDateTime(),
+    if (orderBy != null) 'order_by': orderBy!.toString(),
   };
 
   @override
@@ -64,7 +66,7 @@ class VideoQuery implements JsonSerialisable, PathQueryable {
         query += "&camera_id=$i";
       }
     }
-    if (uploadedAt != null) query += "&uploaded_at=${uploadedAt!.toDateTime()}";
+    if (orderBy != null) query += "&order_by=${orderBy!.toString()}";
     return query == "" ? query : query.substring(1);
   }
 }

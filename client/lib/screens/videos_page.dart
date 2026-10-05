@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
+import 'package:pisec_client/models/api/queryables/video_query.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/video_response.dart';
+import 'package:pisec_client/models/api/sortables/video_fields.dart';
+import 'package:pisec_client/models/sortable.dart';
 import 'package:pisec_client/repositories/api/generic/video_repository.dart';
+import 'package:pisec_client/types/sort_direction.dart';
 import 'package:pisec_client/widgets/video_tile.dart';
 
 class VideosPage extends StatefulWidget {
@@ -21,8 +25,23 @@ class _VideosPageState extends State<VideosPage> {
     PaginatedResponse<VideoResponse>.empty(),
   );
 
+  VideoFields _sortBy = VideoFields.date;
+  SortDirection _sortDirection = SortDirection.descending;
+
+  Sortable<VideoFields> get _sortable =>
+      Sortable<VideoFields>(field: _sortBy, direction: _sortDirection);
+
   int currentPage = 1;
   int maxPages = 1;
+
+  Widget get _sortDirectionIcon {
+    switch (_sortDirection) {
+      case SortDirection.ascending:
+        return const Icon(Icons.arrow_upward);
+      case SortDirection.descending:
+        return const Icon(Icons.arrow_downward);
+    }
+  }
 
   @override
   void initState() {
@@ -41,19 +60,38 @@ class _VideosPageState extends State<VideosPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                TextButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/unfinished'),
-                  label: Text("Filter"),
-                  icon: Icon(Icons.filter_list),
-                ),
-                DropdownButton<String>(
-                  value: "date",
+                DropdownButton<VideoFields>(
+                  padding: const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 0.0),
+                  value: _sortBy,
                   items: [
-                    DropdownMenuItem(value: "date", child: Text("By date")),
+                    const DropdownMenuItem(
+                      value: VideoFields.date,
+                      child: Text("By date"),
+                    ),
+                    const DropdownMenuItem(
+                      value: VideoFields.cameraID,
+                      child: Text("By camera"),
+                    ),
                   ],
                   underline: Container(),
-                  icon: Icon(Icons.sort),
-                  onChanged: (value) {},
+                  icon: const Icon(Icons.sort),
+                  onChanged: (value) {
+                    setState(() {
+                      _sortBy = value!;
+                    });
+                    _refreshVideos();
+                  },
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _sortDirection = _sortDirection == SortDirection.ascending
+                          ? SortDirection.descending
+                          : SortDirection.ascending;
+                    });
+                    _refreshVideos();
+                  },
+                  icon: _sortDirectionIcon,
                 ),
               ],
             ),
@@ -195,8 +233,10 @@ class _VideosPageState extends State<VideosPage> {
   }) async {
     page = page ?? currentPage;
     try {
+      final query = VideoQuery(orderBy: _sortable);
       final response = await widget.videoRepository.getVideos(
         pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
+        videoQuery: query,
       );
       if (mounted) {
         setState(() => maxPages = response.totalPages);
