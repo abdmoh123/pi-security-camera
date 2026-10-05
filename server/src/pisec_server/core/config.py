@@ -93,9 +93,11 @@ def _get_video_dir() -> Path:
     """
     video_dir: str | None = os.getenv("VIDEO_FILES_DIR")
     if not video_dir:
-        video_dir = "/var/lib/pi-security-camera/videos"
+        video_dir = "/var/lib/pisec_server/videos"
 
-    return Path(video_dir)
+    video_dir_path = Path(video_dir)
+    video_dir_path.mkdir(exist_ok=True)
+    return video_dir_path
 
 
 @dataclass
