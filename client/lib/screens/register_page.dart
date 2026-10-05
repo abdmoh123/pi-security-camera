@@ -86,7 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 spacing: spacing,
                 children: [
                   Text(
-                    "Sign in to your Pisec server",
+                    "Create a new account",
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 2 * spacing),

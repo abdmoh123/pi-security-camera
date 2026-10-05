@@ -82,7 +82,13 @@ class _ProfilePageState extends State<ProfilePage> {
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                spacing: spacing,
                 children: [
+                  Text(
+                    "Edit account details",
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 2 * spacing),
                   TextFormField(
                     decoration: const InputDecoration(
                       labelText: 'User email',
@@ -91,7 +97,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     controller: _emailController,
                     onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
-                  const SizedBox(height: spacing),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -113,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     obscureText: _passwordHidden,
                     onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
-                  const SizedBox(height: spacing),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Confirm password',
