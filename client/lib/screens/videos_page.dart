@@ -69,6 +69,10 @@ class _VideosPageState extends State<VideosPage> {
                       child: Text("By date"),
                     ),
                     const DropdownMenuItem(
+                      value: VideoFields.name,
+                      child: Text("By name"),
+                    ),
+                    const DropdownMenuItem(
                       value: VideoFields.cameraID,
                       child: Text("By camera"),
                     ),
