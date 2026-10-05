@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "httpx>=0.28.1",
+    "httpx2>=2.13.1",
     "opencv-python>=4.13.0.92",
     "pydantic[email]>=2.13.3",
     "typer>=0.24.1",

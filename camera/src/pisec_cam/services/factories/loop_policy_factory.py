@@ -1,6 +1,6 @@
 """Factory for selecting the type of loop policy."""
 
-from httpx import HTTPStatusError
+from httpx2 import HTTPStatusError
 
 from pisec_cam.core.api.api_service_context import APIServiceContext
 from pisec_cam.core.models.camera import CameraCreate
