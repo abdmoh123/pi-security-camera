@@ -186,9 +186,8 @@ class _RegisterPageState extends State<RegisterPage> {
       widget._onSubmitSuccess?.call(_serverUrlController.text, response.email);
 
       Navigator.of(context).pop();
-    } catch (e, st) {
-      // TODO: Display the error instead of rethrowing
-      return Future.error(e, st);
+    } catch (e) {
+      // TODO: Display the error instead of doing nothing
     }
   }
 }

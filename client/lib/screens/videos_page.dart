@@ -231,6 +231,7 @@ class _VideosPageState extends State<VideosPage> {
     );
   }
 
+  // NOTE: This is meant to always be set to a future variable and not awaited
   Future<PaginatedResponse<VideoResponse>> _getAllVideos({
     int? page,
     int pageSize = 10,
@@ -242,11 +243,16 @@ class _VideosPageState extends State<VideosPage> {
         pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
         videoQuery: query,
       );
+
       if (mounted) {
         setState(() => maxPages = response.totalPages);
       }
       return response;
     } catch (e, st) {
+      setState(() {
+        currentPage = 1;
+        maxPages = 0;
+      });
       return Future.error(e, st);
     }
   }

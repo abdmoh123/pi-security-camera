@@ -47,11 +47,16 @@ class AuthState extends ChangeNotifier {
       _isAuthenticated = await loginService.isRefreshTokenValid(
         token.refreshToken,
       );
-    } on HttpCodedException {
+    } catch (e) {
       // We are not handling response mismatch exception, as it doesn't indicate
       // whether or not the refresh token has expired.
       // Better for the code to break quickly so we can fix it straight away
       // (it should never be thrown).
+      if (e is ResponseMismatchException) {
+        rethrow;
+      }
+
+      // All other exceptions are handled though
       _isAuthenticated = false;
       _currentUser = null;
       try {
@@ -77,11 +82,7 @@ class AuthState extends ChangeNotifier {
     late final Token token;
     try {
       token = await loginService.login(userQuery);
-    } on HttpCodedException {
-      // End early as login has failed
-      // Auth state hasn't changed, so no need to notify listeners
-      return;
-    } on ArgumentError {
+    } catch (e) {
       // End early as login has failed
       // Auth state hasn't changed, so no need to notify listeners
       return;
@@ -99,10 +100,10 @@ class AuthState extends ChangeNotifier {
       // Try to logout since we aren't able to store the token anyway
       try {
         await loginService.logout(token);
-      } on HttpCodedException {
+      } catch (e) {
         // We failed to logout and failed to store the refresh token, which
         // means that a dangling unused refresh token will eventually exist on
-        // the server
+        // the server and get cleaned up
         // TODO: Add retry functionality
       }
       // End early as we aren't able to store the token and therefore do any
@@ -130,7 +131,7 @@ class AuthState extends ChangeNotifier {
 
     try {
       await loginService.logout(token);
-    } on HttpCodedException {
+    } catch (e) {
       // End early as the logout failed
       // We don't need to notify listeners because the user is still
       // authenticated due to the logout failing
@@ -171,7 +172,7 @@ class AuthState extends ChangeNotifier {
     try {
       // Get rid of old tokens and logout
       await loginService.logout(oldToken);
-    } on HttpCodedException {
+    } catch (e) {
       // If logout failed, then the refresh token on server has already been
       // removed, so we don't need to do anything
     }
@@ -189,6 +190,11 @@ class AuthState extends ChangeNotifier {
     try {
       // Update the token and stored user data
       newToken = await loginService.login(userQuery);
+    } on HttpClientException {
+      // Client failed to connect to the server, so login failed
+      // Same action as error case below
+      notifyListeners();
+      return;
     } on HttpCodedException {
       // Login request was rejected
       // End early, we failed to login, so this function should act like a logout
@@ -212,7 +218,7 @@ class AuthState extends ChangeNotifier {
       // the built-in repeat tries)
       try {
         await loginService.logout(newToken);
-      } on HttpCodedException {
+      } catch (e) {
         // We failed to logout and failed to store the refresh token, which
         // means that a dangling unused refresh token will eventually exist on
         // the server

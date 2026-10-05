@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
@@ -176,11 +175,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       await widget.userRepository.updateCurrentUser(query);
-    } on HttpCodedException {
-      // If user details haven't changed, then there is nothing to do
-      return;
     } catch (e) {
+      // If user details haven't changed, then there is nothing to do
       // TODO: Display error message via toast or popup
+      return;
     }
 
     if (emailText != null) {

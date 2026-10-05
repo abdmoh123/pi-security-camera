@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:http/http.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
@@ -26,7 +27,15 @@ class HttpVideoRepository implements VideoRepository {
 
   @override
   Future<VideoResponse> deleteVideo(int videoId) async {
-    final response = await client.delete(Uri.parse("$baseUrl/videos/$videoId"));
+    late final Response response;
+    try {
+      response = await client.delete(Uri.parse("$baseUrl/videos/$videoId"));
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -41,9 +50,17 @@ class HttpVideoRepository implements VideoRepository {
 
   @override
   Future<EventTask?> downloadVideo(int videoId) async {
-    final downloadUrlResponse = await client.get(
-      Uri.parse("$baseUrl/videos/$videoId/url"),
-    );
+    late final Response downloadUrlResponse;
+    try {
+      downloadUrlResponse = await client.get(
+        Uri.parse("$baseUrl/videos/$videoId/url"),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (downloadUrlResponse.notOk) {
       throw HttpCodedException(
@@ -56,13 +73,32 @@ class HttpVideoRepository implements VideoRepository {
       json.decode(downloadUrlResponse.body) as Map<String, dynamic>,
     );
 
-    final video = await getVideo(videoId);
-    return downloaderService.downloadItem(downloadUrlObj.url, video.fileName);
+    try {
+      final video = await getVideo(videoId);
+      return await downloaderService.downloadItem(
+        downloadUrlObj.url,
+        video.fileName,
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
   }
 
   @override
   Future<VideoResponse> getVideo(int videoId) async {
-    final response = await client.get(Uri.parse("$baseUrl/videos/$videoId"));
+    late final Response response;
+    try {
+      response = await client.get(Uri.parse("$baseUrl/videos/$videoId"));
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -86,7 +122,16 @@ class HttpVideoRepository implements VideoRepository {
     ]);
     final Uri url = Uri.parse("$baseUrl/videos/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -109,7 +154,16 @@ class HttpVideoRepository implements VideoRepository {
         "${pagination.toPathQueryString()}&camera_id=$cameraId";
     final Uri url = Uri.parse("$baseUrl/videos/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,

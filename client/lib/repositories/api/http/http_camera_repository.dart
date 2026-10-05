@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:http/http.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/extensions/http.dart';
 import 'package:pisec_client/models/api/queryables/camera_query.dart';
@@ -30,7 +31,16 @@ class HttpCameraRepository implements CameraRepository {
     ]);
     final Uri url = Uri.parse("$baseUrl/cameras/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -52,7 +62,16 @@ class HttpCameraRepository implements CameraRepository {
     final String query = "${pagination.toPathQueryString()}&user_id=$userId";
     final Uri url = Uri.parse("$baseUrl/cameras/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -79,7 +98,16 @@ class HttpCameraRepository implements CameraRepository {
       "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}&only_owned=$onlyOwned$orderByString",
     );
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -98,9 +126,18 @@ class HttpCameraRepository implements CameraRepository {
     int userId,
     int cameraId,
   ) async {
-    final response = await client.post(
-      Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
-    );
+    late final Response response;
+    try {
+      response = await client.post(
+        Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -118,9 +155,18 @@ class HttpCameraRepository implements CameraRepository {
     int userId,
     int cameraId,
   ) async {
-    final response = await client.delete(
-      Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
-    );
+    late final Response response;
+    try {
+      response = await client.delete(
+        Uri.parse("$baseUrl/users/$userId/subscriptions/$cameraId"),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
