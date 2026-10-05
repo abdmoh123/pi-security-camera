@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
-from sqlalchemy import Select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_subscriptions import CameraSubscription
@@ -17,6 +17,7 @@ from pisec_server.core.exceptions import RecordNotFoundError
 from pisec_server.db.database import get_db
 from pisec_server.db.db_models import Camera as CameraSchema
 from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
+from pisec_server.db.db_models import CameraSubscription as CameraSubscriptionSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.services import camera as camera_service
 from pisec_server.services import camera_credential as camera_credential_service
@@ -55,7 +56,10 @@ def get_cameras(
             return q
 
         # Filter to only show cameras the user is subscribed to
-        return q.where(CameraSchema.id.in_({camera.id for camera in current_user.cameras}))
+        subscribed_camera_ids = select(CameraSubscriptionSchema.camera_id).where(
+            CameraSubscriptionSchema.user_id == current_user.id
+        )
+        return q.where(CameraSchema.id.in_(subscribed_camera_ids))
 
     cameras = camera_service.get_cameras(
         db_session,

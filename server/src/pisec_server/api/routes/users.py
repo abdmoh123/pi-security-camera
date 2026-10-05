@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response
-from sqlalchemy import Select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.camera_credentials import CameraCredentialRedactedResponse, CameraCredentialResponse
@@ -18,6 +18,7 @@ from pisec_server.auth.dependencies import get_current_admin_user, get_current_u
 from pisec_server.core.exceptions import RecordAlreadyExistsError, RecordNotFoundError
 from pisec_server.db.database import get_db
 from pisec_server.db.db_models import Camera as CameraSchema
+from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
 from pisec_server.db.db_models import CameraSubscription as CameraSubscriptionSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.services import camera as camera_service
@@ -48,7 +49,10 @@ def get_self_cameras(
             return q
 
         # Filter only owned cameras
-        return q.where(CameraSchema.credential.in_(current_user.credentials))
+        owned_camera_ids = select(CameraCredentialSchema.camera_id).where(
+            CameraCredentialSchema.user_id == current_user.id
+        )
+        return q.where(CameraSchema.id.in_(owned_camera_ids))
 
     # TODO: Add sorting support
     return camera_service.get_cameras(

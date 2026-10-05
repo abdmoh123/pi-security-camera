@@ -7,7 +7,7 @@ import aiofiles
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
-from sqlalchemy import Select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from pisec_server.api.models.paginated.generic import PaginatedResponse
@@ -19,7 +19,7 @@ from pisec_server.core.validation.regex import file_name_regex
 from pisec_server.core.validation.video_validation import get_video_file_path_safe
 from pisec_server.db.cache_store import nonce_store
 from pisec_server.db.database import get_db
-from pisec_server.db.db_models import Camera
+from pisec_server.db.db_models import Camera, CameraSubscription
 from pisec_server.db.db_models import CameraCredential as CameraCredentialSchema
 from pisec_server.db.db_models import User as UserSchema
 from pisec_server.db.db_models import Video as VideoSchema
@@ -47,7 +47,9 @@ def get_videos(
             return q
 
         # Filter to only show videos from cameras user is subscribed to
-        subscribed_camera_ids = {camera.id for camera in current_user.cameras}
+        subscribed_camera_ids = select(CameraSubscription.camera_id).where(
+            CameraSubscription.user_id == current_user.id
+        )
         return q.where(VideoSchema.camera_id.in_(subscribed_camera_ids))
 
     return video_service.get_video_entries(
