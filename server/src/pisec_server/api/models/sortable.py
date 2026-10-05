@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypeVar, cast, get_args
+from typing import Any, TypeVar, cast
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
@@ -22,9 +22,15 @@ class Sortable[T]:
     field: T
     ascending: bool = True
 
-    @classmethod
+
+@dataclass(frozen=True)
+class SortableParser[T: Enum]:
+    """Parses <field>:<asc|desc> into a Sortable object."""
+
+    enum_type: type[T]
+
     def __get_pydantic_core_schema__(
-        cls,
+        self,
         source: Any,  # pyright: ignore[reportExplicitAny, reportAny]
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
@@ -47,14 +53,11 @@ class Sortable[T]:
                 type, or if the input to be parsed is not a string.
             ValueError: If the Sortable class is not in the correct format.
         """
-        args = get_args(source)
-        if not args and len(args) != 1 and not isinstance(args[0], type):
-            raise TypeError("Sortable must have one parametrised enum type")
-        enum_type: type[Enum] = args[0]
+        enum_type: type[T] = self.enum_type
 
-        def parse(value: Any) -> "Sortable[T]":  # pyright: ignore[reportAny, reportExplicitAny]
-            if isinstance(value, cls):
-                return value
+        def parse(value: Any) -> Sortable[T]:  # pyright: ignore[reportAny, reportExplicitAny]
+            if isinstance(value, Sortable):
+                return cast(Sortable[T], value)
 
             if not isinstance(value, str):
                 raise TypeError("Parsed value must be a string")
@@ -68,7 +71,7 @@ class Sortable[T]:
             try:
                 # Cast was required to get rid of the errors and warnings
                 # The type will always be correct though due to the T Enum bound
-                field: T = cast(T, enum_type(field_name))
+                field = enum_type(field_name)
                 match direction:
                     case "asc":
                         ascending = True
@@ -80,7 +83,7 @@ class Sortable[T]:
                 allowed_types = ", ".join(str(m) for m in enum_type)
                 raise ValueError(f"Invalid sortable: {field_name}. Allowed values: {allowed_types}")
 
-            return cls(field, ascending=ascending)
+            return Sortable(field, ascending=ascending)
 
         # Use str schema first so OpenAPI documents it as a string
         return core_schema.chain_schema([core_schema.str_schema(), core_schema.no_info_plain_validator_function(parse)])
