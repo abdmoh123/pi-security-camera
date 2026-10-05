@@ -76,7 +76,10 @@ class PisecApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Pisec',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepOrange,
+            brightness: Brightness.dark,
+          ),
         ),
         onGenerateInitialRoutes: ((initialRoute) {
           if (!authState.isAuthenticated) {
