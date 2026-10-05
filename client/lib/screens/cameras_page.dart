@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
+import 'package:pisec_client/models/api/queryables/camera_query.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
+import 'package:pisec_client/models/api/sortables/camera_fields.dart';
+import 'package:pisec_client/models/sortable.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
 import 'package:pisec_client/repositories/api/generic/user_repository.dart';
+import 'package:pisec_client/types/sort_direction.dart';
 import 'package:pisec_client/widgets/camera_tile.dart';
-import 'package:pisec_client/widgets/dangerous_button.dart';
 import 'package:pisec_client/widgets/delete_submit_dialog.dart';
 
 class CamerasPage extends StatefulWidget {
@@ -32,6 +35,21 @@ class _CamerasPageState extends State<CamerasPage> {
 
   List<CameraResponse> ownedCameras = [];
 
+  CameraFields _sortBy = CameraFields.date;
+  SortDirection _sortDirection = SortDirection.descending;
+
+  Sortable<CameraFields> get _sortable =>
+      Sortable<CameraFields>(field: _sortBy, direction: _sortDirection);
+
+  Widget get _sortDirectionIcon {
+    switch (_sortDirection) {
+      case SortDirection.ascending:
+        return const Icon(Icons.arrow_upward);
+      case SortDirection.descending:
+        return const Icon(Icons.arrow_downward);
+    }
+  }
+
   int currentPage = 1;
   int maxPages = 1;
 
@@ -49,7 +67,48 @@ class _CamerasPageState extends State<CamerasPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.start),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                DropdownButton<CameraFields>(
+                  padding: const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 0.0),
+                  value: _sortBy,
+                  items: [
+                    const DropdownMenuItem(
+                      value: CameraFields.date,
+                      child: Text("By date"),
+                    ),
+                    const DropdownMenuItem(
+                      value: CameraFields.name,
+                      child: Text("By name"),
+                    ),
+                    const DropdownMenuItem(
+                      value: CameraFields.camera,
+                      child: Text("By camera"),
+                    ),
+                  ],
+                  underline: Container(),
+                  icon: const Icon(Icons.sort),
+                  onChanged: (value) async {
+                    setState(() {
+                      _sortBy = value!;
+                    });
+                    await _refreshCameras();
+                  },
+                ),
+                IconButton(
+                  onPressed: () async {
+                    setState(() {
+                      _sortDirection = _sortDirection == SortDirection.ascending
+                          ? SortDirection.descending
+                          : SortDirection.ascending;
+                    });
+                    await _refreshCameras();
+                  },
+                  icon: _sortDirectionIcon,
+                ),
+              ],
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: 8.0,
@@ -186,6 +245,7 @@ class _CamerasPageState extends State<CamerasPage> {
     try {
       final response = await widget.cameraRepository.getCurrentUserCameras(
         onlyOwned: onlyOwned,
+        orderBy: _sortable,
         pagination: PaginationParams(pageIndex: page - 1, pageSize: pageSize),
       );
       if (mounted) {

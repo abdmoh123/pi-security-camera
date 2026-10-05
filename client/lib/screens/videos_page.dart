@@ -31,9 +31,6 @@ class _VideosPageState extends State<VideosPage> {
   Sortable<VideoFields> get _sortable =>
       Sortable<VideoFields>(field: _sortBy, direction: _sortDirection);
 
-  int currentPage = 1;
-  int maxPages = 1;
-
   Widget get _sortDirectionIcon {
     switch (_sortDirection) {
       case SortDirection.ascending:
@@ -42,6 +39,9 @@ class _VideosPageState extends State<VideosPage> {
         return const Icon(Icons.arrow_downward);
     }
   }
+
+  int currentPage = 1;
+  int maxPages = 1;
 
   @override
   void initState() {

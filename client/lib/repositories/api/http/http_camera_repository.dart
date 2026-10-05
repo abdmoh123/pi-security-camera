@@ -7,7 +7,9 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
+import 'package:pisec_client/models/api/sortables/camera_fields.dart';
 import 'package:pisec_client/models/http/http_queryable.dart';
+import 'package:pisec_client/models/sortable.dart';
 import 'package:pisec_client/repositories/api/generic/camera_repository.dart';
 import 'package:pisec_client/services/auth_http_client.dart';
 
@@ -67,10 +69,14 @@ class HttpCameraRepository implements CameraRepository {
   @override
   Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
     bool onlyOwned = false,
+    Sortable<CameraFields>? orderBy,
     PaginationParams pagination = const PaginationParams(),
   }) async {
+    final orderByString = orderBy == null
+        ? ""
+        : "&order_by=${orderBy.toString()}";
     final Uri url = Uri.parse(
-      "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}&only_owned=$onlyOwned",
+      "$baseUrl/users/me/cameras/?${pagination.toPathQueryString()}&only_owned=$onlyOwned$orderByString",
     );
 
     final response = await client.get(url);

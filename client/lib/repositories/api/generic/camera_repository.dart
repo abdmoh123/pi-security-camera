@@ -3,6 +3,8 @@ import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_response.dart';
 import 'package:pisec_client/models/api/responses/camera_subscription_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
+import 'package:pisec_client/models/api/sortables/camera_fields.dart';
+import 'package:pisec_client/models/sortable.dart';
 
 abstract interface class CameraRepository {
   Future<PaginatedResponse<CameraResponse>> getCameras({
@@ -17,6 +19,7 @@ abstract interface class CameraRepository {
 
   Future<PaginatedResponse<CameraResponse>> getCurrentUserCameras({
     bool onlyOwned = false,
+    Sortable<CameraFields>? orderBy,
     PaginationParams pagination = const PaginationParams(),
   });
 
