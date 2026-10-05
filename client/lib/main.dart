@@ -135,31 +135,44 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text("${widget.title} - ${_getTitle(pageIndex)}"),
       ),
       body: Center(child: widget.pages[pageIndex]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: pageIndex,
         items: [
           BottomNavigationBarItem(
-            label: "Videos",
-            activeIcon: Icon(Icons.camera_roll),
-            icon: Icon(Icons.camera_roll_outlined),
+            label: _getTitle(0),
+            activeIcon: const Icon(Icons.camera_roll),
+            icon: const Icon(Icons.camera_roll_outlined),
           ),
           BottomNavigationBarItem(
-            label: "Cameras",
-            activeIcon: Icon(Icons.camera),
-            icon: Icon(Icons.camera_outlined),
+            label: _getTitle(1),
+            activeIcon: const Icon(Icons.camera),
+            icon: const Icon(Icons.camera_outlined),
           ),
           BottomNavigationBarItem(
-            label: "Settings",
-            activeIcon: Icon(Icons.settings),
-            icon: Icon(Icons.settings_outlined),
+            label: _getTitle(2),
+            activeIcon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
         onTap: _onTabTapped,
       ),
     );
+  }
+
+  String _getTitle(int index) {
+    switch (index) {
+      case 0:
+        return "Videos";
+      case 1:
+        return "Cameras";
+      case 2:
+        return "Settings";
+      default:
+        return "Unknown";
+    }
   }
 
   void _onTabTapped(int index) {
