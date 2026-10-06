@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/models/api/queryables/pagination_params.dart';
 import 'package:pisec_client/models/api/responses/camera_credential_response.dart';
 import 'package:pisec_client/models/api/responses/paginated_response.dart';
@@ -94,7 +93,7 @@ class _CredetialsPageState extends State<CredentialsPage> {
     CameraCredentialResponse response;
     try {
       response = await widget.userRepository.createCameraCredential();
-    } on HttpCodedException {
+    } catch (e) {
       // Do nothing for now if we couldn't create a new credential
       return;
     }
@@ -142,8 +141,10 @@ class _CredetialsPageState extends State<CredentialsPage> {
                       try {
                         await _deleteCredential(response.clientID);
                         if (!context.mounted) return;
+                      } catch (e) {
+                        // TODO: Display and log error
                       } finally {
-                        Navigator.pop(context);
+                        Navigator.of(context).pop();
                       }
                     },
                     icon: const Icon(Icons.delete),

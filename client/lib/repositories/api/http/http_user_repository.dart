@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:http/http.dart';
 import 'package:pisec_client/constants/http/content_type_headers.dart';
 import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/extensions/http.dart';
@@ -20,9 +21,16 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<CameraCredentialResponse> createCameraCredential() async {
-    final response = await client.post(
-      Uri.parse("$baseUrl/users/me/credentials"),
-    );
+    late final Response response;
+    try {
+      response = await client.post(Uri.parse("$baseUrl/users/me/credentials"));
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -39,9 +47,18 @@ class HttpUserRepository implements UserRepository {
   Future<RedactedCameraCredentialResponse> deleteCameraCredential(
     String clientId,
   ) async {
-    final response = await client.delete(
-      Uri.parse("$baseUrl/users/me/credentials/$clientId"),
-    );
+    late final Response response;
+    try {
+      response = await client.delete(
+        Uri.parse("$baseUrl/users/me/credentials/$clientId"),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -56,7 +73,16 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<UserResponse> deleteCurrentUser() async {
-    final response = await client.delete(Uri.parse("$baseUrl/users/me"));
+    late final Response response;
+    try {
+      response = await client.delete(Uri.parse("$baseUrl/users/me"));
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -73,9 +99,18 @@ class HttpUserRepository implements UserRepository {
   Future<PaginatedResponse<RedactedCameraCredentialResponse>>
   getCameraCredentials(PaginationParams pagination) async {
     final String query = pagination.toPathQueryString();
-    final response = await client.get(
-      Uri.parse("$baseUrl/users/me/credentials?$query"),
-    );
+
+    late final Response response;
+    try {
+      response = await client.get(
+        Uri.parse("$baseUrl/users/me/credentials?$query"),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.notOk) {
       throw HttpCodedException(
@@ -92,7 +127,16 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<UserResponse> getCurrentUser() async {
-    final response = await client.get(Uri.parse("$baseUrl/users/me"));
+    late final Response response;
+    try {
+      response = await client.get(Uri.parse("$baseUrl/users/me"));
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -114,7 +158,16 @@ class HttpUserRepository implements UserRepository {
         "${pagination.toPathQueryString()}&camera_id=$cameraId";
     final Uri url = Uri.parse("$baseUrl/users/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -130,11 +183,20 @@ class HttpUserRepository implements UserRepository {
 
   @override
   Future<UserResponse> updateCurrentUser(UserQuery userQuery) async {
-    final response = await client.put(
-      Uri.parse("$baseUrl/users/me"),
-      headers: jsonHeader.toDict(),
-      body: json.encode(userQuery.toJson()),
-    );
+    late final Response response;
+    try {
+      response = await client.put(
+        Uri.parse("$baseUrl/users/me"),
+        headers: jsonHeader.toDict(),
+        body: json.encode(userQuery.toJson()),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -155,7 +217,16 @@ class HttpUserRepository implements UserRepository {
     final String query = "${pagination.toPathQueryString()}&email=$username";
     final Uri url = Uri.parse("$baseUrl/users/?$query");
 
-    final response = await client.get(url);
+    late final Response response;
+    try {
+      response = await client.get(url);
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
+
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,

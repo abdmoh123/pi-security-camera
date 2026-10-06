@@ -48,3 +48,13 @@ class InvalidUrlException implements Exception {
   @override
   String toString() => message;
 }
+
+class HttpClientException implements Exception {
+  final String message;
+  final Object? inner;
+
+  const HttpClientException(this.message, {this.inner});
+
+  @override
+  String toString() => message;
+}

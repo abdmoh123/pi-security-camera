@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import TracebackType
 
-import httpx
-from httpx import ConnectError, Response
+import httpx2
+from httpx2 import ConnectError, Response
 
 from pisec_cam.core.api.api_service_context import APIServiceContext
 from pisec_cam.core.models.camera import Camera, CameraCreate, CameraUpdate
@@ -24,11 +24,11 @@ class APIService:
 
     context: APIServiceContext
 
-    _client: httpx.Client = field(init=False)
+    _client: httpx2.Client = field(init=False)
 
     def __post_init__(self) -> None:
         """Post init constructor for this API service dataclass."""
-        self._client = httpx.Client(
+        self._client = httpx2.Client(
             base_url=self.context.api_url, auth=self.context.authenticator
         )
 
@@ -56,7 +56,7 @@ class APIService:
             True if the API server is reachable, False otherwise.
         """
         try:
-            response = httpx.get(url=api_url)
+            response = httpx2.get(url=api_url)
             return response.status_code == 200
         except ConnectError as e:
             print(f"Failed to connect: {e}")

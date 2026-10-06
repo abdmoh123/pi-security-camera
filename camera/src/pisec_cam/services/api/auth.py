@@ -3,14 +3,14 @@
 from collections.abc import Generator
 from typing import override
 
-import httpx
-from httpx import Request, Response
+import httpx2
+from httpx2 import Request, Response
 
 from pisec_cam.core.models.credential import Credential
 
 
-class OAuth2Authenticator(httpx.Auth):
-    """Authenticator class inheriting httpx.Auth."""
+class OAuth2Authenticator(httpx2.Auth):
+    """Authenticator class inheriting httpx2.Auth."""
 
     def __init__(
         self, token_url: str, credential: Credential, max_retries: int = 3
@@ -58,7 +58,7 @@ class OAuth2Authenticator(httpx.Auth):
             self._access_token = token_response.json()["access_token"]
 
     def _build_token_request(self) -> Request:
-        return httpx.Request(
+        return httpx2.Request(
             method="POST",
             url=self.token_url,
             data={

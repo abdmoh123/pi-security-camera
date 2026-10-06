@@ -27,8 +27,15 @@ class LoginAPIService {
       return false;
     }
 
-    final response = await _client.get(Uri.parse(baseUrl!));
-    return response.ok;
+    try {
+      final response = await _client.get(Uri.parse(baseUrl!));
+      return response.ok;
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
   }
 
   Future<UserResponse> registerUser(UserQuery userQuery) async {
@@ -40,11 +47,19 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/users/"),
-      headers: jsonHeader.toDict(),
-      body: json.encode(userQuery.toJson()),
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/users/"),
+        headers: jsonHeader.toDict(),
+        body: json.encode(userQuery.toJson()),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
     if (response.notOk) {
       throw HttpCodedException(
         statusCode: response.statusCode,
@@ -63,15 +78,23 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/auth/token"),
-      headers: xWwwFormUrlencodedHeader.toDict(),
-      body: {
-        "username": userQuery.email,
-        "password": userQuery.password,
-        "grant_type": "password",
-      },
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/auth/token"),
+        headers: xWwwFormUrlencodedHeader.toDict(),
+        body: {
+          "username": userQuery.email,
+          "password": userQuery.password,
+          "grant_type": "password",
+        },
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.notOk) {
       throw HttpCodedException(
@@ -95,11 +118,19 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/auth/logout"),
-      headers: AuthorizationHeader.fromToken(token).toDict(),
-      body: {"refresh_token": token.refreshToken},
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/auth/logout"),
+        headers: AuthorizationHeader.fromToken(token).toDict(),
+        body: {"refresh_token": token.refreshToken},
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.statusCode != 204) {
       throw HttpCodedException(
@@ -114,13 +145,21 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/auth/logout/all"),
-      headers: AuthorizationHeader(
-        accessToken,
-        tokenType: TokenType.bearer,
-      ).toDict(),
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/auth/logout/all"),
+        headers: AuthorizationHeader(
+          accessToken,
+          tokenType: TokenType.bearer,
+        ).toDict(),
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.statusCode != 204) {
       throw HttpCodedException(
@@ -135,11 +174,19 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/auth/refresh"),
-      headers: xWwwFormUrlencodedHeader.toDict(),
-      body: {"refresh_token": refreshTokenValue},
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/auth/refresh"),
+        headers: xWwwFormUrlencodedHeader.toDict(),
+        body: {"refresh_token": refreshTokenValue},
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.notOk) {
       throw HttpCodedException(
@@ -163,11 +210,19 @@ class LoginAPIService {
       throw InvalidUrlException("Server url is not set");
     }
 
-    final response = await _client.post(
-      Uri.parse("$baseUrl/auth/refresh/expiry"),
-      headers: xWwwFormUrlencodedHeader.toDict(),
-      body: {"refresh_token": refreshTokenValue},
-    );
+    late final http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse("$baseUrl/auth/refresh/expiry"),
+        headers: xWwwFormUrlencodedHeader.toDict(),
+        body: {"refresh_token": refreshTokenValue},
+      );
+    } catch (e) {
+      throw HttpClientException(
+        "Error occurred while calling server",
+        inner: e,
+      );
+    }
 
     if (response.notOk) {
       throw HttpCodedException(

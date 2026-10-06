@@ -144,6 +144,10 @@ $CMD
 description = "Install the flutter dependencies"
 run = "flutter pub get"
 
+[tasks.lint]
+description = "Run the dart linter"
+run = "dart analyze"
+
 [tasks.devcontainer]
 description = "Build, start and enter devcontainer"
 run = '''

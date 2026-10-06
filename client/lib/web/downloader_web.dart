@@ -1,3 +1,4 @@
+// ignore: depend_on_referenced_packages
 import 'package:web/web.dart' as web;
 
 void startDownload(String url, String fileName) {

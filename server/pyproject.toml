@@ -1,7 +1,7 @@
 [project]
 name = "pisec-server"
 version = "0.1.0"
-description = "Project about a remote Raspberry Pi security camera"
+description = "Central API server for Pisec"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,6 +9,7 @@ dependencies = [
     "alembic>=1.18.4",
     "argon2-cffi>=25.1.0",
     "fastapi[standard]>=0.119.0",
+    "httpx2>=2.13.1",
     "psycopg2-binary>=2.9.11",
     "python-jose[cryptography]>=3.5.0",
     "sqlalchemy>=2.0.44",
@@ -26,7 +27,7 @@ dev = [
 ]
 
 [project.scripts]
-pisec-server = "pisec_server.main:cli_app"
+pisec-server = "pisec_server.main:main"
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12"]

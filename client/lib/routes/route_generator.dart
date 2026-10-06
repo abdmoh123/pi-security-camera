@@ -105,8 +105,8 @@ class RouteGenerator {
   Route<dynamic> _unfinishedRoute() {
     return MaterialPageRoute(
       builder: (_) => Scaffold(
-        appBar: AppBar(title: Text("Unfinished page")),
-        body: Center(child: Text("This page is unfinished")),
+        appBar: AppBar(title: const Text("Unfinished page")),
+        body: const Center(child: Text("This page is unfinished")),
       ),
     );
   }
@@ -119,7 +119,7 @@ class RouteGenerator {
 
   Route<dynamic> _homePageRoute({int pageIdx = 0}) {
     return _protectedRoute(
-      MyHomePage(title: 'Pisec Home', pages: mainPages, initPageIndex: pageIdx),
+      MyHomePage(title: 'Pisec', pages: mainPages, initPageIndex: pageIdx),
     );
   }
 }

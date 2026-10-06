@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pisec_server.api.routes import cameras, users, videos
 from pisec_server.auth import routes as auth
+from pisec_server.core.config import init_settings, settings
 
 # get version info
 try:
@@ -56,5 +57,14 @@ def serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = True) -> Non
     uvicorn.run("pisec_server.main:app", host=host, port=port, reload=reload)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main app entrypoint. Where the executable starts."""
+    # Sets up config
+    init_settings(settings)
+
+    # Runs the CLI
     cli_app()
+
+
+if __name__ == "__main__":
+    main()

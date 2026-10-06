@@ -42,8 +42,8 @@ class CredentialTile extends StatelessWidget {
   Future<void> _onDelete() async {
     try {
       await _deleteCredential?.call();
-    } catch (e, st) {
-      return Future.error(e, st);
+    } catch (e) {
+      // TODO: Display error
     }
   }
 }

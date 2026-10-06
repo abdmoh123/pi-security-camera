@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pisec_client/exceptions/http_exceptions.dart';
 import 'package:pisec_client/globals/notifier_provider.dart';
 import 'package:pisec_client/models/api/queryables/user_query.dart';
 import 'package:pisec_client/models/api/responses/user_response.dart';
@@ -83,7 +82,13 @@ class _ProfilePageState extends State<ProfilePage> {
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                spacing: spacing,
                 children: [
+                  Text(
+                    "Edit account details",
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 2 * spacing),
                   TextFormField(
                     decoration: const InputDecoration(
                       labelText: 'User email',
@@ -92,7 +97,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     controller: _emailController,
                     onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
-                  const SizedBox(height: spacing),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -114,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     obscureText: _passwordHidden,
                     onFieldSubmitted: (_) async => await _onSubmit(context),
                   ),
-                  const SizedBox(height: spacing),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Confirm password',
@@ -176,11 +179,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       await widget.userRepository.updateCurrentUser(query);
-    } on HttpCodedException {
-      // If user details haven't changed, then there is nothing to do
-      return;
     } catch (e) {
+      // If user details haven't changed, then there is nothing to do
       // TODO: Display error message via toast or popup
+      return;
     }
 
     if (emailText != null) {
