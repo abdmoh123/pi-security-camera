@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.scripts]
-pisec-server = "pisec_server.main:cli_app"
+pisec-server = "pisec_server.main:main"
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12"]

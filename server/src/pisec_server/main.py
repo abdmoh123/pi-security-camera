@@ -19,9 +19,6 @@ except PackageNotFoundError:
     # package is not installed (e.g. in development without editable install)
     __version__ = "0.1.0"  # fallback initial version value
 
-# Sets up config
-init_settings(settings)
-
 app = FastAPI(title="Pi Security Camera", description="API for managing Pi security cameras", version=__version__)
 
 app.add_middleware(
@@ -60,5 +57,14 @@ def serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = True) -> Non
     uvicorn.run("pisec_server.main:app", host=host, port=port, reload=reload)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main app entrypoint. Where the executable starts."""
+    # Sets up config
+    init_settings(settings)
+
+    # Runs the CLI
     cli_app()
+
+
+if __name__ == "__main__":
+    main()
