@@ -13,6 +13,10 @@ uv python install
 uv sync --frozen --dev
 """
 
+[tasks.build]
+description = "Builds the python wheel"
+run = "uv build"
+
 [tasks.start]
 description = "Start the fastapi server"
 usage = '''

@@ -14,6 +14,10 @@ uv python install
 uv sync --frozen --dev
 """
 
+[tasks.build]
+description = "Builds the python wheel"
+run = "uv build"
+
 [tasks.ruff]
 description = "Run ruff linter"
 depends = "init"
