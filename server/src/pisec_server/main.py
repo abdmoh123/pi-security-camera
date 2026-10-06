@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pisec_server.api.routes import cameras, users, videos
 from pisec_server.auth import routes as auth
+from pisec_server.core.config import init_settings, settings
 
 # get version info
 try:
@@ -17,6 +18,9 @@ try:
 except PackageNotFoundError:
     # package is not installed (e.g. in development without editable install)
     __version__ = "0.1.0"  # fallback initial version value
+
+# Sets up config
+init_settings(settings)
 
 app = FastAPI(title="Pi Security Camera", description="API for managing Pi security cameras", version=__version__)
 

@@ -1,7 +1,7 @@
 """Module for handling environmental configurations."""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from pathlib import Path
 
@@ -91,20 +91,15 @@ def _get_video_dir() -> Path:
 
     Returns a default path if the environment variable is not set.
     """
-    video_dir: str | None = os.getenv("VIDEO_FILES_DIR")
-    if not video_dir:
-        video_dir = "/var/lib/pisec_server/videos"
-
-    video_dir_path = Path(video_dir)
-    video_dir_path.mkdir(exist_ok=True)
-    return video_dir_path
+    video_dir: str = os.getenv("VIDEO_FILES_DIR") or "/var/lib/pisec_server/videos"
+    return Path(video_dir).resolve()
 
 
 @dataclass
 class Settings:
     """Centralized settings management for the application."""
 
-    VIDEO_FILES_DIR: Path = _get_video_dir().resolve()
+    VIDEO_FILES_DIR: Path = field(default_factory=_get_video_dir)
 
     DB_TYPE: DBType = _get_db_type()
     DB_URL: str = _get_db_url(DB_TYPE)
@@ -123,6 +118,11 @@ class Settings:
     # Admin bootstrapping
     # The first registered user will automatically become an admin if this is enabled
     ENABLE_FIRST_USER_ADMIN: bool = os.getenv("ENABLE_FIRST_USER_ADMIN", "true").lower() == "true"
+
+
+def init_settings(config: Settings) -> None:
+    """Does any initial setup required."""
+    config.VIDEO_FILES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 settings = Settings()
