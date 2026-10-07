@@ -27,7 +27,8 @@ The rest of the required tools should be installed by mise via `mise install`.
 
 ### Android
 
-You will have to manually install the Android SDK and command line tools. After that, you set the following environment variables:
+You can use the `mise run install-android-tools` task to install the android SDK and tools using the android-cli.
+Before that, you can set the following environment variables to choose where the SDKs are stored:
 
 - ANDROID_HOME
 - ANDROID_SDK_ROOT
@@ -47,15 +48,18 @@ _.path = [
 ]
 ```
 
-> [!NOTE]
-> By default the mise tasks will assume you are running the app on the web, so the android setup is optional.
-
 ## Testing
 
-Before testing, you will need to generate the mock stubs. You do this with the following command:
+Before testing, you will need to generate the mock stubs. You can do this with the following command:
 
 ```bash
 dart run build_runner build
+```
+
+Or use the mise task:
+
+```bash
+mise run setup-mocks
 ```
 
 These mock stubs have been added to .gitignore, so you should not commit them to version control.
@@ -67,7 +71,3 @@ mise run test
 ```
 
 Or use the `flutter test` command.
-
-> [!TIP]
-> If you use `mise test`, it should automatically build the stubs before running the tests.
-> You can also build the mocks manually with `mise run setup-mocks`.

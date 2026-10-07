@@ -6,6 +6,7 @@ FastAPI based API for managing Pi cameras and videos.
 
 ### Linting and formatting
 
+- basedpyright for static analysis
 - mypy in strict mode for type checking
 - ruff for linting and formatting
 
@@ -46,12 +47,16 @@ All environment variables are loaded and accessed from the app.core.config modul
 
 #### Optional
 
+- VIDEO_FILES_DIR
+    - Default is '/var/lib/pisec_server/videos'
 - JWT_ALGORITHM
     - Default is HS256
 - ACCESS_TOKEN_EXPIRE_MINUTES
     - Default is 30 mins
 - REFRESH_TOKEN_EXPIRE_DAYS
     - Default is 30 days
+- CAMERA_TOKEN_EXPIRE_HOURS
+    - Default is 12 hours
 - ENABLE_FIRST_USER_ADMIN
     - Default is true (so we can easily setup an admin user)
 

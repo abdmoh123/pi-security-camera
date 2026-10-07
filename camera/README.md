@@ -34,9 +34,21 @@ This system continues looping until the service is force-stopped (SIGINT) or an 
 
 As this system has a sleep stage, the amount of data transferred can be massively reduced, which is ideal for metered mobile data plans.
 
+## Building
+
+Run `uv build` to build a wheel binary (+ archive) for the CLI app.
+
+This can be installed using a package manager like pip or uv.
+
+```bash
+pip install pisec_cam-{version}-py3-none-any.whl
+```
+
+Where `{version}` is the version of the application.
+
 ## Usage
 
-After building the executable with `uv sync`, you can run this service in the terminal with the following command:
+After building an executable script with `uv sync`, you can run this service in the terminal with the following command:
 
 ```bash
 pisec-cam serve --wait-time-ms 1000 --delta-ms 500 --video-length-s 5 --video-dir ./recordings --max-files 5
