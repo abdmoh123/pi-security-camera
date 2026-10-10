@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Extracts release notes for a given version tag from the changelog.
+
+Usage: changelog.py <tag> [changelog-path]
+
+For tag "v1.2.0" this extracts the body of the "## [1.2.0] - 2026-10-10"
+section of the changelog (default: CHANGELOG.md). Exits non-zero if the
+section is missing or empty, so a release can't go out without notes.
+"""
+
+import re
+import sys
+from pathlib import Path
+
+DEFAULT_CHANGELOG = "CHANGELOG.md"
+
+HEADING_RE = re.compile(r"^##\s+\[?v?(?P<version>[^\]\s]+)\]?(?:\s+-\s+.*)?\s*$")
+LINK_REF_RE = re.compile(r"^\[[^\]]+\]:\s")
+
+
+class ChangelogError(Exception):
+    """Raised when release notes can't be extracted."""
+
+
+def version_from_tag(tag: str) -> str:
+    """Convert a tag like 'v1.2.0' to a version like '1.2.0'.
+
+    Args:
+        tag: The tag to convert
+
+    Returns:
+        The version without the 'v' prefix
+    """
+    # The 0 index at the end means that we throw away any extra suffix
+    # Both - and + are used so we can remove suffixes like -rc1 and +build1
+    return re.split(r"[-+]", tag.removeprefix("v"), maxsplit=1)[0]
+
+
+def extract_section(lines: list[str], version: str) -> str | None:
+    """Return the body of the given version's section, or None if absent.
+
+    The section ends at the next version heading or at the link reference
+    definitions at the bottom of the file.
+
+    Args:
+        lines: The lines of the changelog
+        version: The version to extract for
+
+    Returns:
+        Only the section of the changelog for the given version
+    """
+    body: list[str] = []
+    found = False
+
+    for line in lines:
+        match = HEADING_RE.match(line)
+        if match:
+            if found:
+                break  # Reached the next version heading
+            found = match["version"] == version
+            continue
+        if found:
+            if LINK_REF_RE.match(line):
+                break  # Reached the link references at the bottom
+            body.append(line)
+
+    return "\n".join(body).strip() if found else None
+
+
+def get_release_notes(tag: str, path: Path) -> str:
+    """Extracts the changes for the given tag from the changelog.
+
+    Args:
+        tag: The tag containing the version number
+        path: The path to the changelog
+
+    Returns:
+        The desired release notes for the given version
+    """
+    version = version_from_tag(tag)
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    notes = extract_section(lines, version)
+    if notes is None:
+        raise ChangelogError(f"no section for version {version} found in {path}")
+    if not notes:
+        raise ChangelogError(f"section for version {version} in {path} is empty")
+    return notes
+
+
+def main(argv: list[str]) -> int:
+    """Extracts release notes from the changelog and prints it to stdout.
+
+    Args:
+        argv: The command line arguments
+
+    Returns:
+        0 on success, non-zero for failure
+    """
+    if len(argv) < 2:
+        print(f"usage: {argv[0]} <tag> [changelog-path]", file=sys.stderr)
+        return 2
+
+    tag = argv[1]
+    path = Path(argv[2] if len(argv) > 2 else DEFAULT_CHANGELOG)
+
+    try:
+        print(get_release_notes(tag, path))
+    except (ChangelogError, OSError) as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

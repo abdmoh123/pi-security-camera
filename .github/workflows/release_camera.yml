@@ -1,0 +1,65 @@
+name: test-camera
+
+on:
+  push:
+    tags:
+      - "camera/v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  test_camera:
+    uses: ./.github/workflows/test_camera.yml
+
+  build:
+    needs: test_camera
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./camera
+    steps:
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v4
+        with:
+            version: 2026.3.10
+      - run: mise run init
+      - run: mise run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files:camera
+          path: camera/dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files:camera
+          path: artifacts
+
+      - name: extract changes from changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#camera/}"
+          python3 ".github/scripts/read_changelog" "$VERSION" "camera/CHANGELOG.md" > "RELEASE_NOTES.md"
+
+      - name: create github release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          # Create a prerelease release if tag is a release candidate
+          if [[ "$GITHUB_REF_NAME" == *-rc*]]; then flags="--prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file "RELEASE_NOTES.md" \
+            --verify-tag \
+            $flags
