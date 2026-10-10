@@ -1,0 +1,88 @@
+name: release-client
+
+on:
+  push:
+    tags:
+      - "client/v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  test_client:
+    uses: ./.github/workflows/test_client.yml
+
+  build:
+    needs: test_client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@v6
+      - uses: jdx/mise-action@v4
+        with:
+            version: 2026.3.10
+      - run: mise run restore
+
+      - name: create build directory
+        run: mkdir -p artifacts
+
+      - name: build android app
+        run: mise run build apk
+
+      - name: copy built apk to artifact folder
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            artifacts/pisec_client-${GITHUB_REF_NAME#client/}.apk
+
+      - name: build linux app
+        run: mise run build linux
+
+      - name: bundle up linux app into tarball
+        run: |
+          tar -czf pisec_client-${GITHUB_REF_NAME#client/}-linux-x64.tar.gz \
+            -C client/build/linux/x64/release/bundle \
+            artifacts
+
+      - name: upload all build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-files.client
+          path: artifacts/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files.client
+          path: artifacts
+
+      - name: create sha256 checksums
+        run: cd aritfacts && sha256sum *.tar.gz *.apk > sha256sums.txt
+
+      - name: extract changes from changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#client/}"
+          python3 ".github/scripts/read_changelog" "$VERSION" "client/CHANGELOG.md" > "RELEASE_NOTES.md"
+
+      - name: create github release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          # Create a prerelease release if tag is a release candidate
+          if [[ "$GITHUB_REF_NAME" == *-rc* ]]; then flags="--prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file "RELEASE_NOTES.md" \
+            --verify-tag \
+            $flags
