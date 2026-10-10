@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     env:
-      HMAC_SECRET_KEY: ${{ secrets.HMAC_SECRET_KEY }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      HMAC_SECRET_KEY: fake-hmac_secret
+      SECRET_KEY: fake-secret
       DB_TYPE: ${{ vars.DB_TYPE }}
       JWT_ALGORITHM: ${{ vars.JWT_ALGORITHM }}
     defaults:
