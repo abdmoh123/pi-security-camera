@@ -1,4 +1,4 @@
-name: test-camera
+name: release-camera
 
 on:
   push:
