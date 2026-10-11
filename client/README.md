@@ -20,7 +20,7 @@ You will need to install extra dependencies using your package manager because m
 The following steps are for a fedora-based system:
 
 ```bash
-sudo dnf install -y clang libsecret-devel pkg-conf-pkg-config gtk3-devel
+sudo dnf install -y clang libsecret-devel jsoncpp-devel pkg-conf-pkg-config gtk3-devel
 ```
 
 The rest of the required tools should be installed by mise via `mise install`.
