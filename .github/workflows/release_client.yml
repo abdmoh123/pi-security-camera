@@ -88,7 +88,7 @@ jobs:
           path: artifacts
 
       - name: create sha256 checksums
-        run: cd aritfacts && sha256sum *.tar.gz *.apk > sha256sums.txt
+        run: cd artifacts && sha256sum *.tar.gz *.apk > sha256sums.txt
 
       - name: extract changes from changelog
         run: |
