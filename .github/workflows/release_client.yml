@@ -46,7 +46,8 @@ jobs:
 
       - name: install required packages for linux build
         run: |
-          apt install -y \
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
             libgtk-3 \
             pkg-config \
             clang \
