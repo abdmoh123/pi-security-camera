@@ -20,6 +20,9 @@ jobs:
         working-directory: ./client
     steps:
       - uses: actions/checkout@v6
+        with:
+          lfs: true
+
       - uses: jdx/mise-action@v4
         with:
             version: 2026.3.10
