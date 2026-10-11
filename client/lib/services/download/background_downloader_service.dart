@@ -7,7 +7,44 @@ class BackgroundDownloaderService implements DownloaderService {
   // Used to generate unique task ids
   final String Function(String url) taskIdGenerator;
 
-  const BackgroundDownloaderService(this.taskIdGenerator);
+  BackgroundDownloaderService(this.taskIdGenerator) {
+    FileDownloader().configure(
+      globalConfig: [(Config.requestTimeout, const Duration(seconds: 100))],
+      androidConfig: [(Config.useCacheDir, Config.whenAble)],
+    );
+
+    FileDownloader().configureNotificationForGroup(
+      FileDownloader.defaultGroup,
+      running: const TaskNotification(
+        "Downloading {filename}",
+        "Progress: {progress} - Time remaining: {timeRemaining}",
+      ),
+      complete: const TaskNotification(
+        "Download complete",
+        "Successfully downloaded {filename}",
+      ),
+      error: const TaskNotification(
+        "Download error",
+        "Failed to download {filename}",
+      ),
+      paused: const TaskNotification(
+        "Download paused",
+        "Download for {filename} was paused",
+      ),
+      canceled: const TaskNotification(
+        "Download cancelled",
+        "Download cancelled for {filename}",
+      ),
+      progressBar: true,
+      tapOpensFile: true,
+    );
+  }
+
+  @override
+  Future<void> init() async {
+    await FileDownloader().start(autoCleanDatabase: true);
+    // TODO: Maybe support resuming downloads
+  }
 
   @override
   Future<bool> cancelDownload(EventTask downloadTask) async {

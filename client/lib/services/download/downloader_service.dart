@@ -4,4 +4,6 @@ abstract interface class DownloaderService {
   Future<bool> cancelDownload(EventTask downloadTask);
 
   Future<EventTask?> downloadItem(String url, String fileName);
+
+  Future<void> init();
 }

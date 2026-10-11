@@ -16,4 +16,9 @@ class BrowserDownloaderService implements DownloaderService {
     // Returns a fake dummy task as we can't really do anything
     return EventTask("");
   }
+
+  @override
+  Future<void> init() async {
+    // Intentionally do nothing
+  }
 }

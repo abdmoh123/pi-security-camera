@@ -35,6 +35,8 @@ Future<void> main() async {
 
   // Automatically chooses between web and native downloader
   final downloaderService = createDownloaderService(videoIdFromUrl);
+  await downloaderService.init();
+
   final videoRepository = HttpVideoRepository(
     client,
     baseUrl,
