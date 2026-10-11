@@ -62,7 +62,7 @@ jobs:
       - name: bundle up linux app into tarball
         run: |
           tar -czf pisec_client-${GITHUB_REF_NAME#client/}-linux-x64.tar.gz \
-            -C client/build/linux/x64/release/bundle \
+            -C build/linux/x64/release/bundle \
             artifacts
 
       - name: upload all build artifacts
