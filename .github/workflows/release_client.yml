@@ -44,6 +44,15 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk \
             artifacts/pisec_client-${GITHUB_REF_NAME#client/}.apk
 
+      - name: install required packages for linux build
+        run: |
+          apt install -y \
+            libgtk-3 \
+            pkg-config \
+            clang \
+            libsecret-1-dev \
+            libjsoncpp-dev
+
       - name: build linux app
         run: mise run build linux
 
