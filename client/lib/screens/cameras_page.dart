@@ -137,7 +137,7 @@ class _CamerasPageState extends State<CamerasPage> {
               }
               if (snapshot.hasData) {
                 if (snapshot.data!.items.isEmpty) {
-                  return const Center(child: Text("No videos found"));
+                  return const Center(child: Text("No cameras found"));
                 }
                 return _buildCameraList(snapshot.data!.items);
               }
