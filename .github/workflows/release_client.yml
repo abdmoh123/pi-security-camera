@@ -23,13 +23,18 @@ jobs:
       - uses: jdx/mise-action@v4
         with:
             version: 2026.3.10
-      - run: mise run restore
 
-      - name: create build directory
-        run: mkdir -p artifacts
+      - name: initalise flutter dependencies
+        run: mise run restore
+
+      - name: setup android tooling
+        run: mise run install-android-tools
 
       - name: build android app
         run: mise run build android
+
+      - name: create artifacts directory
+        run: mkdir -p artifacts
 
       - name: copy built apk to artifact folder
         run: |
