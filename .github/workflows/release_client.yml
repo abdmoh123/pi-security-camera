@@ -64,13 +64,13 @@ jobs:
           tar -czf pisec_client-${GITHUB_REF_NAME#client/}-linux-x64.tar.gz \
             -C build/linux/x64/release/bundle \
             .
-          mv pisec_client-${GITHUB_REF_NAME#client/}-linux-x64.tar.gz artifacts
+          mv pisec_client-${GITHUB_REF_NAME#client/}-linux-x64.tar.gz artifacts/
 
       - name: upload all build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-files.client
-          path: artifacts/*
+          path: client/artifacts/*
           if-no-files-found: error
 
   release:
