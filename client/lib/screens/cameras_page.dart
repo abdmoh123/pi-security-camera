@@ -109,11 +109,6 @@ class _CamerasPageState extends State<CamerasPage> {
               ],
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 8.0,
-              children: [_buildPaginationGroup(context)],
-            ),
-            Row(
               mainAxisAlignment: MainAxisAlignment.end,
               spacing: 8.0,
               children: [
@@ -144,6 +139,11 @@ class _CamerasPageState extends State<CamerasPage> {
               return const Center(child: Text("Something went wrong"));
             },
           ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8.0,
+          children: [_buildPaginationGroup(context)],
         ),
       ],
     );
