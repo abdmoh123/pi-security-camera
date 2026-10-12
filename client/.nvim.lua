@@ -1,3 +1,5 @@
+local android_device = os.getenv("ANDROID_DEVICE_NAME")
+
 require("flutter-tools").setup_project({
 	{
 		name = "Web",
@@ -9,5 +11,9 @@ require("flutter-tools").setup_project({
 	{
 		name = "Linux",
 		device = "linux",
+	},
+	{
+		name = "Android physical",
+		device = android_device,
 	},
 })
