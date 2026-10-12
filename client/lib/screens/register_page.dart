@@ -76,9 +76,9 @@ class _RegisterPageState extends State<RegisterPage> {
         ],
       ),
       body: Form(
-        child: Padding(
-          padding: const EdgeInsets.all(spacing),
-          child: Center(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(spacing),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
