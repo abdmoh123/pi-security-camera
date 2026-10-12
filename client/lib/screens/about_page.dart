@@ -58,7 +58,7 @@ class AboutPage extends StatelessWidget {
 
     try {
       if (await canLaunchUrl(gitUrl)) {
-        await launchUrl(gitUrl);
+        await launchUrl(gitUrl, mode: LaunchMode.platformDefault);
       } else {
         // Failed to launch a URL, not much to do tbh
       }
