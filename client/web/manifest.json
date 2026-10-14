@@ -1,11 +1,11 @@
 {
-    "name": "pisec_client",
-    "short_name": "pisec_client",
+    "name": "Pisec",
+    "short_name": "Pisec",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Web client for the Pisec server",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
