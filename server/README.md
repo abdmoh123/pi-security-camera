@@ -1,6 +1,8 @@
-# Pi Security Camera API server
+# Pisec API server
 
 FastAPI based API for managing Pi cameras and videos.
+
+> The cameras don't need to be raspberry pis, just a computer with access to a camera
 
 ## Tooling
 

@@ -1,6 +1,9 @@
-# Pi Security Camera
+# Pisec
 
-A project about a remote Raspberry Pi security camera system.
+A project about a self-hostable Raspberry Pi-based security camera system.
+
+> You don't actually need a raspberry pi. This works on any machine with a camera.
+> For example you can run it on an old laptop.
 
 ## Contents
 

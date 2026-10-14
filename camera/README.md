@@ -1,4 +1,4 @@
-# Pi camera service
+# Pisec camera service
 
 The main purpose of this project is to provide cheap remote surveillance where online connection is metered and limited.
 
